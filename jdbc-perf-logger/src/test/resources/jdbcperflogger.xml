@@ -1,0 +1,5 @@
+<jdbc-perf-logger>
+  <wrapping-connections>
+    <wrapping-connection>slaurent.jdbcperflogger.StatsLoggingConnection</wrapping-connection>
+  </wrapping-connections>
+</jdbc-perf-logger>
