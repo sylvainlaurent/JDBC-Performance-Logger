@@ -5,8 +5,6 @@ import java.sql.SQLException;
 import java.util.UUID;
 
 public class StatsLoggingResultSet extends WrappingResultSet {
-    // TODO compter lignes itérées
-
     private final UUID logId;
     private final long fetchStartTime;
     private final StatementType statementType;
