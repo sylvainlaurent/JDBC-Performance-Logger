@@ -171,29 +171,6 @@ public class LogRepository {
         }
     }
 
-    public void dump() {
-        try {
-            final Statement statement = connection.createStatement();
-            try {
-                final ResultSet resultSet = statement
-                        .executeQuery("select id, tstamp, rawSql, filledSql, executionDurationNanos from statement_log");
-                while (resultSet.next()) {
-                    final long id = resultSet.getLong(1);
-                    final Timestamp tstamp = resultSet.getTimestamp(2);
-                    final String rawSql = resultSet.getString(3);
-                    final String filledSql = resultSet.getString(4);
-                    final long durationNanos = resultSet.getLong(5);
-                    System.out.println(id + ";" + tstamp + ";" + rawSql + ";" + filledSql + ";" + durationNanos);
-                }
-                resultSet.close();
-            } finally {
-                statement.close();
-            }
-        } catch (final SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public void getStatements(String filter, Long minDurationNanos, ResultSetAnalyzer analyzer) {
         String sql = "select id, tstamp, statementType, rawSql, filledSql, " //
                 + "exec_plus_fetch_time, execution_time, fetch_time, nbRowsIterated, threadName, error " //
@@ -219,13 +196,13 @@ public class LogRepository {
 
     public void getStatementsGroupByRawSQL(String filter, Long minDurationNanos, ResultSetAnalyzer analyzer) {
         String sql = "select min(id) as ID, rawSql, count(1) as exec_count, " //
-                + "cast(sum(executionDurationNanos)/1000000.0 as bigint) as total_exec_time, "//
-                + "cast(max(executionDurationNanos)/1000000.0 as bigint) as max_exec_time, " //
-                + "cast(min(executionDurationNanos)/1000000.0 as bigint) as min_exec_time, " //
-                + "cast(avg(executionDurationNanos)/1000000.0 as bigint) as avg_exec_time " //
+                + "sum(executionDurationNanos) as total_exec_time, "//
+                + "max(executionDurationNanos) as max_exec_time, " //
+                + "min(executionDurationNanos) as min_exec_time, " //
+                + "avg(executionDurationNanos) as avg_exec_time " //
                 + "from statement_log ";
         if (filter != null && filter.length() > 0) {
-            sql += "where UPPER(rawSql) like ? ";
+            sql += "where (UPPER(rawSql) like ? or UPPER(filledSql) like ?)";
         }
         sql += "group by rawSql ";
         if (minDurationNanos != null) {
@@ -251,13 +228,13 @@ public class LogRepository {
 
     public void getStatementsGroupByFilledSQL(String filter, Long minDurationNanos, ResultSetAnalyzer analyzer) {
         String sql = "select min(id) as ID, rawSql, filledSql, count(1) as exec_count, " //
-                + "cast(sum(executionDurationNanos)/1000000.0 as bigint) as total_exec_time, "//
-                + "cast(max(executionDurationNanos)/1000000.0 as bigint) as max_exec_time, " //
-                + "cast(min(executionDurationNanos)/1000000.0 as bigint) as min_exec_time, " //
-                + "cast(avg(executionDurationNanos)/1000000.0 as bigint) as avg_exec_time " //
+                + "sum(executionDurationNanos) as total_exec_time, "//
+                + "max(executionDurationNanos) as max_exec_time, " //
+                + "min(executionDurationNanos) as min_exec_time, " //
+                + "avg(executionDurationNanos) as avg_exec_time " //
                 + "from statement_log ";
         if (filter != null && filter.length() > 0) {
-            sql += "where UPPER(rawSql) like ? ";
+            sql += "where (UPPER(rawSql) like ? or UPPER(filledSql) like ?)";
         }
         sql += "group by rawSql, filledSql ";
         if (minDurationNanos != null) {
@@ -364,10 +341,10 @@ public class LogRepository {
         }
     }
 
-    public long getTotalExecutionTimeNanos() {
+    public long getTotalExecAndFetchTimeNanos() {
         try {
             final PreparedStatement statement = connection
-                    .prepareStatement("select sum(executionDurationNanos) from statement_log");
+                    .prepareStatement("select sum(exec_plus_fetch_time) from v_statement_log");
             try {
                 final ResultSet resultSet = statement.executeQuery();
                 resultSet.next();
@@ -382,8 +359,8 @@ public class LogRepository {
         }
     }
 
-    public long getTotalExecutionTimeNanos(String filter, Long minDurationNanos) {
-        String sql = "select sum(executionDurationNanos) from statement_log ";
+    public long getTotalExecAndFetchTimeNanos(String filter, Long minDurationNanos) {
+        String sql = "select sum(exec_plus_fetch_time) from v_statement_log ";
         sql += getWhereClause(filter, minDurationNanos);
 
         try {
@@ -424,10 +401,4 @@ public class LogRepository {
 
     }
 
-    // private String truncateString(String str, int maxLength) {
-    // if (str == null || str.length() <= maxLength) {
-    // return str;
-    // }
-    // return str.substring(0, maxLength);
-    // }
 }

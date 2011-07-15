@@ -2,6 +2,7 @@ package slaurent.jdbcperflogger.gui;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.table.AbstractTableModel;
 
@@ -61,6 +62,9 @@ class ResultSetDataModel extends AbstractTableModel {
         final String col = getColumnName(columnIndex);
         if (LogRepository.STMT_TYPE_COLUMN.equals(col)) {
             o = StatementType.fromId(((Byte) o).byteValue());
+        } else if (o != null && col.endsWith("TIME")) {
+            // all time retrieved from the DB is in ns, we just convert it for display to have the best perf
+            o = TimeUnit.NANOSECONDS.toMillis(((Number) o).longValue());
         }
         return o;
 

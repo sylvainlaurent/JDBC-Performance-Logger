@@ -169,6 +169,18 @@ public class PerfLogger {
     }
 
     static String getValueAsString(final SqlTypedValue sqlTypedValue, final DatabaseType databaseType) {
+        String sqlTypeStr = typesMap.get(sqlTypedValue.sqlType);
+        if (sqlTypeStr == null) {
+            sqlTypeStr = "TYPE=" + sqlTypedValue.sqlType;
+        }
+        sqlTypeStr = " /*" + sqlTypeStr + "*/";
+
+        if (sqlTypedValue.value == null) {
+            final StringBuilder strBuilder = new StringBuilder(20);
+            strBuilder.append("NULL");
+            strBuilder.append(sqlTypeStr);
+            return strBuilder.toString();
+        }
         switch (sqlTypedValue.sqlType) {
         case Types.VARCHAR:
             return "'" + sqlTypedValue.value + "'";
@@ -208,17 +220,14 @@ public class PerfLogger {
         case Types.NCLOB:
         case Types.VARBINARY: {
             final StringBuilder strBuilder = new StringBuilder();
-            strBuilder.append("? /*");
-            strBuilder.append(typesMap.get(sqlTypedValue.sqlType));
-            strBuilder.append("*/");
+            strBuilder.append("?");
+            strBuilder.append(sqlTypeStr);
             return strBuilder.toString();
         }
         default: {
             final StringBuilder strBuilder = new StringBuilder();
             strBuilder.append(String.valueOf(sqlTypedValue.value));
-            strBuilder.append("/*");
-            strBuilder.append(typesMap.get(sqlTypedValue.sqlType));
-            strBuilder.append("*/");
+            strBuilder.append(sqlTypeStr);
             return strBuilder.toString();
         }
         }

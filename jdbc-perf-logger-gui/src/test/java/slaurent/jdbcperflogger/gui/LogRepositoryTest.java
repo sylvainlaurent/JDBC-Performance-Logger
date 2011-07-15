@@ -36,6 +36,6 @@ public class LogRepositoryTest {
                         .currentThread().getName(), new SQLException());
         repository.addStatementLog(log);
         repository.addStatementLog(log);
-        repository.dump();
+        repository.getStatementLog(1);
     }
 }

@@ -13,15 +13,16 @@ create table if not exists batched_statement_log
     (id identity, logId UUID not null, batched_stmt_order int not null, filledSql varchar not null);
 create index if not exists idx_batched_logId on batched_statement_log(logId);
 
-create view if not exists v_statement_log
+create or replace view v_statement_log
     (id, tstamp, statementType, rawSql, filledSql, exec_plus_fetch_time, execution_time, fetch_time, nbRowsIterated, threadName, error)
   as select id, tstamp, statementType, rawSql, filledSql,
-            cast((executionDurationNanos+coalesce(fetchDurationNanos,0))/1000000.0 as bigint) as exec_plus_fetch_time,
-            cast(executionDurationNanos/1000000.0 as bigint) as execution_time, 
-            cast(fetchDurationNanos/1000000.0 as bigint) as fetch_time,
+            executionDurationNanos+coalesce(fetchDurationNanos,0) as exec_plus_fetch_time,
+            executionDurationNanos as execution_time, 
+            fetchDurationNanos as fetch_time,
             nbRowsIterated,
             threadName,
-            NVL2(exception, 1, 0)
+            NVL2(exception, 1, 0),
+            executionDurationNanos
         from statement_log;
 
 --insert into statement_log (id, tstamp, rawSql, filledSql, durationNanos) values(1, sysdate, 'raw', 'filled', 456);

@@ -22,8 +22,11 @@ public class CustomTable extends JTable {
             public String getToolTipText(MouseEvent e) {
                 final java.awt.Point p = e.getPoint();
                 final int index = columnModel.getColumnIndexAtX(p.x);
-                // final int realIndex = columnModel.getColumn(index).getModelIndex();
-                return columnModel.getColumn(index).getHeaderValue().toString();
+                if (index >= 0) {
+                    return columnModel.getColumn(index).getHeaderValue().toString();
+                } else {
+                    return "";
+                }
             }
         };
     }

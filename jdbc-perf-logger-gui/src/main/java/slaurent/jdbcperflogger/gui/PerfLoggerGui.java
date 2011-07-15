@@ -54,6 +54,7 @@ import slaurent.jdbcperflogger.StatementLog;
 
 //TODO features
 //fond rouge si exception + dŽtail d'exception + test unit
+//Barre de menu : open/save DB, setup connections
 //GUI pour choisir adresse remote
 
 //inverser sockets client et serveur, selon config
@@ -120,6 +121,7 @@ public class PerfLoggerGui {
     private JScrollPane scrollPaneSqlDetail2;
     private JScrollPane scrollPaneSqlDetail1;
     private final LogReceiver logReceiver;
+    private boolean tableStructureChanged = true;
 
     /**
      * Launch the application.
@@ -289,6 +291,7 @@ public class PerfLoggerGui {
         comboBoxGroupBy.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                tableStructureChanged = true;
                 refresh();
             }
         });
@@ -535,23 +538,23 @@ public class PerfLoggerGui {
             lastRefreshTime = logRepository.getLastModificationTime();
             doRefreshData(currentSelectLogRunner);
 
+            final StringBuilder txt = new StringBuilder();
+            txt.append(connected ? "Connected" : "Disconnected");
+            txt.append(" - ");
+            txt.append(logRepository.count());
+            txt.append(" statements logged - ");
+            txt.append(TimeUnit.NANOSECONDS.toMillis(logRepository.getTotalExecAndFetchTimeNanos()));
+            txt.append("ms total execution time (with fetch)");
+            if ((txtFilter != null && txtFilter.length() > 0)
+                    || (minDurationNanos != null && minDurationNanos.longValue() > 0)) {
+                txt.append(" - ");
+                txt.append(TimeUnit.NANOSECONDS.toMillis(logRepository.getTotalExecAndFetchTimeNanos(txtFilter,
+                        minDurationNanos)));
+                txt.append("ms total filtered");
+            }
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    final StringBuilder txt = new StringBuilder();
-                    txt.append(connected ? "Connected" : "Disconnected");
-                    txt.append(" - ");
-                    txt.append(logRepository.count());
-                    txt.append(" statements logged - ");
-                    txt.append(TimeUnit.NANOSECONDS.toMillis(logRepository.getTotalExecutionTimeNanos()));
-                    txt.append("ms total execution time (without fetch)");
-                    if ((txtFilter != null && txtFilter.length() > 0)
-                            || (minDurationNanos != null && minDurationNanos.longValue() > 0)) {
-                        txt.append(" - ");
-                        txt.append(TimeUnit.NANOSECONDS.toMillis(logRepository.getTotalExecutionTimeNanos(txtFilter,
-                                minDurationNanos)));
-                        txt.append("ms total filtered");
-                    }
                     lblStatus.setText(txt.toString());
                 }
             });
@@ -600,11 +603,14 @@ public class PerfLoggerGui {
                         @Override
                         public void run() {
                             dataModel.setNewData(tempRows, tempColumnNames, tempColumnTypes);
-                            for (int i = 0; i < dataModel.getColumnCount(); i++) {
-                                final Integer width = COLUMNS_WIDTH.get(dataModel.getColumnName(i));
-                                if (width != null) {
-                                    table.getColumnModel().getColumn(i).setPreferredWidth(width.intValue());
+                            if (tableStructureChanged) {
+                                for (int i = 0; i < dataModel.getColumnCount(); i++) {
+                                    final Integer width = COLUMNS_WIDTH.get(dataModel.getColumnName(i));
+                                    if (width != null) {
+                                        table.getColumnModel().getColumn(i).setPreferredWidth(width.intValue());
+                                    }
                                 }
+                                tableStructureChanged = false;
                             }
                         }
                     });
