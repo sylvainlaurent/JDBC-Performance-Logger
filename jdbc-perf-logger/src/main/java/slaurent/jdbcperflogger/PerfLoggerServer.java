@@ -62,7 +62,7 @@ public class PerfLoggerServer extends Thread {
     class LogSenderThread extends Thread {
         private final Logger LOGGER = LoggerFactory.getLogger(LogSenderThread.class);
 
-        private final BlockingQueue<LogMessage> logsToSend = new LinkedBlockingQueue<LogMessage>(1000);
+        private final BlockingQueue<LogMessage> logsToSend = new LinkedBlockingQueue<LogMessage>(10000);
         private final Socket socket;
 
         LogSenderThread(final Socket socket) throws SocketException {
