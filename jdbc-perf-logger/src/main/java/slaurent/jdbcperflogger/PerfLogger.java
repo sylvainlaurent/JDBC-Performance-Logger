@@ -1,7 +1,6 @@
 package slaurent.jdbcperflogger;
 
 import java.lang.reflect.Field;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -44,10 +43,54 @@ public class PerfLogger {
             throw new RuntimeException(e);
         }
 
+        // try {
+        //
+        // final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        // final DocumentBuilder docBuilder = dbf.newDocumentBuilder();
+        // final InputStream configFileStream = WrappingDriver.class.getResourceAsStream("/" + CONFIG_FILE);
+        // if (configFileStream == null) {
+        // LOGGER.warn("Cannot find " + CONFIG_FILE + " in the classpath, using default configuration");
+        // return defaultResult;
+        // }
+        // final Document doc = docBuilder.parse(configFileStream);
+        // final Element root = (Element) doc.getElementsByTagName("jdbc-perf-logger").item(0);
+        // final Element classListParent = (Element) root.getElementsByTagName("wrapping-connections").item(0);
+        // if (classListParent == null) {
+        // return defaultResult;
+        // }
+        // final NodeList classList = classListParent.getElementsByTagName("wrapping-connection");
+        // final List<Class<WrappingConnectionJdbc3>> result = new ArrayList<Class<WrappingConnectionJdbc3>>(
+        // classList.getLength());
+        // for (int i = 0; i < classList.getLength(); i++) {
+        // final String className = classList.item(i).getTextContent();
+        // if (className == null) {
+        // continue;
+        // }
+        // try {
+        // result.add((Class<WrappingConnectionJdbc3>) Class.forName(className.trim()));
+        // } catch (final ClassNotFoundException e) {
+        // LOGGER.warn("Cannot find class {}, falling back to default configuration", e);
+        // return defaultResult;
+        // }
+        // }
+        // if (result.isEmpty()) {
+        // LOGGER.warn("No WrappingConnection configured, falling bac to default");
+        // return defaultResult;
+        // }
+        // return result;
+        //
+        // } catch (final ParserConfigurationException e) {
+        // throw new RuntimeException(e);
+        // } catch (final IOException e) {
+        // throw new RuntimeException(e);
+        // } catch (final SAXException e) {
+        // LOGGER.warn("Error parsing " + CONFIG_FILE + ", falling back to default config", e);
+        // return defaultResult;
+        // }
     }
 
     public static void logStatement(final UUID logId, final String sql, final long durationNanos,
-            final StatementType statementType, final SQLException sqlException) {
+            final StatementType statementType, final Throwable sqlException) {
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
             LOGGER_ORIGINAL_SQL.debug(TimeUnit.NANOSECONDS.toMillis(durationNanos)
                     + "ms to execute non-prepared stmt #" + logId + ": " + sql, sqlException);
@@ -63,7 +106,7 @@ public class PerfLogger {
 
     public static void logPreparedStatement(final UUID logId, final String rawSql,
             final PreparedStatementValuesHolder pstmtValues, final long durationNanos,
-            final StatementType statementType, final DatabaseType databaseType, final SQLException sqlException) {
+            final StatementType statementType, final DatabaseType databaseType, final Throwable sqlException) {
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
             LOGGER_ORIGINAL_SQL.debug(TimeUnit.NANOSECONDS.toMillis(durationNanos) + "ms to execute prepared stmt #"
                     + logId + ": " + rawSql, sqlException);
@@ -90,7 +133,7 @@ public class PerfLogger {
     }
 
     public static void logNonPreparedBatchedStatements(final List<String> batchedExecutions, final long durationNanos,
-            final DatabaseType databaseType, final SQLException sqlException) {
+            final DatabaseType databaseType, final Throwable sqlException) {
 
         final long now = System.currentTimeMillis();
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
@@ -108,7 +151,7 @@ public class PerfLogger {
     }
 
     public static void logPreparedBatchedStatements(final String rawSql, final List<Object> batchedExecutions,
-            final long durationNanos, final DatabaseType databaseType, final SQLException sqlException) {
+            final long durationNanos, final DatabaseType databaseType, final Throwable sqlException) {
         final long now = System.currentTimeMillis();
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
             LOGGER_ORIGINAL_SQL.debug(TimeUnit.NANOSECONDS.toMillis(durationNanos) + "ms to execute batch of "
@@ -169,9 +212,12 @@ public class PerfLogger {
     }
 
     static String getValueAsString(final SqlTypedValue sqlTypedValue, final DatabaseType databaseType) {
-        String sqlTypeStr = typesMap.get(sqlTypedValue.sqlType);
+        String sqlTypeStr = sqlTypedValue.setter;
         if (sqlTypeStr == null) {
-            sqlTypeStr = "TYPE=" + sqlTypedValue.sqlType;
+            sqlTypeStr = typesMap.get(sqlTypedValue.sqlType);
+            if (sqlTypeStr == null) {
+                sqlTypeStr = "TYPE=" + sqlTypedValue.sqlType;
+            }
         }
         sqlTypeStr = " /*" + sqlTypeStr + "*/";
 
@@ -217,7 +263,6 @@ public class PerfLogger {
         case Types.BINARY:
         case Types.JAVA_OBJECT:
         case Types.LONGVARBINARY:
-        case Types.NCLOB:
         case Types.VARBINARY: {
             final StringBuilder strBuilder = new StringBuilder();
             strBuilder.append("?");

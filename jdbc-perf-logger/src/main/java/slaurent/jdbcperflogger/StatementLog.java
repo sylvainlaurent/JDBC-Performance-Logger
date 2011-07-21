@@ -1,6 +1,5 @@
 package slaurent.jdbcperflogger;
 
-import java.sql.SQLException;
 import java.util.UUID;
 
 public class StatementLog extends AbstractLogMessage {
@@ -12,8 +11,7 @@ public class StatementLog extends AbstractLogMessage {
     private final boolean preparedStatement;
 
     public StatementLog(final UUID logId, final long timestamp, final long executionTimeNanos,
-            final StatementType statementType, final String sql, final String threadName,
-            final SQLException sqlException) {
+            final StatementType statementType, final String sql, final String threadName, final Throwable sqlException) {
         super(logId, timestamp, executionTimeNanos, statementType, threadName, sqlException);
         rawSql = sql;
         filledSql = sql;
@@ -22,7 +20,7 @@ public class StatementLog extends AbstractLogMessage {
 
     public StatementLog(final UUID logId, final long timestamp, final long executionTimeNanos,
             final StatementType statementType, final String rawSql, final String filledSql, final String threadName,
-            final SQLException sqlException) {
+            final Throwable sqlException) {
         super(logId, timestamp, executionTimeNanos, statementType, threadName, sqlException);
         this.rawSql = rawSql;
         this.filledSql = filledSql;

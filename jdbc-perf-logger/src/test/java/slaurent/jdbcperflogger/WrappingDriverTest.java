@@ -39,21 +39,16 @@ public class WrappingDriverTest {
 
     @Test
     public void testSetupDriver() throws Exception {
-        Assert.assertTrue(connection instanceof WrappingConnection);
-    }
-
-    @Test
-    public void testgetWrappingConnectionClasses() {
-        WrappingDriver.getWrappingConnectionClasses();
+        Assert.assertNotNull(connection);
     }
 
     @Test
     public void testSelectNonPrepared() throws Exception {
         final Statement statement = connection.createStatement();
         statement.execute("create table test (key_id int);");
-        statement.execute("select * from test;");
-        statement.execute("select * from test;");
-        statement.execute("select * from test;");
+        statement.executeQuery("select * from test;");
+        statement.executeQuery("select * from test;");
+        statement.executeQuery("select * from test;");
         statement.close();
     }
 

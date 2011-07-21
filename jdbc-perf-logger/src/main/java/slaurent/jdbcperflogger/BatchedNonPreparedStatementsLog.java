@@ -1,6 +1,5 @@
 package slaurent.jdbcperflogger;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,7 +12,7 @@ public class BatchedNonPreparedStatementsLog extends AbstractLogMessage {
     private final List<String> sqlList;
 
     public BatchedNonPreparedStatementsLog(final UUID logId, final long timestamp, final long executionTimeNanos,
-            final List<String> sqlList, final String threadName, final SQLException exc) {
+            final List<String> sqlList, final String threadName, final Throwable exc) {
         super(logId, timestamp, executionTimeNanos, StatementType.NON_PREPARED_BATCH_EXECUTION, threadName, exc);
         this.sqlList = Collections.unmodifiableList(new ArrayList<String>(sqlList));
     }
