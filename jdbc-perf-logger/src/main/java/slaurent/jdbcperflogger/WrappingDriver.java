@@ -37,8 +37,8 @@ public class WrappingDriver implements Driver {
         LOGGER.debug("connect url=[{}]", url);
         Connection connection = DriverManager.getConnection(extractUrlForWrappedDriver(url), info);
 
-        connection = (Connection) Proxy.newProxyInstance(WrappingDriver.class.getClassLoader(),
-                new Class[] { Connection.class }, new LoggingConnectionInvocationHandler(connection));
+        connection = (Connection) Proxy.newProxyInstance(WrappingDriver.class.getClassLoader(), connection.getClass()
+                .getInterfaces(), new LoggingConnectionInvocationHandler(connection));
         return connection;
     }
 

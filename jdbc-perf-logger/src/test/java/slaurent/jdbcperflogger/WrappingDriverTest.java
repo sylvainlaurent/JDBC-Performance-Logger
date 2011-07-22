@@ -65,6 +65,11 @@ public class WrappingDriverTest {
             statement.executeQuery().close();
             statement.setInt(1, 2);
             statement.executeQuery().close();
+            statement.setByte(1, (byte) 112);
+            statement.executeQuery().close();
+            statement.setLong(1, 123);
+            statement.executeQuery().close();
+            statement.close();
             statement.close();
         }
         {
@@ -83,11 +88,9 @@ public class WrappingDriverTest {
             final PreparedStatement statement = connection.prepareStatement("select * from test where myTimestamp=?");
             statement.setTimestamp(1, new java.sql.Timestamp(System.currentTimeMillis()));
             statement.executeQuery().close();
-            statement.close();
-        }
-        {
-            final PreparedStatement statement = connection.prepareStatement("select * from test where myTime=?");
             statement.setTime(1, new java.sql.Time(System.currentTimeMillis()));
+            statement.executeQuery().close();
+            statement.setDate(1, java.sql.Date.valueOf("2011-01-02"));
             statement.executeQuery().close();
             statement.close();
         }

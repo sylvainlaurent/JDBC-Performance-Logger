@@ -20,13 +20,12 @@ public class LoggingConnectionInvocationHandler implements InvocationHandler {
         final Object result = Utils.invokeUnwrapException(wrappedConnection, method, args);
         final String methodName = method.getName();
         if ("createStatement".equals(methodName)) {
-            return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(),
-                    new Class[] { Statement.class }, new LoggingStatementInvocationHandler((Statement) result,
-                            databaseType));
+            return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(), result.getClass()
+                    .getInterfaces(), new LoggingStatementInvocationHandler((Statement) result, databaseType));
         } else if ("prepareStatement".equals(methodName)) {
-            return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(),
-                    new Class[] { PreparedStatement.class }, new LoggingPreparedStatementInvocationHandler(
-                            (PreparedStatement) result, (String) args[0], databaseType));
+            return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(), result.getClass()
+                    .getInterfaces(), new LoggingPreparedStatementInvocationHandler((PreparedStatement) result,
+                    (String) args[0], databaseType));
         }
         // TODO prepareCall
 

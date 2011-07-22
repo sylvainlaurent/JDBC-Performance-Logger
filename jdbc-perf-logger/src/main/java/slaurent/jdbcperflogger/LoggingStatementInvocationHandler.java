@@ -52,9 +52,9 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
         Throwable exc = null;
         try {
             final ResultSet resultSet = (ResultSet) Utils.invokeUnwrapException(wrappedStatement, method, args);
-            return (ResultSet) Proxy.newProxyInstance(
-                    LoggingPreparedStatementInvocationHandler.class.getClassLoader(), new Class[] { ResultSet.class },
-                    new LoggingResultSetInvocationHandler(resultSet, logId, StatementType.NON_PREPARED_QUERY_STMT));
+            return (ResultSet) Proxy.newProxyInstance(LoggingStatementInvocationHandler.class.getClassLoader(),
+                    resultSet.getClass().getInterfaces(), new LoggingResultSetInvocationHandler(resultSet, logId,
+                            StatementType.NON_PREPARED_QUERY_STMT));
         } catch (final Throwable e) {
             exc = e;
             throw exc;

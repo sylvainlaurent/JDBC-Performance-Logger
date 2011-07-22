@@ -227,55 +227,50 @@ public class PerfLogger {
             strBuilder.append(sqlTypeStr);
             return strBuilder.toString();
         }
-        switch (sqlTypedValue.sqlType) {
-        case Types.VARCHAR:
-            return "'" + sqlTypedValue.value + "'";
-        case Types.DATE: {
+        if (sqlTypedValue.sqlType == Types.CHAR //
+                || sqlTypedValue.sqlType == Types.VARCHAR//
+                || sqlTypedValue.sqlType == -15 // NCHAR, from java 6
+                || sqlTypedValue.sqlType == -9 // NVARCHAR, from java 6
+                || "setString".equals(sqlTypedValue.setter)//
+                || "setNString".equals(sqlTypedValue.setter)) {
+            return "'" + sqlTypedValue.value + "'" + sqlTypeStr;
+        } else if (sqlTypedValue.sqlType == Types.DATE || "setDate".equals(sqlTypedValue.setter)
+                || sqlTypedValue.value instanceof java.sql.Date) {
             java.sql.Date sqlDate;
             if (sqlTypedValue.value instanceof java.sql.Date) {
                 sqlDate = (java.sql.Date) sqlTypedValue.value;
             } else {
                 sqlDate = new java.sql.Date(((java.util.Date) sqlTypedValue.value).getTime());
             }
-            return "date'" + sqlDate.toString() + "'";
-        }
-        case Types.TIMESTAMP: {
+            return "date'" + sqlDate.toString() + "'" + sqlTypeStr;
+        } else if (sqlTypedValue.sqlType == Types.TIMESTAMP || "setTimestamp".equals(sqlTypedValue.setter)
+                || sqlTypedValue.value instanceof java.sql.Timestamp) {
             Timestamp tstamp;
             if (sqlTypedValue.value instanceof Timestamp) {
                 tstamp = (Timestamp) sqlTypedValue.value;
             } else {
                 tstamp = new Timestamp(((java.util.Date) sqlTypedValue.value).getTime());
             }
-            return "timestamp'" + tstamp.toString() + "'";
-        }
-        case Types.TIME: {
+            return "timestamp'" + tstamp.toString() + "'" + sqlTypeStr;
+        } else if (sqlTypedValue.sqlType == Types.TIME || "setTime".equals(sqlTypedValue.setter)
+                || sqlTypedValue.value instanceof java.sql.Time) {
             java.sql.Time sqlTime;
             if (sqlTypedValue.value instanceof java.sql.Time) {
                 sqlTime = (java.sql.Time) sqlTypedValue.value;
             } else {
                 sqlTime = new java.sql.Time(((java.util.Date) sqlTypedValue.value).getTime());
             }
-            return "time'" + sqlTime.toString() + "'";
-        }
-        case Types.ARRAY:
-        case Types.BLOB:
-        case Types.CLOB:
-        case Types.BINARY:
-        case Types.JAVA_OBJECT:
-        case Types.LONGVARBINARY:
-        case Types.VARBINARY: {
+            return "time'" + sqlTime.toString() + "'" + sqlTypeStr;
+        } else if (sqlTypedValue.value instanceof Number) {
+            final StringBuilder strBuilder = new StringBuilder();
+            strBuilder.append(String.valueOf(sqlTypedValue.value));
+            strBuilder.append(sqlTypeStr);
+            return strBuilder.toString();
+        } else {
             final StringBuilder strBuilder = new StringBuilder();
             strBuilder.append("?");
             strBuilder.append(sqlTypeStr);
             return strBuilder.toString();
         }
-        default: {
-            final StringBuilder strBuilder = new StringBuilder();
-            strBuilder.append(String.valueOf(sqlTypedValue.value));
-            strBuilder.append(sqlTypeStr);
-            return strBuilder.toString();
-        }
-        }
     }
-
 }
