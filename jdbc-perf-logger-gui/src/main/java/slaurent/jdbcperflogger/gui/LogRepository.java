@@ -37,6 +37,7 @@ public class LogRepository {
         try {
             Driver.class.getClass();
             connection = DriverManager.getConnection(DB_URL);
+            // TODO : supprimer Db si erreur ˆ l'initialisation
             initDb();
         } catch (final SQLException e) {
             throw new RuntimeException(e);

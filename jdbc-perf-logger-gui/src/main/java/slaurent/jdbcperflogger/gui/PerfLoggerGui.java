@@ -148,7 +148,7 @@ public class PerfLoggerGui {
         logRepository = new LogRepository();
 
         initialize();
-
+        // TODO : server socket
         logReceiver = new LogReceiver(socketAddress, logRepository);
         logReceiver.start();
     }

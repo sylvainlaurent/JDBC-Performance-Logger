@@ -2,4 +2,6 @@
   <wrapping-connections>
     <wrapping-connection>slaurent.jdbcperflogger.StatsLoggingConnection</wrapping-connection>
   </wrapping-connections>
+  <local-server port="4561" />
+  <target-console host="localhost" port="8889" />
 </jdbc-perf-logger>

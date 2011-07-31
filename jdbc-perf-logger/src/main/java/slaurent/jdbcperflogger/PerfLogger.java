@@ -27,8 +27,6 @@ public class PerfLogger {
 
     private final static Pattern PSTMT_PARAMETERS_PATTERN = Pattern.compile("\\?");
 
-    private static PerfLoggerServer SERVER;
-
     private static Map<Integer, String> typesMap;
 
     static {
@@ -43,50 +41,6 @@ public class PerfLogger {
             throw new RuntimeException(e);
         }
 
-        // try {
-        //
-        // final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        // final DocumentBuilder docBuilder = dbf.newDocumentBuilder();
-        // final InputStream configFileStream = WrappingDriver.class.getResourceAsStream("/" + CONFIG_FILE);
-        // if (configFileStream == null) {
-        // LOGGER.warn("Cannot find " + CONFIG_FILE + " in the classpath, using default configuration");
-        // return defaultResult;
-        // }
-        // final Document doc = docBuilder.parse(configFileStream);
-        // final Element root = (Element) doc.getElementsByTagName("jdbc-perf-logger").item(0);
-        // final Element classListParent = (Element) root.getElementsByTagName("wrapping-connections").item(0);
-        // if (classListParent == null) {
-        // return defaultResult;
-        // }
-        // final NodeList classList = classListParent.getElementsByTagName("wrapping-connection");
-        // final List<Class<WrappingConnectionJdbc3>> result = new ArrayList<Class<WrappingConnectionJdbc3>>(
-        // classList.getLength());
-        // for (int i = 0; i < classList.getLength(); i++) {
-        // final String className = classList.item(i).getTextContent();
-        // if (className == null) {
-        // continue;
-        // }
-        // try {
-        // result.add((Class<WrappingConnectionJdbc3>) Class.forName(className.trim()));
-        // } catch (final ClassNotFoundException e) {
-        // LOGGER.warn("Cannot find class {}, falling back to default configuration", e);
-        // return defaultResult;
-        // }
-        // }
-        // if (result.isEmpty()) {
-        // LOGGER.warn("No WrappingConnection configured, falling bac to default");
-        // return defaultResult;
-        // }
-        // return result;
-        //
-        // } catch (final ParserConfigurationException e) {
-        // throw new RuntimeException(e);
-        // } catch (final IOException e) {
-        // throw new RuntimeException(e);
-        // } catch (final SAXException e) {
-        // LOGGER.warn("Error parsing " + CONFIG_FILE + ", falling back to default config", e);
-        // return defaultResult;
-        // }
     }
 
     public static void logStatement(final UUID logId, final String sql, final long durationNanos,
@@ -100,8 +54,8 @@ public class PerfLogger {
                     + "ms to execute non-prepared stmt #" + logId + ": " + sql, sqlException);
         }
         final long now = System.currentTimeMillis();
-        postLog(new StatementLog(logId, now, durationNanos, statementType, sql, Thread.currentThread().getName(),
-                sqlException));
+        PerfLoggerRemoting.postLog(new StatementLog(logId, now, durationNanos, statementType, sql, Thread
+                .currentThread().getName(), sqlException));
     }
 
     public static void logPreparedStatement(final UUID logId, final String rawSql,
@@ -117,8 +71,8 @@ public class PerfLogger {
                     + "ms to execute non-prepared stmt #" + logId + ": " + filledSql, sqlException);
         }
         final long now = System.currentTimeMillis();
-        postLog(new StatementLog(logId, now, durationNanos, statementType, rawSql, filledSql, Thread.currentThread()
-                .getName(), sqlException));
+        PerfLoggerRemoting.postLog(new StatementLog(logId, now, durationNanos, statementType, rawSql, filledSql, Thread
+                .currentThread().getName(), sqlException));
     }
 
     public static void logClosedResultSet(final UUID logId, final long durationNanos,
@@ -128,8 +82,8 @@ public class PerfLogger {
                     new Object[] { TimeUnit.NANOSECONDS.toMillis(durationNanos), nbRowsIterated, logId });
         }
         final long now = System.currentTimeMillis();
-        postLog(new ResultSetLog(logId, now, durationNanos, statementType, Thread.currentThread().getName(),
-                nbRowsIterated));
+        PerfLoggerRemoting.postLog(new ResultSetLog(logId, now, durationNanos, statementType, Thread.currentThread()
+                .getName(), nbRowsIterated));
     }
 
     public static void logNonPreparedBatchedStatements(final List<String> batchedExecutions, final long durationNanos,
@@ -146,8 +100,8 @@ public class PerfLogger {
                 LOGGER_BATCHED_STATEMENTS_DETAIL.debug("#{}: {}", i, sql);
             }
         }
-        postLog(new BatchedNonPreparedStatementsLog(UUID.randomUUID(), now, durationNanos, batchedExecutions, Thread
-                .currentThread().getName(), sqlException));
+        PerfLoggerRemoting.postLog(new BatchedNonPreparedStatementsLog(UUID.randomUUID(), now, durationNanos,
+                batchedExecutions, Thread.currentThread().getName(), sqlException));
     }
 
     public static void logPreparedBatchedStatements(final String rawSql, final List<Object> batchedExecutions,
@@ -172,26 +126,8 @@ public class PerfLogger {
                 LOGGER_BATCHED_STATEMENTS_DETAIL.debug("#{}: {}", i, filledSql);
             }
         }
-        postLog(new BatchedPreparedStatementsLog(UUID.randomUUID(), now, durationNanos, rawSql, filledSqlList, Thread
-                .currentThread().getName(), sqlException));
-    }
-
-    static void postLog(final LogMessage log) {
-        getPerfLoggerServer().postLog(log);
-    }
-
-    static PerfLoggerServer getPerfLoggerServer() {
-        if (SERVER == null) {
-            // double-locking
-            synchronized (PerfLogger.class) {
-                if (SERVER == null) {
-                    // TODO make port configurable
-                    SERVER = new PerfLoggerServer(4561);
-                    SERVER.start();
-                }
-            }
-        }
-        return SERVER;
+        PerfLoggerRemoting.postLog(new BatchedPreparedStatementsLog(UUID.randomUUID(), now, durationNanos, rawSql,
+                filledSqlList, Thread.currentThread().getName(), sqlException));
     }
 
     static String fillParameters(final String sql, final PreparedStatementValuesHolder pstmtValues,
