@@ -140,7 +140,7 @@ public class PerfLogger {
             final SqlTypedValue sqlTypedValue = pstmtValues.get(i);
             if (sqlTypedValue != null) {
                 final String valueAsString = getValueAsString(sqlTypedValue, databaseType);
-                matcher = matcher.appendReplacement(strBuf, valueAsString);
+                matcher = matcher.appendReplacement(strBuf, Matcher.quoteReplacement(valueAsString));
             }
         }
         matcher.appendTail(strBuf);
