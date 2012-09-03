@@ -1,9 +1,12 @@
-package slaurent.jdbcperflogger;
+package slaurent.jdbcperflogger.driver;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.util.UUID;
+
+import slaurent.jdbcperflogger.PerfLogger;
+import slaurent.jdbcperflogger.StatementType;
 
 public class LoggingResultSetInvocationHandler implements InvocationHandler {
     private final ResultSet wrappedResultSet;

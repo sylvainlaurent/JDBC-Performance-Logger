@@ -13,11 +13,11 @@ import org.h2.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import slaurent.jdbcperflogger.BatchedNonPreparedStatementsLog;
-import slaurent.jdbcperflogger.BatchedPreparedStatementsLog;
-import slaurent.jdbcperflogger.ResultSetLog;
-import slaurent.jdbcperflogger.StatementLog;
 import slaurent.jdbcperflogger.StatementType;
+import slaurent.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
+import slaurent.jdbcperflogger.model.BatchedPreparedStatementsLog;
+import slaurent.jdbcperflogger.model.ResultSetLog;
+import slaurent.jdbcperflogger.model.StatementLog;
 
 public class LogRepository {
     public static final String TSTAMP_COLUMN = "TSTAMP";
@@ -37,7 +37,7 @@ public class LogRepository {
         try {
             Driver.class.getClass();
             connection = DriverManager.getConnection(DB_URL);
-            // TODO : supprimer Db si erreur ˆ l'initialisation
+            // TODO : supprimer Db si erreur ï¿½ l'initialisation
             initDb();
         } catch (final SQLException e) {
             throw new RuntimeException(e);

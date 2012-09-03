@@ -1,6 +1,9 @@
-package slaurent.jdbcperflogger;
+package slaurent.jdbcperflogger.model;
 
 import java.util.UUID;
+
+import slaurent.jdbcperflogger.StatementType;
+import slaurent.jdbcperflogger.model.LogMessage;
 
 public class AbstractLogMessage implements LogMessage {
 

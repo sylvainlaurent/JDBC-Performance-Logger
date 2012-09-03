@@ -10,10 +10,10 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import slaurent.jdbcperflogger.BatchedNonPreparedStatementsLog;
-import slaurent.jdbcperflogger.BatchedPreparedStatementsLog;
-import slaurent.jdbcperflogger.ResultSetLog;
-import slaurent.jdbcperflogger.StatementLog;
+import slaurent.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
+import slaurent.jdbcperflogger.model.BatchedPreparedStatementsLog;
+import slaurent.jdbcperflogger.model.ResultSetLog;
+import slaurent.jdbcperflogger.model.StatementLog;
 
 public class LogReceiver extends Thread {
     private final static Logger LOGGER = LoggerFactory.getLogger(LogReceiver.class);

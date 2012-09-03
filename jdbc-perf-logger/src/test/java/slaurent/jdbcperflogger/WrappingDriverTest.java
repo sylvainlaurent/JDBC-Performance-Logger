@@ -15,6 +15,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import slaurent.jdbcperflogger.driver.WrappingDriver;
+
 public class WrappingDriverTest {
     private Connection connection;
 

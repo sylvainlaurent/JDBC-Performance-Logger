@@ -1,6 +1,8 @@
-package slaurent.jdbcperflogger;
+package slaurent.jdbcperflogger.model;
 
 import java.util.UUID;
+
+import slaurent.jdbcperflogger.StatementType;
 
 public class ResultSetLog extends AbstractLogMessage {
 

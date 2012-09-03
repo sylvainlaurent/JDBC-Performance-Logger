@@ -1,4 +1,4 @@
-package slaurent.jdbcperflogger;
+package slaurent.jdbcperflogger.driver;
 
 import java.io.PrintWriter;
 import java.sql.Connection;

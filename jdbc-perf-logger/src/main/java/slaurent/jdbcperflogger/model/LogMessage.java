@@ -1,4 +1,4 @@
-package slaurent.jdbcperflogger;
+package slaurent.jdbcperflogger.model;
 
 import java.io.Serializable;
 

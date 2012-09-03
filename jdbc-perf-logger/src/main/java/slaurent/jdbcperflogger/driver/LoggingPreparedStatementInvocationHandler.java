@@ -1,4 +1,4 @@
-package slaurent.jdbcperflogger;
+package slaurent.jdbcperflogger.driver;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -7,6 +7,11 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import slaurent.jdbcperflogger.PerfLogger;
+import slaurent.jdbcperflogger.SqlTypedValue;
+import slaurent.jdbcperflogger.StatementType;
+import slaurent.jdbcperflogger.model.PreparedStatementValuesHolder;
 
 public class LoggingPreparedStatementInvocationHandler extends LoggingStatementInvocationHandler {
     private static final String CLEAR_PARAMETERS = "clearParameters";

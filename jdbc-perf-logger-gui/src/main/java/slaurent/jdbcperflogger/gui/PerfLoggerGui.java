@@ -50,10 +50,10 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.event.UndoableEditListener;
 
-import slaurent.jdbcperflogger.StatementLog;
+import slaurent.jdbcperflogger.model.StatementLog;
 
 //TODO features
-//fond rouge si exception + dŽtail d'exception + test unit
+//fond rouge si exception + dï¿½tail d'exception + test unit
 //Barre de menu : open/save DB, setup connections
 //GUI pour choisir adresse remote
 

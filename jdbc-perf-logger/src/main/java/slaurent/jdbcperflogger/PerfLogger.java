@@ -15,6 +15,13 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import slaurent.jdbcperflogger.driver.DatabaseType;
+import slaurent.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
+import slaurent.jdbcperflogger.model.BatchedPreparedStatementsLog;
+import slaurent.jdbcperflogger.model.PreparedStatementValuesHolder;
+import slaurent.jdbcperflogger.model.ResultSetLog;
+import slaurent.jdbcperflogger.model.StatementLog;
+
 public class PerfLogger {
     private final static Logger LOGGER_ORIGINAL_SQL = LoggerFactory.getLogger(PerfLogger.class.getName()
             + ".originalSql");

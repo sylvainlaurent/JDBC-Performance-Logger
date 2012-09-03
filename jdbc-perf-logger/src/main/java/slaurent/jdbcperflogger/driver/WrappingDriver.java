@@ -1,4 +1,4 @@
-package slaurent.jdbcperflogger;
+package slaurent.jdbcperflogger.driver;
 
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
@@ -10,6 +10,7 @@ import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 //TODO DataSource, XADataSource
 public class WrappingDriver implements Driver {

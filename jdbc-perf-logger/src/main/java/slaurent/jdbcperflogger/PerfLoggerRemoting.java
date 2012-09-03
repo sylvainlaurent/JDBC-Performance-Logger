@@ -24,6 +24,9 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import slaurent.jdbcperflogger.driver.WrappingDriver;
+import slaurent.jdbcperflogger.model.LogMessage;
+
 public class PerfLoggerRemoting {
     private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerRemoting.class);
 

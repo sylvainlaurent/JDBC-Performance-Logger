@@ -1,6 +1,8 @@
-package slaurent.jdbcperflogger;
+package slaurent.jdbcperflogger.model;
 
 import java.util.HashMap;
+
+import slaurent.jdbcperflogger.SqlTypedValue;
 
 /**
  * Map from parameter index to value.
@@ -11,15 +13,15 @@ import java.util.HashMap;
 public class PreparedStatementValuesHolder extends HashMap<Integer, SqlTypedValue> {
     private static final long serialVersionUID = 1L;
 
-    PreparedStatementValuesHolder() {
+    public PreparedStatementValuesHolder() {
         super(10);
     }
 
-    PreparedStatementValuesHolder(final PreparedStatementValuesHolder original) {
+    public PreparedStatementValuesHolder(final PreparedStatementValuesHolder original) {
         super(original);
     }
 
-    PreparedStatementValuesHolder copy() {
+    public PreparedStatementValuesHolder copy() {
         return new PreparedStatementValuesHolder(this);
     }
 }

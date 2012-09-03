@@ -1,4 +1,4 @@
-package slaurent.jdbcperflogger;
+package slaurent.jdbcperflogger.driver;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -8,6 +8,9 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import slaurent.jdbcperflogger.PerfLogger;
+import slaurent.jdbcperflogger.StatementType;
 
 public class LoggingStatementInvocationHandler implements InvocationHandler {
     protected static final String CLEAR_BATCH = "clearBatch";

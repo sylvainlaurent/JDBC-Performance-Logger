@@ -6,6 +6,9 @@ import java.text.SimpleDateFormat;
 import org.junit.Assert;
 import org.junit.Test;
 
+import slaurent.jdbcperflogger.driver.DatabaseType;
+import slaurent.jdbcperflogger.model.PreparedStatementValuesHolder;
+
 public class PerfLoggerTest {
     @Test
     public void testfillParameters() throws Exception {

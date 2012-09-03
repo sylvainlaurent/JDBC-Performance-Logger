@@ -1,9 +1,11 @@
-package slaurent.jdbcperflogger;
+package slaurent.jdbcperflogger.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
+import slaurent.jdbcperflogger.StatementType;
 
 public class BatchedPreparedStatementsLog extends AbstractLogMessage {
 

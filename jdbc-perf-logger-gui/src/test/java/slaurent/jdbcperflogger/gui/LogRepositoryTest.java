@@ -8,8 +8,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import slaurent.jdbcperflogger.StatementLog;
 import slaurent.jdbcperflogger.StatementType;
+import slaurent.jdbcperflogger.model.StatementLog;
 
 public class LogRepositoryTest {
     private LogRepository repository;
