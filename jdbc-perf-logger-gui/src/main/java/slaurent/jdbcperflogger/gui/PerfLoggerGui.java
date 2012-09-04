@@ -461,6 +461,8 @@ public class PerfLoggerGui {
                 case PREPARED_QUERY_STMT:
                     txt2 = statementLog.getFilledSql();
                     break;
+                default:
+                    break;
                 }
             } else if (GROUP_BY_RAW_SQL.equals(selectedItem)) {
                 switch (statementLog.getStatementType()) {
