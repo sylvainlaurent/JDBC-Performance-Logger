@@ -45,9 +45,9 @@
       <version>1.2.16</version>
     </dependency>
     <dependency>
-    	<groupId>com.h2database</groupId>
-    	<artifactId>h2</artifactId>
-    	<version>1.3.155</version>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <version>1.3.155</version>
     </dependency>
   </dependencies>
   <build>
@@ -68,6 +68,19 @@
         <version>2.4.3</version>
         <configuration>
           <encoding>UTF-8</encoding>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>appassembler-maven-plugin</artifactId>
+        <version>1.2.2</version>
+        <configuration>
+          <programs>
+            <program>
+              <mainClass>slaurent.jdbcperflogger.gui.PerfLoggerGui</mainClass>
+              <name>jdbc-perf-logger-gui</name>
+            </program>
+          </programs>
         </configuration>
       </plugin>
     </plugins>
