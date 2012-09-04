@@ -1,5 +1,6 @@
 package slaurent.jdbcperflogger.driver;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.PreparedStatement;
@@ -49,12 +50,12 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
             if (methodName.startsWith("set")) {
                 result = Utils.invokeUnwrapException(wrappedStatement, method, args);
                 if ("setNull".equals(methodName)) {
-                    paramValues.put((Integer) args[0], new SqlTypedValue(null, (Integer) args[1]));
+                    paramValues.put((Serializable) args[0], new SqlTypedValue(null, ((Integer) args[1]).intValue()));
                 } else if (args.length == 2 || "setDate".equals(methodName) || "setTime".equals(methodName)
                         || "setTimestamp".equals(methodName)) {
-                    paramValues.put((Integer) args[0], new SqlTypedValue(args[1], methodName));
+                    paramValues.put((Serializable) args[0], new SqlTypedValue(args[1], methodName));
                 } else if ("setObject".equals(methodName)) {
-                    paramValues.put((Integer) args[0], new SqlTypedValue(args[1], (Integer) args[2]));
+                    paramValues.put((Serializable) args[0], new SqlTypedValue(args[1], ((Integer) args[2]).intValue()));
                 }
                 return result;
             }

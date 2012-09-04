@@ -1,5 +1,6 @@
 package slaurent.jdbcperflogger;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -7,7 +8,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -55,6 +55,22 @@ public class WrappingDriverTest {
     }
 
     @Test
+    public void testExecutePrepared() throws Exception {
+        {
+            final PreparedStatement statement = connection.prepareStatement("create table test (key_id int);");
+            statement.execute();
+            statement.close();
+        }
+        {
+            final PreparedStatement statement = connection.prepareStatement("insert into test (key_id) values (?)");
+            statement.setInt(1, 123);
+            final int nb = statement.executeUpdate();
+            Assert.assertEquals(1, nb);
+            statement.close();
+        }
+    }
+
+    @Test
     public void testSelectPrepared() throws Exception {
         {
             final Statement statement = connection.createStatement();
@@ -98,6 +114,25 @@ public class WrappingDriverTest {
         }
     }
 
+    @Test(expected = SQLException.class)
+    public void testClearParameters() throws Exception {
+        {
+            final Statement statement = connection.createStatement();
+            statement.execute("create table test (key_id int)");
+            statement.close();
+        }
+        {
+            final PreparedStatement statement = connection.prepareStatement("select * from test where key_id=?");
+            statement.setInt(1, 1);
+            statement.executeQuery().close();
+            statement.executeQuery().close();
+            statement.clearParameters();
+            statement.executeQuery().close();
+            // should fail if no exception is raised
+            Assert.fail("last executeQuery() should have failed because not all param values bound");
+        }
+    }
+
     @Test
     public void testBatchedNonPrepared() throws Exception {
         {
@@ -105,15 +140,19 @@ public class WrappingDriverTest {
             statement.execute("create table test (key_id int);");
             statement.close();
         }
-        TimeUnit.SECONDS.sleep(10);
+        // TimeUnit.SECONDS.sleep(10);
         final Statement statement = connection.createStatement();
         for (int i = 0; i < 100; i++) {
             statement.addBatch("insert into test (key_id) values (" + i + ")");
         }
         statement.executeBatch();
         statement.executeBatch();
+        for (int i = 0; i < 10; i++) {
+            statement.addBatch("insert into test (key_id) values (" + i + ")");
+        }
+        statement.clearBatch();
         statement.close();
-        TimeUnit.SECONDS.sleep(10);
+        // TimeUnit.SECONDS.sleep(10);
     }
 
     @Test
@@ -123,7 +162,7 @@ public class WrappingDriverTest {
             statement.execute("create table test (key_id int);");
             statement.close();
         }
-        TimeUnit.SECONDS.sleep(10);
+        // TimeUnit.SECONDS.sleep(10);
         final PreparedStatement statement = connection.prepareStatement("insert into test (key_id) values (?)");
         for (int i = 0; i < 100; i++) {
             statement.setInt(1, i);
@@ -131,8 +170,13 @@ public class WrappingDriverTest {
         }
         statement.executeBatch();
         statement.executeBatch();
+        for (int i = 0; i < 10; i++) {
+            statement.setInt(1, i);
+            statement.addBatch();
+        }
+        statement.clearBatch();
         statement.close();
-        TimeUnit.SECONDS.sleep(10);
+        // TimeUnit.SECONDS.sleep(10);
     }
 
     @Test
@@ -149,9 +193,9 @@ public class WrappingDriverTest {
             statement.setInt(1, i);
             final ResultSet resultSet = statement.executeQuery();
             resultSet.next();
-            Thread.sleep(5);
+            // Thread.sleep(5);
             resultSet.close();
-            Thread.sleep(10);
+            // Thread.sleep(10);
         }
     }
 
@@ -160,10 +204,32 @@ public class WrappingDriverTest {
         final Statement statement = connection.createStatement();
         try {
             statement.execute("create table test (key_id int);");
-            TimeUnit.SECONDS.sleep(10);
+            // TimeUnit.SECONDS.sleep(10);
             statement.execute("create table test (key_id int);");
         } finally {
-            TimeUnit.SECONDS.sleep(5);
+            // TimeUnit.SECONDS.sleep(5);
+            statement.close();
+        }
+    }
+
+    @Test
+    public void testCallable() throws Exception {
+        {
+            final PreparedStatement statement = connection.prepareCall("call 2*3");
+            final ResultSet resultSet = statement.executeQuery();
+            Assert.assertTrue(resultSet.next());
+            Assert.assertEquals(6, resultSet.getInt(1));
+            resultSet.close();
+            statement.close();
+        }
+        {
+            final CallableStatement statement = connection.prepareCall("{call 2*?}");
+            // TODO use set(name,value) instead, but it's not supported by H2..
+            statement.setInt(1, 7);
+            final ResultSet resultSet = statement.executeQuery();
+            Assert.assertTrue(resultSet.next());
+            Assert.assertEquals(14, resultSet.getInt(1));
+            resultSet.close();
             statement.close();
         }
     }

@@ -18,12 +18,12 @@ public class Utils {
             dbProduct = connection.getMetaData().getDatabaseProductName();
         } catch (final SQLException e) {
             LOGGER.error("cannot get db product name");
-            return DatabaseType.UNKNOWN;
+            return DatabaseType.GENERIC;
         }
         if ("Oracle".equals(dbProduct)) {
             return DatabaseType.ORACLE;
         }
-        return DatabaseType.UNKNOWN;
+        return DatabaseType.GENERIC;
     }
 
     static Object invokeUnwrapException(final Object target, final Method method, final Object[] args) throws Throwable {
