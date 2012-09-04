@@ -1,9 +1,9 @@
-package slaurent.jdbcperflogger;
+package slaurent.jdbcperflogger.driver;
 
 public class SqlTypedValue {
-    final Object value;
-    final int sqlType;
-    final String setter;
+    public final Object value;
+    public final int sqlType;
+    public final String setter;
 
     public SqlTypedValue(final Object value, final int sqlType) {
         this.value = value;

@@ -1,4 +1,4 @@
-package slaurent.jdbcperflogger;
+package slaurent.jdbcperflogger.logger;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -5,8 +5,8 @@ import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.util.UUID;
 
-import slaurent.jdbcperflogger.PerfLogger;
 import slaurent.jdbcperflogger.StatementType;
+import slaurent.jdbcperflogger.logger.PerfLogger;
 
 public class LoggingResultSetInvocationHandler implements InvocationHandler {
     private final ResultSet wrappedResultSet;

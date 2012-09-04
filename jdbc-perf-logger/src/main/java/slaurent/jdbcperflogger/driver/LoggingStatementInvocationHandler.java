@@ -9,8 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import slaurent.jdbcperflogger.PerfLogger;
 import slaurent.jdbcperflogger.StatementType;
+import slaurent.jdbcperflogger.logger.PerfLogger;
 
 public class LoggingStatementInvocationHandler implements InvocationHandler {
     protected static final String CLEAR_BATCH = "clearBatch";

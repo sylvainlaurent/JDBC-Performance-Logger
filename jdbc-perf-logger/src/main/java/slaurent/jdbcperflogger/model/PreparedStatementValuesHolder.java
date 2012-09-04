@@ -2,7 +2,7 @@ package slaurent.jdbcperflogger.model;
 
 import java.util.HashMap;
 
-import slaurent.jdbcperflogger.SqlTypedValue;
+import slaurent.jdbcperflogger.driver.SqlTypedValue;
 
 /**
  * Map from parameter index to value.

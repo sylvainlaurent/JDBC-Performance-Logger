@@ -1,4 +1,4 @@
-package slaurent.jdbcperflogger;
+package slaurent.jdbcperflogger.logger;
 
 import java.sql.Types;
 import java.text.SimpleDateFormat;
@@ -7,6 +7,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import slaurent.jdbcperflogger.driver.DatabaseType;
+import slaurent.jdbcperflogger.driver.SqlTypedValue;
+import slaurent.jdbcperflogger.logger.PerfLogger;
 import slaurent.jdbcperflogger.model.PreparedStatementValuesHolder;
 
 public class PerfLoggerTest {

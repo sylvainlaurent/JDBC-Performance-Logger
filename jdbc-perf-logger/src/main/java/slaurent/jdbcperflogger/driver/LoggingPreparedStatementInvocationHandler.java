@@ -8,9 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import slaurent.jdbcperflogger.PerfLogger;
-import slaurent.jdbcperflogger.SqlTypedValue;
 import slaurent.jdbcperflogger.StatementType;
+import slaurent.jdbcperflogger.logger.PerfLogger;
 import slaurent.jdbcperflogger.model.PreparedStatementValuesHolder;
 
 public class LoggingPreparedStatementInvocationHandler extends LoggingStatementInvocationHandler {

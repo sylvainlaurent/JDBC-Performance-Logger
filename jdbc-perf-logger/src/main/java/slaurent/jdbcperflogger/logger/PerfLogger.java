@@ -1,4 +1,4 @@
-package slaurent.jdbcperflogger;
+package slaurent.jdbcperflogger.logger;
 
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
@@ -15,7 +15,9 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import slaurent.jdbcperflogger.StatementType;
 import slaurent.jdbcperflogger.driver.DatabaseType;
+import slaurent.jdbcperflogger.driver.SqlTypedValue;
 import slaurent.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
 import slaurent.jdbcperflogger.model.BatchedPreparedStatementsLog;
 import slaurent.jdbcperflogger.model.PreparedStatementValuesHolder;
