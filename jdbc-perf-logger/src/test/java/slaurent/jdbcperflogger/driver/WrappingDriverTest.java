@@ -15,8 +15,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import slaurent.jdbcperflogger.driver.WrappingDriver;
-
 public class WrappingDriverTest {
     private Connection connection;
 
@@ -224,7 +222,7 @@ public class WrappingDriverTest {
         }
         {
             final CallableStatement statement = connection.prepareCall("{call 2*?}");
-            // TODO use set(name,value) instead, but it's not supported by H2..
+            // we should use set(name,value) instead, but it's not supported by H2..
             statement.setInt(1, 7);
             final ResultSet resultSet = statement.executeQuery();
             Assert.assertTrue(resultSet.next());
