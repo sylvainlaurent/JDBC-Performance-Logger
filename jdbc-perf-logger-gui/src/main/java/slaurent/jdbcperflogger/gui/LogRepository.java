@@ -22,6 +22,10 @@ import slaurent.jdbcperflogger.model.StatementLog;
 public class LogRepository {
     public static final String TSTAMP_COLUMN = "TSTAMP";
     public static final String STMT_TYPE_COLUMN = "STATEMENTTYPE";
+    public static final String FILLED_SQL_COLUMN = "FILLEDSQL";
+    public static final String EXEC_TIME_COLUMN = "execution_time";
+    public static final String FETCH_TIME_COLUMN = "fetch_time";
+    public static final String NB_ROWS_COLUMN = "nbRowsIterated";
 
     private static String DB_URL = "jdbc:h2:file:logrepository;DB_CLOSE_DELAY=-1";
     private static boolean dbInitialized;

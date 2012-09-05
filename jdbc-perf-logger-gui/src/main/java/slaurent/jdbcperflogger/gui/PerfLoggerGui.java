@@ -9,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.CharArrayWriter;
+import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.net.InetSocketAddress;
@@ -32,6 +33,7 @@ import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -376,13 +378,22 @@ public class PerfLoggerGui {
                                 GroupLayout.PREFERRED_SIZE).addContainerGap()));
 
         lblStatus = new JLabel(" ");
+
+        final JButton btnExportSql = new JButton("Export...");
+        btnExportSql.setToolTipText("Export all statements as a sql script");
+        btnExportSql.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                exportSql();
+            }
+        });
         final GroupLayout gl_panel = new GroupLayout(panel);
         gl_panel.setHorizontalGroup(gl_panel.createParallelGroup(Alignment.LEADING).addGroup(
                 gl_panel.createSequentialGroup().addContainerGap()
-                        .addComponent(lblStatus, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addContainerGap()));
+                        .addComponent(lblStatus, GroupLayout.DEFAULT_SIZE, 854, Short.MAX_VALUE)
+                        .addPreferredGap(ComponentPlacement.RELATED).addComponent(btnExportSql).addContainerGap()));
         gl_panel.setVerticalGroup(gl_panel.createParallelGroup(Alignment.LEADING).addGroup(
-                gl_panel.createSequentialGroup().addComponent(lblStatus)));
+                gl_panel.createParallelGroup(Alignment.BASELINE).addComponent(lblStatus).addComponent(btnExportSql)));
         panel.setLayout(gl_panel);
         frmJdbcPerformanceLogger.getContentPane().setLayout(groupLayout);
 
@@ -524,6 +535,57 @@ public class PerfLoggerGui {
             }
         });
         return strBuilder.toString();
+    }
+
+    private void exportSql() {
+        final JFileChooser fileChooser = new JFileChooser();
+        if (fileChooser.showSaveDialog(frmJdbcPerformanceLogger) == JFileChooser.APPROVE_OPTION) {
+            final PrintWriter writer;
+            try {
+                writer = new PrintWriter(fileChooser.getSelectedFile());
+            } catch (final FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                selectAllLogStatements.doSelect(new ResultSetAnalyzer() {
+                    @Override
+                    public void analyze(ResultSet resultSet) throws SQLException {
+
+                        final SimpleDateFormat tstampFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+                        while (resultSet.next()) {
+                            final Timestamp timestamp = resultSet.getTimestamp(LogRepository.TSTAMP_COLUMN);
+                            writer.print("/*");
+                            writer.print(tstampFormat.format(timestamp));
+                            writer.print(" exec=");
+                            writer.print(TimeUnit.NANOSECONDS.toMillis(resultSet
+                                    .getLong(LogRepository.EXEC_TIME_COLUMN)));
+                            writer.print("ms ");
+
+                            final int nbRows = resultSet.getInt(LogRepository.NB_ROWS_COLUMN);
+                            if (!resultSet.wasNull()) {
+                                writer.print(nbRows);
+                                writer.print(", row(s) fetched in ");
+                                writer.print(TimeUnit.NANOSECONDS.toMillis(resultSet
+                                        .getLong(LogRepository.FETCH_TIME_COLUMN)));
+                                writer.print("ms ");
+                            }
+
+                            writer.print("*/ ");
+
+                            final String filledSql = resultSet.getString(LogRepository.FILLED_SQL_COLUMN);
+                            writer.print(filledSql);
+                            if (!filledSql.endsWith(";")) {
+                                writer.print(";");
+                            }
+                            writer.println();
+                        }
+
+                    }
+                });
+            } finally {
+                writer.close();
+            }
+        }
     }
 
     private class RefreshDataTask extends TimerTask {
