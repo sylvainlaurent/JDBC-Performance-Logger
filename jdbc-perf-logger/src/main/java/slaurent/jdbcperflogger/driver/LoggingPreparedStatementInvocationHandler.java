@@ -71,8 +71,8 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
         try {
             final ResultSet resultSet = (ResultSet) Utils.invokeUnwrapException(wrappedStatement, method, args);
             return (ResultSet) Proxy.newProxyInstance(LoggingPreparedStatementInvocationHandler.class.getClassLoader(),
-                    resultSet.getClass().getInterfaces(), new LoggingResultSetInvocationHandler(resultSet, logId,
-                            StatementType.PREPARED_QUERY_STMT));
+                    Utils.extractAllInterfaces(resultSet.getClass()), new LoggingResultSetInvocationHandler(resultSet,
+                            logId, StatementType.PREPARED_QUERY_STMT));
         } catch (final Throwable e) {
             exc = e;
             throw exc;

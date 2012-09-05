@@ -4,10 +4,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 public class Utils {
     private final static Logger LOGGER = LoggerFactory.getLogger(Utils.class);
@@ -32,6 +34,15 @@ public class Utils {
         } catch (final InvocationTargetException e) {
             throw e.getCause();
         }
+    }
+
+    static Class<?>[] extractAllInterfaces(final Class<?> clazz) {
+        final Set<Class<?>> interfaces = new HashSet<Class<?>>();
+        for (Class<?> currClazz = clazz; currClazz != null; currClazz = currClazz.getSuperclass()) {
+            Collections.addAll(interfaces, currClazz.getInterfaces());
+        }
+
+        return interfaces.toArray(new Class[interfaces.size()]);
     }
 
 }

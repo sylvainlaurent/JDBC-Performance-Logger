@@ -29,6 +29,7 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
         this.databaseType = databaseType;
     }
 
+    @Override
     public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
         final Object result;
         final String methodName = method.getName();
@@ -55,9 +56,9 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
         Throwable exc = null;
         try {
             final ResultSet resultSet = (ResultSet) Utils.invokeUnwrapException(wrappedStatement, method, args);
-            return (ResultSet) Proxy.newProxyInstance(LoggingStatementInvocationHandler.class.getClassLoader(),
-                    resultSet.getClass().getInterfaces(), new LoggingResultSetInvocationHandler(resultSet, logId,
-                            StatementType.NON_PREPARED_QUERY_STMT));
+            return (ResultSet) Proxy.newProxyInstance(LoggingStatementInvocationHandler.class.getClassLoader(), Utils
+                    .extractAllInterfaces(resultSet.getClass()), new LoggingResultSetInvocationHandler(resultSet,
+                    logId, StatementType.NON_PREPARED_QUERY_STMT));
         } catch (final Throwable e) {
             exc = e;
             throw exc;

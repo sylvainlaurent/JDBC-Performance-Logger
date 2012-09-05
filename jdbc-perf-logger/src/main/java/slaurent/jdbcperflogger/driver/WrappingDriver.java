@@ -11,7 +11,6 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 //TODO DataSource, XADataSource
 public class WrappingDriver implements Driver {
     public final static String URL_PREFIX = "jdbcperflogger:";
@@ -32,6 +31,7 @@ public class WrappingDriver implements Driver {
     public WrappingDriver() {
     }
 
+    @Override
     public Connection connect(final String url, final Properties info) throws SQLException {
         if (!acceptsURL(url)) {
             return null;
@@ -39,27 +39,32 @@ public class WrappingDriver implements Driver {
         LOGGER.debug("connect url=[{}]", url);
         Connection connection = DriverManager.getConnection(extractUrlForWrappedDriver(url), info);
 
-        connection = (Connection) Proxy.newProxyInstance(WrappingDriver.class.getClassLoader(), connection.getClass()
-                .getInterfaces(), new LoggingConnectionInvocationHandler(connection));
+        connection = (Connection) Proxy.newProxyInstance(WrappingDriver.class.getClassLoader(),
+                Utils.extractAllInterfaces(connection.getClass()), new LoggingConnectionInvocationHandler(connection));
         return connection;
     }
 
+    @Override
     public boolean acceptsURL(final String url) throws SQLException {
         return url.startsWith(URL_PREFIX);
     }
 
+    @Override
     public DriverPropertyInfo[] getPropertyInfo(final String url, final Properties info) throws SQLException {
         return new DriverPropertyInfo[0];
     }
 
+    @Override
     public int getMajorVersion() {
         return 1;
     }
 
+    @Override
     public int getMinorVersion() {
         return 0;
     }
 
+    @Override
     public boolean jdbcCompliant() {
         return false;
     }
