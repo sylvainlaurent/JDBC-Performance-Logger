@@ -20,9 +20,9 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
     private final PreparedStatementValuesHolder paramValues = new PreparedStatementValuesHolder();
     private final List<Object> batchedPreparedOrNonPreparedStmtExecutions = new ArrayList<Object>();
 
-    LoggingPreparedStatementInvocationHandler(final PreparedStatement statement, final String rawSql,
-            final DatabaseType databaseType) {
-        super(statement, databaseType);
+    LoggingPreparedStatementInvocationHandler(final int connectionId, final PreparedStatement statement,
+            final String rawSql, final DatabaseType databaseType) {
+        super(connectionId, statement, databaseType);
         this.rawSql = rawSql;
     }
 
@@ -78,8 +78,8 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
             throw exc;
         } finally {
             final long end = System.nanoTime();
-            PerfLogger.logPreparedStatement(logId, rawSql, paramValues, end - start, StatementType.PREPARED_QUERY_STMT,
-                    databaseType, exc);
+            PerfLogger.logPreparedStatement(connectionId, logId, rawSql, paramValues, end - start,
+                    StatementType.PREPARED_QUERY_STMT, databaseType, exc);
         }
 
     }
@@ -94,7 +94,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
             throw exc;
         } finally {
             final long end = System.nanoTime();
-            PerfLogger.logPreparedStatement(UUID.randomUUID(), rawSql, paramValues, end - start,
+            PerfLogger.logPreparedStatement(connectionId, UUID.randomUUID(), rawSql, paramValues, end - start,
                     StatementType.BASE_PREPARED_STMT, databaseType, exc);
         }
     }
@@ -110,8 +110,8 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
             throw exc;
         } finally {
             final long end = System.nanoTime();
-            PerfLogger.logPreparedBatchedStatements(rawSql, batchedPreparedOrNonPreparedStmtExecutions, end - start,
-                    databaseType, exc);
+            PerfLogger.logPreparedBatchedStatements(connectionId, rawSql, batchedPreparedOrNonPreparedStmtExecutions,
+                    end - start, databaseType, exc);
             batchedPreparedOrNonPreparedStmtExecutions.clear();
         }
 

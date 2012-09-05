@@ -31,7 +31,7 @@ public class LogRepositoryTest {
 
     @Test
     public void testInsertAndRead() {
-        final StatementLog log = new StatementLog(UUID.randomUUID(), System.currentTimeMillis(),
+        final StatementLog log = new StatementLog(123, UUID.randomUUID(), System.currentTimeMillis(),
                 TimeUnit.MILLISECONDS.toNanos(256), StatementType.BASE_NON_PREPARED_STMT, "myrawsql", Thread
                         .currentThread().getName(), new SQLException());
         repository.addStatementLog(log);

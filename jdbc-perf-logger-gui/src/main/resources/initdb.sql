@@ -1,5 +1,5 @@
 create table if not exists statement_log 
-    (id identity, logId UUID not null, tstamp timestamp not null, statementType tinyInt not null, 
+    (id identity, connectionId int, logId UUID not null, tstamp timestamp not null, statementType tinyInt not null, 
     rawSql varchar not null, filledSql varchar not null, 
     executionDurationNanos bigInt not null, fetchDurationNanos bigInt, nbRowsIterated int, threadName varchar,
     exception other);
@@ -14,7 +14,7 @@ create table if not exists batched_statement_log
 create index if not exists idx_batched_logId on batched_statement_log(logId);
 
 create or replace view v_statement_log
-    (id, tstamp, statementType, rawSql, filledSql, exec_plus_fetch_time, execution_time, fetch_time, nbRowsIterated, threadName, error)
+    (id, tstamp, statementType, rawSql, filledSql, exec_plus_fetch_time, execution_time, fetch_time, nbRowsIterated, threadName, error, connectionId)
   as select id, tstamp, statementType, rawSql, filledSql,
             executionDurationNanos+coalesce(fetchDurationNanos,0) as exec_plus_fetch_time,
             executionDurationNanos as execution_time, 
@@ -22,7 +22,7 @@ create or replace view v_statement_log
             nbRowsIterated,
             threadName,
             NVL2(exception, 1, 0),
-            executionDurationNanos
+            connectionId
         from statement_log;
 
 --insert into statement_log (id, tstamp, rawSql, filledSql, durationNanos) values(1, sysdate, 'raw', 'filled', 456);

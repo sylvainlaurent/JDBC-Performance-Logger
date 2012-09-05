@@ -77,8 +77,8 @@ public class LogRepository {
 
         addStatementLog = connection
                 .prepareStatement("insert into statement_log (logId, tstamp, statementType, rawSql, filledSql, " //
-                        + "executionDurationNanos, threadName, exception)"//
-                        + " values(?, ?, ?, ?, ?, ?, ?, ?)");
+                        + "executionDurationNanos, threadName, exception, connectionId)"//
+                        + " values(?, ?, ?, ?, ?, ?, ?, ?, ?)");
         updateStatementLog = connection
                 .prepareStatement("update statement_log set fetchDurationNanos=?, nbRowsIterated=? where logId=?");
 
@@ -89,14 +89,16 @@ public class LogRepository {
 
     public void addStatementLog(StatementLog log) {
         try {
-            addStatementLog.setObject(1, log.getLogId());
-            addStatementLog.setTimestamp(2, new Timestamp(log.getTimestamp()));
-            addStatementLog.setInt(3, log.getStatementType().getId());
-            addStatementLog.setString(4, log.getRawSql());
-            addStatementLog.setString(5, log.getFilledSql());
-            addStatementLog.setLong(6, log.getExecutionTimeNanos());
-            addStatementLog.setString(7, log.getThreadName());
-            addStatementLog.setObject(8, log.getSqlException());
+            int i = 1;
+            addStatementLog.setObject(i++, log.getLogId());
+            addStatementLog.setTimestamp(i++, new Timestamp(log.getTimestamp()));
+            addStatementLog.setInt(i++, log.getStatementType().getId());
+            addStatementLog.setString(i++, log.getRawSql());
+            addStatementLog.setString(i++, log.getFilledSql());
+            addStatementLog.setLong(i++, log.getExecutionTimeNanos());
+            addStatementLog.setString(i++, log.getThreadName());
+            addStatementLog.setObject(i++, log.getSqlException());
+            addStatementLog.setInt(i++, log.getConnectionId());
             addStatementLog.execute();
         } catch (final SQLException e) {
             throw new RuntimeException(e);
@@ -178,7 +180,7 @@ public class LogRepository {
 
     public void getStatements(String filter, Long minDurationNanos, ResultSetAnalyzer analyzer) {
         String sql = "select id, tstamp, statementType, rawSql, filledSql, " //
-                + "exec_plus_fetch_time, execution_time, fetch_time, nbRowsIterated, threadName, error " //
+                + "exec_plus_fetch_time, execution_time, fetch_time, nbRowsIterated, threadName, connectionId, error " //
                 + "from v_statement_log ";
         sql += getWhereClause(filter, minDurationNanos);
         sql += "order by tstamp";
@@ -302,22 +304,24 @@ public class LogRepository {
         try {
             final PreparedStatement statement = connection
                     .prepareStatement("select logId, tstamp, statementType, rawSql, filledSql, " //
-                            + "executionDurationNanos, threadName, exception from statement_log where id=?");
+                            + "executionDurationNanos, threadName, exception, connectionId from statement_log where id=?");
             statement.setLong(1, id);
             try {
                 final ResultSet resultSet = statement.executeQuery();
                 StatementLog result = null;
                 if (resultSet.next()) {
-                    final UUID logId = (UUID) resultSet.getObject(1);
-                    final Timestamp tstamp = resultSet.getTimestamp(2);
-                    final StatementType statementType = StatementType.fromId(resultSet.getInt(3));
-                    final String rawSql = resultSet.getString(4);
-                    final String filledSql = resultSet.getString(5);
-                    final long durationNanos = resultSet.getLong(6);
-                    final String threadName = resultSet.getString(7);
-                    final SQLException exception = (SQLException) resultSet.getObject(8);
-                    result = new StatementLog(logId, tstamp.getTime(), durationNanos, statementType, rawSql, filledSql,
-                            threadName, exception);
+                    int i = 1;
+                    final UUID logId = (UUID) resultSet.getObject(i++);
+                    final Timestamp tstamp = resultSet.getTimestamp(i++);
+                    final StatementType statementType = StatementType.fromId(resultSet.getInt(i++));
+                    final String rawSql = resultSet.getString(i++);
+                    final String filledSql = resultSet.getString(i++);
+                    final long durationNanos = resultSet.getLong(i++);
+                    final String threadName = resultSet.getString(i++);
+                    final SQLException exception = (SQLException) resultSet.getObject(i++);
+                    final int connectionId = resultSet.getInt(i++);
+                    result = new StatementLog(connectionId, logId, tstamp.getTime(), durationNanos, statementType,
+                            rawSql, filledSql, threadName, exception);
                 }
                 resultSet.close();
                 return result;

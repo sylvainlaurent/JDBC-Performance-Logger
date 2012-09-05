@@ -23,6 +23,7 @@ public class LoggingResultSetInvocationHandler implements InvocationHandler {
         fetchStartTime = System.nanoTime();
     }
 
+    @Override
     public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
         final Object result = Utils.invokeUnwrapException(wrappedResultSet, method, args);
         ;

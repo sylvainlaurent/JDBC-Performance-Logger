@@ -20,11 +20,13 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
     protected static final String EXECUTE = "execute";
     protected static final String EXECUTE_QUERY = "executeQuery";
 
+    protected int connectionId;
     protected final DatabaseType databaseType;
     protected final Statement wrappedStatement;
     private final List<String> batchedNonPreparedStmtExecutions = new ArrayList<String>();
 
-    LoggingStatementInvocationHandler(final Statement statement, final DatabaseType databaseType) {
+    LoggingStatementInvocationHandler(final int connectionId, final Statement statement, final DatabaseType databaseType) {
+        this.connectionId = connectionId;
         wrappedStatement = statement;
         this.databaseType = databaseType;
     }
@@ -64,7 +66,8 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
             throw exc;
         } finally {
             final long end = System.nanoTime();
-            PerfLogger.logStatement(logId, (String) args[0], end - start, StatementType.NON_PREPARED_QUERY_STMT, exc);
+            PerfLogger.logStatement(connectionId, logId, (String) args[0], end - start,
+                    StatementType.NON_PREPARED_QUERY_STMT, exc);
         }
 
     }
@@ -79,7 +82,7 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
             throw exc;
         } finally {
             final long end = System.nanoTime();
-            PerfLogger.logStatement(UUID.randomUUID(), (String) args[0], end - start,
+            PerfLogger.logStatement(connectionId, UUID.randomUUID(), (String) args[0], end - start,
                     StatementType.BASE_NON_PREPARED_STMT, exc);
         }
     }
@@ -94,8 +97,8 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
             throw exc;
         } finally {
             final long end = System.nanoTime();
-            PerfLogger
-                    .logNonPreparedBatchedStatements(batchedNonPreparedStmtExecutions, end - start, databaseType, exc);
+            PerfLogger.logNonPreparedBatchedStatements(connectionId, batchedNonPreparedStmtExecutions, end - start,
+                    databaseType, exc);
             batchedNonPreparedStmtExecutions.clear();
         }
 

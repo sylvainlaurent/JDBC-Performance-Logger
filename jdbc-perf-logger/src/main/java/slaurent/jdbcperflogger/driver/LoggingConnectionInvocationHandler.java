@@ -8,10 +8,12 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 
 public class LoggingConnectionInvocationHandler implements InvocationHandler {
+    private final int connectionId;
     private final Connection wrappedConnection;
     private final DatabaseType databaseType;
 
-    LoggingConnectionInvocationHandler(final Connection wrappedConnection) {
+    LoggingConnectionInvocationHandler(final int connectionId, final Connection wrappedConnection) {
+        this.connectionId = connectionId;
         this.wrappedConnection = wrappedConnection;
         databaseType = Utils.getDatabaseType(wrappedConnection);
     }
@@ -22,12 +24,12 @@ public class LoggingConnectionInvocationHandler implements InvocationHandler {
         final String methodName = method.getName();
         if ("createStatement".equals(methodName)) {
             return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(), Utils
-                    .extractAllInterfaces(result.getClass()), new LoggingStatementInvocationHandler((Statement) result,
-                    databaseType));
+                    .extractAllInterfaces(result.getClass()), new LoggingStatementInvocationHandler(connectionId,
+                    (Statement) result, databaseType));
         } else if ("prepareStatement".equals(methodName) || "prepareCall".equals(methodName)) {
             return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(), Utils
                     .extractAllInterfaces(result.getClass()), new LoggingPreparedStatementInvocationHandler(
-                    (PreparedStatement) result, (String) args[0], databaseType));
+                    connectionId, (PreparedStatement) result, (String) args[0], databaseType));
         }
 
         return result;

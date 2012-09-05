@@ -3,11 +3,11 @@ package slaurent.jdbcperflogger.model;
 import java.util.UUID;
 
 import slaurent.jdbcperflogger.StatementType;
-import slaurent.jdbcperflogger.model.LogMessage;
 
 public class AbstractLogMessage implements LogMessage {
 
     private static final long serialVersionUID = 3766419115920080440L;
+    private final int connectionId;
     private final UUID logId;
     private final long timestamp;
     private final long executionTimeNanos;
@@ -15,14 +15,20 @@ public class AbstractLogMessage implements LogMessage {
     private final String threadName;
     private final Throwable sqlException;
 
-    public AbstractLogMessage(final UUID logId, final long timestamp, final long executionTimeNanos,
-            final StatementType statementType, final String threadName, final Throwable sqlException) {
+    public AbstractLogMessage(final int connectionId, final UUID logId, final long timestamp,
+            final long executionTimeNanos, final StatementType statementType, final String threadName,
+            final Throwable sqlException) {
+        this.connectionId = connectionId;
         this.logId = logId;
         this.timestamp = timestamp;
         this.executionTimeNanos = executionTimeNanos;
         this.statementType = statementType;
         this.threadName = threadName;
         this.sqlException = sqlException;
+    }
+
+    public int getConnectionId() {
+        return connectionId;
     }
 
     public UUID getLogId() {

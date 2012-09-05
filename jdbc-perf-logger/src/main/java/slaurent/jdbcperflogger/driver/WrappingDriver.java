@@ -7,6 +7,7 @@ import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,8 @@ public class WrappingDriver implements Driver {
         }
     }
 
+    private final AtomicInteger connectionCounter = new AtomicInteger();
+
     public WrappingDriver() {
     }
 
@@ -39,8 +42,9 @@ public class WrappingDriver implements Driver {
         LOGGER.debug("connect url=[{}]", url);
         Connection connection = DriverManager.getConnection(extractUrlForWrappedDriver(url), info);
 
-        connection = (Connection) Proxy.newProxyInstance(WrappingDriver.class.getClassLoader(),
-                Utils.extractAllInterfaces(connection.getClass()), new LoggingConnectionInvocationHandler(connection));
+        connection = (Connection) Proxy.newProxyInstance(WrappingDriver.class.getClassLoader(), Utils
+                .extractAllInterfaces(connection.getClass()),
+                new LoggingConnectionInvocationHandler(connectionCounter.incrementAndGet(), connection));
         return connection;
     }
 

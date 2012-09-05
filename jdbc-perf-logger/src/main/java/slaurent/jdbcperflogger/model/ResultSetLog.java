@@ -12,7 +12,7 @@ public class ResultSetLog extends AbstractLogMessage {
 
     public ResultSetLog(final UUID logId, final long timestamp, final long executionTimeNanos,
             final StatementType statementType, final String threadName, final int nbRowsIterated) {
-        super(logId, timestamp, executionTimeNanos, statementType, threadName, null);
+        super(-1, logId, timestamp, executionTimeNanos, statementType, threadName, null);
         this.nbRowsIterated = nbRowsIterated;
     }
 
