@@ -29,6 +29,7 @@ import slaurent.jdbcperflogger.model.LogMessage;
 
 public class PerfLoggerRemoting {
     private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerRemoting.class);
+    private final static int DEFAULT_LISTEN_PORT = 4561;
 
     private final static Set<LogSender> senders = new CopyOnWriteArraySet<PerfLoggerRemoting.LogSender>();
     static {
@@ -36,7 +37,8 @@ public class PerfLoggerRemoting {
         final InputStream configFileStream = WrappingDriver.class.getResourceAsStream("/" + WrappingDriver.CONFIG_FILE);
         if (configFileStream == null) {
             LOGGER.warn("Cannot find " + WrappingDriver.CONFIG_FILE
-                    + " in the classpath, no logging will be sent to a console");
+                    + " in the classpath, the default server socket will be listening on port " + DEFAULT_LISTEN_PORT);
+            new PerfLoggerServerThread(DEFAULT_LISTEN_PORT).start();
         } else {
             try {
                 final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -175,6 +177,7 @@ public class PerfLoggerRemoting {
             }
         }
 
+        @Override
         public void run() {
             ObjectOutputStream oos = null;
             try {
