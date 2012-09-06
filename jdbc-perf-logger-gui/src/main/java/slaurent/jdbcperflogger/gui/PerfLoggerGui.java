@@ -40,7 +40,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.ListSelectionModel;
@@ -51,6 +50,9 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.event.UndoableEditListener;
+
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 
 import slaurent.jdbcperflogger.model.StatementLog;
 
@@ -116,8 +118,8 @@ public class PerfLoggerGui {
 
     private JComboBox comboBoxGroupBy;
 
-    private JTextArea txtFieldSqlDetail1;
-    private JTextArea txtFieldSqlDetail2;
+    private RSyntaxTextArea txtFieldSqlDetail1;
+    private RSyntaxTextArea txtFieldSqlDetail2;
 
     private JLabel lblStatus;
     private JScrollPane scrollPaneSqlDetail2;
@@ -205,7 +207,8 @@ public class PerfLoggerGui {
         scrollPaneSqlDetail1 = new JScrollPane();
         scrollPaneSqlDetail1.setOpaque(false);
 
-        txtFieldSqlDetail1 = new JTextArea();
+        txtFieldSqlDetail1 = new RSyntaxTextArea();
+        txtFieldSqlDetail1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
         txtFieldSqlDetail1.setOpaque(false);
         txtFieldSqlDetail1.setEditable(false);
         txtFieldSqlDetail1.setLineWrap(true);
@@ -214,7 +217,8 @@ public class PerfLoggerGui {
         scrollPaneSqlDetail2 = new JScrollPane();
         scrollPaneSqlDetail2.setOpaque(false);
 
-        txtFieldSqlDetail2 = new JTextArea();
+        txtFieldSqlDetail2 = new RSyntaxTextArea();
+        txtFieldSqlDetail2.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
         txtFieldSqlDetail2.setOpaque(false);
         txtFieldSqlDetail2.setEditable(false);
         txtFieldSqlDetail2.setLineWrap(true);
