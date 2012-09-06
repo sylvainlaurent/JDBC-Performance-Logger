@@ -84,4 +84,13 @@ class ResultSetDataModel extends AbstractTableModel {
         return (Long) rows.get(rowIndex)[0];
     }
 
+    public Object getValueAt(int rowIndex, String columnName) {
+        final int columnIndex = columnNames.indexOf(columnName);
+        if (columnIndex < 0) {
+            return null;
+        }
+        final Object o = rows.get(rowIndex)[columnIndex];
+
+        return o;
+    }
 }

@@ -1,3 +1,5 @@
+set log 0;
+
 create table if not exists statement_log 
     (id identity, connectionId int, logId UUID not null, tstamp timestamp not null, statementType tinyInt not null, 
     rawSql varchar not null, filledSql varchar not null, 

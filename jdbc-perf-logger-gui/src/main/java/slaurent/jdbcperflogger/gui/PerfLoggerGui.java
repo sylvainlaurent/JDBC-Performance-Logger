@@ -1,5 +1,6 @@
 package slaurent.jdbcperflogger.gui;
 
+import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
@@ -9,6 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.CharArrayWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
@@ -50,6 +52,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.event.UndoableEditListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -178,6 +181,9 @@ public class PerfLoggerGui {
 
         dataModel = new ResultSetDataModel();
         table = new CustomTable(dataModel);
+        table.setSelectionForeground(Color.blue);
+        table.setSelectionBackground(Color.yellow);
+        table.setDefaultRenderer(Byte.class, new CustomTableCellRenderer());
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.setFillsViewportHeight(true);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -441,7 +447,7 @@ public class PerfLoggerGui {
             if (txt.length() == 0) {
                 minDurationNanos = null;
             } else {
-                minDurationNanos = new BigDecimal(txt).multiply(new BigDecimal(1000000L)).longValue();
+                minDurationNanos = TimeUnit.MILLISECONDS.toNanos(new BigDecimal(txt).longValue());
             }
         }
         if (NO_GROUPING.equals(comboBoxGroupBy.getSelectedItem())) {
@@ -543,10 +549,15 @@ public class PerfLoggerGui {
 
     private void exportSql() {
         final JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new FileNameExtensionFilter("SQL file", "sql"));
         if (fileChooser.showSaveDialog(frmJdbcPerformanceLogger) == JFileChooser.APPROVE_OPTION) {
+            File targetFile = fileChooser.getSelectedFile();
+            if (!targetFile.getName().toLowerCase().endsWith(".sql")) {
+                targetFile = new File(targetFile.getAbsolutePath() + ".sql");
+            }
             final PrintWriter writer;
             try {
-                writer = new PrintWriter(fileChooser.getSelectedFile());
+                writer = new PrintWriter(targetFile);
             } catch (final FileNotFoundException e) {
                 throw new RuntimeException(e);
             }
