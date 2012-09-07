@@ -203,7 +203,7 @@ public class LogRepository {
     }
 
     public void getStatementsGroupByRawSQL(String filter, Long minDurationNanos, ResultSetAnalyzer analyzer) {
-        String sql = "select min(id) as ID, rawSql, count(1) as exec_count, " //
+        String sql = "select min(id) as ID, statementType, rawSql, count(1) as exec_count, " //
                 + "sum(executionDurationNanos) as total_exec_time, "//
                 + "max(executionDurationNanos) as max_exec_time, " //
                 + "min(executionDurationNanos) as min_exec_time, " //
@@ -212,7 +212,7 @@ public class LogRepository {
         if (filter != null && filter.length() > 0) {
             sql += "where (UPPER(rawSql) like ? or UPPER(filledSql) like ?)";
         }
-        sql += "group by rawSql ";
+        sql += "group by statementType, rawSql ";
         if (minDurationNanos != null) {
             sql += "having sum(executionDurationNanos)>=? ";
         }
@@ -235,7 +235,7 @@ public class LogRepository {
     }
 
     public void getStatementsGroupByFilledSQL(String filter, Long minDurationNanos, ResultSetAnalyzer analyzer) {
-        String sql = "select min(id) as ID, rawSql, filledSql, count(1) as exec_count, " //
+        String sql = "select min(id) as ID, statementType, rawSql, filledSql, count(1) as exec_count, " //
                 + "sum(executionDurationNanos) as total_exec_time, "//
                 + "max(executionDurationNanos) as max_exec_time, " //
                 + "min(executionDurationNanos) as min_exec_time, " //
@@ -244,7 +244,7 @@ public class LogRepository {
         if (filter != null && filter.length() > 0) {
             sql += "where (UPPER(rawSql) like ? or UPPER(filledSql) like ?)";
         }
-        sql += "group by rawSql, filledSql ";
+        sql += "group by statementType, rawSql, filledSql ";
         if (minDurationNanos != null) {
             sql += "having sum(executionDurationNanos)>=?";
         }
