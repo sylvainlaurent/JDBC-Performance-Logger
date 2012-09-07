@@ -1,6 +1,7 @@
 package slaurent.jdbcperflogger.gui;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
@@ -47,6 +48,7 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.ToolTipManager;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -60,7 +62,6 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import slaurent.jdbcperflogger.model.StatementLog;
 
 //TODO features
-//fond rouge si exception + d�tail d'exception + test unit
 //Barre de menu : open/save DB, setup connections
 //GUI pour choisir adresse remote
 
@@ -164,6 +165,8 @@ public class PerfLoggerGui {
      * Initialize the contents of the frame.
      */
     private void initialize() {
+        ToolTipManager.sharedInstance().setInitialDelay(500);
+
         frmJdbcPerformanceLogger = new JFrame();
         frmJdbcPerformanceLogger.setTitle("JDBC Performance Logger");
         frmJdbcPerformanceLogger.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -184,6 +187,7 @@ public class PerfLoggerGui {
         table.setSelectionForeground(Color.blue);
         table.setSelectionBackground(Color.yellow);
         table.setDefaultRenderer(Byte.class, new CustomTableCellRenderer());
+        table.setDefaultRenderer(String.class, new CustomTableCellRenderer());
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.setFillsViewportHeight(true);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -210,31 +214,31 @@ public class PerfLoggerGui {
                 null));
         splitPane.setBottomComponent(sqlDetailPanel);
 
+        final JSplitPane splitPane_1 = new JSplitPane();
+        splitPane_1.setResizeWeight(0.5);
+        splitPane_1.setContinuousLayout(true);
+        splitPane_1.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        final GroupLayout gl_sqlDetailPanel = new GroupLayout(sqlDetailPanel);
+        gl_sqlDetailPanel.setHorizontalGroup(gl_sqlDetailPanel.createParallelGroup(Alignment.LEADING).addGroup(
+                gl_sqlDetailPanel.createSequentialGroup().addContainerGap()
+                        .addComponent(splitPane_1, GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE).addContainerGap()));
+        gl_sqlDetailPanel.setVerticalGroup(gl_sqlDetailPanel.createParallelGroup(Alignment.LEADING)
+                .addGroup(
+                        gl_sqlDetailPanel.createSequentialGroup().addContainerGap().addComponent(splitPane_1)
+                                .addContainerGap()));
+
         scrollPaneSqlDetail1 = new JScrollPane();
+        scrollPaneSqlDetail1.setMinimumSize(new Dimension(23, 30));
+        splitPane_1.setLeftComponent(scrollPaneSqlDetail1);
         scrollPaneSqlDetail1.setOpaque(false);
 
         txtFieldSqlDetail1 = new RSyntaxTextArea();
+        txtFieldSqlDetail1.setCurrentLineHighlightColor(Color.WHITE);
         txtFieldSqlDetail1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
         txtFieldSqlDetail1.setOpaque(false);
         txtFieldSqlDetail1.setEditable(false);
         txtFieldSqlDetail1.setLineWrap(true);
         scrollPaneSqlDetail1.setViewportView(txtFieldSqlDetail1);
-
-        scrollPaneSqlDetail2 = new JScrollPane();
-        scrollPaneSqlDetail2.setOpaque(false);
-
-        txtFieldSqlDetail2 = new RSyntaxTextArea();
-        txtFieldSqlDetail2.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
-        txtFieldSqlDetail2.setOpaque(false);
-        txtFieldSqlDetail2.setEditable(false);
-        txtFieldSqlDetail2.setLineWrap(true);
-        scrollPaneSqlDetail2.setViewportView(txtFieldSqlDetail2);
-        final GroupLayout gl_sqlDetailPanel = new GroupLayout(sqlDetailPanel);
-        gl_sqlDetailPanel.setHorizontalGroup(gl_sqlDetailPanel.createParallelGroup(Alignment.LEADING)
-                .addComponent(scrollPaneSqlDetail1).addComponent(scrollPaneSqlDetail2));
-        gl_sqlDetailPanel.setVerticalGroup(gl_sqlDetailPanel.createSequentialGroup().addComponent(scrollPaneSqlDetail1)
-                .addComponent(scrollPaneSqlDetail2));
-        sqlDetailPanel.setLayout(gl_sqlDetailPanel);
 
         final JPanel panelCopy1 = new JPanel();
         panelCopy1.setBorder(null);
@@ -243,13 +247,19 @@ public class PerfLoggerGui {
         final JButton btnCopy1 = new JButton("Copy");
         panelCopy1.add(btnCopy1);
         scrollPaneSqlDetail1.setRowHeaderView(panelCopy1);
-        btnCopy1.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                final StringSelection stringSelection = new StringSelection(txtFieldSqlDetail1.getText());
-                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, stringSelection);
-            }
-        });
+
+        scrollPaneSqlDetail2 = new JScrollPane();
+        scrollPaneSqlDetail2.setMinimumSize(new Dimension(23, 30));
+        splitPane_1.setRightComponent(scrollPaneSqlDetail2);
+        scrollPaneSqlDetail2.setOpaque(false);
+
+        txtFieldSqlDetail2 = new RSyntaxTextArea();
+        txtFieldSqlDetail2.setCurrentLineHighlightColor(Color.WHITE);
+        txtFieldSqlDetail2.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
+        txtFieldSqlDetail2.setOpaque(false);
+        txtFieldSqlDetail2.setEditable(false);
+        txtFieldSqlDetail2.setLineWrap(true);
+        scrollPaneSqlDetail2.setViewportView(txtFieldSqlDetail2);
 
         final JPanel panelCopy2 = new JPanel();
         panelCopy2.setBorder(null);
@@ -265,6 +275,14 @@ public class PerfLoggerGui {
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, stringSelection);
             }
         });
+        btnCopy1.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                final StringSelection stringSelection = new StringSelection(txtFieldSqlDetail1.getText());
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, stringSelection);
+            }
+        });
+        sqlDetailPanel.setLayout(gl_sqlDetailPanel);
 
         final JLabel lblFilter = new JLabel("Filter:");
 
