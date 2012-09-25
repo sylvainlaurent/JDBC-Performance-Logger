@@ -21,7 +21,8 @@ public class CustomTableCellRenderer extends DefaultTableCellRenderer {
 
         final ResultSetDataModel dataModel = (ResultSetDataModel) table.getModel();
         if (LogRepository.STMT_TYPE_COLUMN.equals(dataModel.getColumnName(column))) {
-            final StatementType statementType = (StatementType) dataModel.getValueAt(row, column);
+            final int modelRowIndex = table.convertRowIndexToModel(row);
+            final StatementType statementType = (StatementType) dataModel.getValueAt(modelRowIndex, column);
             if (statementType != null) {
                 switch (statementType) {
                 case BASE_NON_PREPARED_STMT:
