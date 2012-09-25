@@ -11,8 +11,12 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Utils {
+public final class Utils {
     private final static Logger LOGGER = LoggerFactory.getLogger(Utils.class);
+
+    private Utils() {
+
+    }
 
     static DatabaseType getDatabaseType(final Connection connection) {
         String dbProduct;

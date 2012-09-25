@@ -46,6 +46,7 @@ public class WrappingDriverTest {
     public void testSelectNonPrepared() throws Exception {
         final Statement statement = connection.createStatement();
         statement.execute("create table test (key_id int);");
+        Thread.sleep(5000);
         statement.executeQuery("select * from test;");
         statement.executeQuery("select * from test;");
         statement.executeQuery("select * from test;");
