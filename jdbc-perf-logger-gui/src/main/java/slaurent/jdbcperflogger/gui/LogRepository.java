@@ -42,7 +42,7 @@ public class LogRepository {
         try {
             Driver.class.getClass();
             connection = DriverManager.getConnection(DB_URL);
-            // TODO : supprimer Db si erreur � l'initialisation
+            // TODO : supprimer Db si erreur à l'initialisation
             initDb();
         } catch (final SQLException e) {
             throw new RuntimeException(e);
@@ -270,7 +270,7 @@ public class LogRepository {
         String sql = "";
         boolean whereAdded = false;
         if (filter != null) {
-            sql += "where UPPER(rawSql) like ? or UPPER(filledSql) like ? ";
+            sql += "where (UPPER(rawSql) like ? or UPPER(filledSql) like ?) ";
             whereAdded = true;
         }
         if (minDurationNanos != null) {
@@ -280,7 +280,7 @@ public class LogRepository {
             } else {
                 sql += "and ";
             }
-            sql += "executionDurationNanos>? ";
+            sql += "exec_plus_fetch_time>? ";
         }
         return sql;
     }
