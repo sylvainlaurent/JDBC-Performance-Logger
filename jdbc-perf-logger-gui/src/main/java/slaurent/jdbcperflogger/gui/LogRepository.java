@@ -20,6 +20,7 @@ import slaurent.jdbcperflogger.model.ResultSetLog;
 import slaurent.jdbcperflogger.model.StatementLog;
 
 public class LogRepository {
+    // TODO ajouter colonne clientId (processId)
     public static final String TSTAMP_COLUMN = "TSTAMP";
     public static final String STMT_TYPE_COLUMN = "STATEMENTTYPE";
     public static final String FILLED_SQL_COLUMN = "FILLEDSQL";
@@ -28,20 +29,19 @@ public class LogRepository {
     public static final String NB_ROWS_COLUMN = "nbRowsIterated";
     public static final String ERROR_COLUMN = "ERROR";
 
-    private static String DB_URL = "jdbc:h2:file:logrepository;DB_CLOSE_DELAY=-1";
-    private static boolean dbInitialized;
     private static final Logger LOGGER = LoggerFactory.getLogger(LogRepository.class);
 
     private Connection connection;
+    private boolean dbInitialized;
     private PreparedStatement addStatementLog;
     private PreparedStatement updateStatementLog;
     private PreparedStatement addBatchedStatementLog;
-    private static volatile long lastModificationTime = System.currentTimeMillis();
+    private long lastModificationTime = System.currentTimeMillis();
 
-    public LogRepository() {
+    public LogRepository(String name) {
         try {
             Driver.class.getClass();
-            connection = DriverManager.getConnection(DB_URL);
+            connection = DriverManager.getConnection("jdbc:h2:file:logrepository_" + name + ";DB_CLOSE_DELAY=-1");
             // TODO : supprimer Db si erreur à l'initialisation
             initDb();
         } catch (final SQLException e) {
@@ -88,7 +88,7 @@ public class LogRepository {
                         + " values(?, ?, ?)");
     }
 
-    public void addStatementLog(StatementLog log) {
+    public synchronized void addStatementLog(StatementLog log) {
         try {
             int i = 1;
             addStatementLog.setObject(i++, log.getLogId());
@@ -107,7 +107,7 @@ public class LogRepository {
         lastModificationTime = System.currentTimeMillis();
     }
 
-    public void updateLogWithResultSetLog(ResultSetLog log) {
+    public synchronized void updateLogWithResultSetLog(ResultSetLog log) {
         try {
             updateStatementLog.setLong(1, log.getExecutionTimeNanos());
             updateStatementLog.setInt(2, log.getNbRowsIterated());
@@ -119,7 +119,7 @@ public class LogRepository {
         lastModificationTime = System.currentTimeMillis();
     }
 
-    public void addBatchedPreparedStatementsLog(BatchedPreparedStatementsLog log) {
+    public synchronized void addBatchedPreparedStatementsLog(BatchedPreparedStatementsLog log) {
         try {
             addStatementLog.setObject(1, log.getLogId());
             addStatementLog.setTimestamp(2, new Timestamp(log.getTimestamp()));
@@ -144,7 +144,7 @@ public class LogRepository {
         lastModificationTime = System.currentTimeMillis();
     }
 
-    public void addBatchedNonPreparedStatementsLog(BatchedNonPreparedStatementsLog log) {
+    public synchronized void addBatchedNonPreparedStatementsLog(BatchedNonPreparedStatementsLog log) {
         try {
             addStatementLog.setObject(1, log.getLogId());
             addStatementLog.setTimestamp(2, new Timestamp(log.getTimestamp()));
@@ -297,7 +297,7 @@ public class LogRepository {
 
     }
 
-    public long getLastModificationTime() {
+    public synchronized long getLastModificationTime() {
         return lastModificationTime;
     }
 

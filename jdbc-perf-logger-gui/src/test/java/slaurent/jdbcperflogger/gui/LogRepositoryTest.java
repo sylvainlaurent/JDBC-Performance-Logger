@@ -16,7 +16,7 @@ public class LogRepositoryTest {
 
     @Before
     public void setup() {
-        repository = new LogRepository();
+        repository = new LogRepository("test");
     }
 
     @After
