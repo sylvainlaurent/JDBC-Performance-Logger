@@ -86,6 +86,7 @@ public class PerfLoggerGui implements IClientConnectionDelegate {
     @Override
     public void close(PerfLoggerPanel perfLoggerPanel) {
         tabbedPane.remove(perfLoggerPanel);
+        perfLoggerPanel.dispose();
         perfLoggerPanel.getLogReceiver().dispose();
         perfLoggerPanel.getLogRepository().close();
     }

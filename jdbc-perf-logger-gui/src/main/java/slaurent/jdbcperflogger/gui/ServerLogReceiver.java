@@ -27,9 +27,19 @@ public class ServerLogReceiver extends AbstractLogReceiver {
     // TODO : override mgt methods pour propager aux LogReceivers spawned par l'acceptor
 
     @Override
+    public void dispose() {
+        super.dispose();
+        try {
+            serverSocket.close();
+        } catch (final IOException e) {
+            LOGGER.error("error while closing socket", e);
+        }
+    }
+
+    @Override
     public void run() {
         try {
-            while (true) {
+            while (!disposed) {
                 try {
                     LOGGER.debug("Waiting for client connections on " + serverSocket);
                     final Socket socket = serverSocket.accept();
@@ -51,14 +61,21 @@ public class ServerLogReceiver extends AbstractLogReceiver {
                 } catch (final SocketTimeoutException e) {
                     LOGGER.debug("timeout while accepting socket", e);
                 } catch (final IOException e) {
-                    LOGGER.error("error while accepting socket", e);
+                    if (!disposed) {
+                        LOGGER.error("error while accepting socket", e);
+                    } else {
+                        LOGGER.debug("error while accepting socket, the server has been closed", e);
+                    }
                 }
             }
         } finally {
-            try {
-                serverSocket.close();
-            } catch (final IOException e) {
-                LOGGER.error("error while closing socket", e);
+            LOGGER.debug("Closing server socket " + serverSocket);
+            if (!serverSocket.isClosed()) {
+                try {
+                    serverSocket.close();
+                } catch (final IOException e) {
+                    LOGGER.error("error while closing socket", e);
+                }
             }
         }
 

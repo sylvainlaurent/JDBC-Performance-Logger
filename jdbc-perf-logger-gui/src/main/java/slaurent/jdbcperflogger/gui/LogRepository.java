@@ -32,6 +32,7 @@ public class LogRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(LogRepository.class);
 
     private Connection connection;
+    private final String repoName;
     private boolean dbInitialized;
     private PreparedStatement addStatementLog;
     private PreparedStatement updateStatementLog;
@@ -39,9 +40,11 @@ public class LogRepository {
     private long lastModificationTime = System.currentTimeMillis();
 
     public LogRepository(String name) {
+        repoName = name;
         try {
             Driver.class.getClass();
-            connection = DriverManager.getConnection("jdbc:h2:file:logrepository_" + name + ";DB_CLOSE_DELAY=-1");
+            LOGGER.debug("Opening H2 connection for log repository " + name);
+            connection = DriverManager.getConnection("jdbc:h2:file:logrepository_" + name + ";DB_CLOSE_DELAY=1");
             // TODO : supprimer Db si erreur à l'initialisation
             initDb();
         } catch (final SQLException e) {
@@ -50,6 +53,7 @@ public class LogRepository {
     }
 
     public void close() {
+        LOGGER.debug("closing H2 connection for log repository " + repoName);
         try {
             addStatementLog.close();
             updateStatementLog.close();

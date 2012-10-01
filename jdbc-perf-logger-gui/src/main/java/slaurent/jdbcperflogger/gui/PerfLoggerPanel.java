@@ -596,6 +596,10 @@ public class PerfLoggerPanel extends JPanel {
         return logRepository;
     }
 
+    public void dispose() {
+        refreshDataTask.cancel();
+    }
+
     private class RefreshDataTask extends TimerTask {
         private volatile long lastRefreshTime;
         private boolean connected;

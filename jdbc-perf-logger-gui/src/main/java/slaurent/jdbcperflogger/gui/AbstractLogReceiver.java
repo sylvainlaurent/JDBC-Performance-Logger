@@ -87,6 +87,7 @@ public abstract class AbstractLogReceiver extends Thread {
         } finally {
             connected = false;
             ois.close();
+            LOGGER.debug("Closing socket " + socket);
             socket.close();
         }
     }
