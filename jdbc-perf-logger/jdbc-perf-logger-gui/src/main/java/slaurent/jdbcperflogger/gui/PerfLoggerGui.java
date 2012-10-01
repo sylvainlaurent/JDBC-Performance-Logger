@@ -10,7 +10,8 @@ import javax.swing.JTabbedPane;
 import javax.swing.SwingConstants;
 import javax.swing.ToolTipManager;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 //TODO features
 //Barre de menu : open/save DB, setup connections
@@ -20,7 +21,7 @@ import org.apache.log4j.Logger;
 //plusieurs panels, 1 seul receiver
 
 public class PerfLoggerGui implements IClientConnectionDelegate {
-    private final static Logger LOGGER = Logger.getLogger(PerfLoggerGui.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerGui.class);
 
     private JFrame frmJdbcPerformanceLogger;
     private JTabbedPane tabbedPane;

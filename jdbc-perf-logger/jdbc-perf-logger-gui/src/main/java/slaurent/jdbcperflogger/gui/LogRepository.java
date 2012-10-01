@@ -44,7 +44,7 @@ public class LogRepository {
         try {
             Driver.class.getClass();
             LOGGER.debug("Opening H2 connection for log repository " + name);
-            connection = DriverManager.getConnection("jdbc:h2:file:logrepository_" + name + ";DB_CLOSE_DELAY=1");
+            connection = DriverManager.getConnection("jdbc:h2:file:logdb/logrepository_" + name + ";DB_CLOSE_DELAY=1");
             // TODO : supprimer Db si erreur à l'initialisation
             initDb();
         } catch (final SQLException e) {

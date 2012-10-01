@@ -1,0 +1,4 @@
+<jdbc-perf-logger>
+  <local-server port="8889" />
+  <target-console host="localhost" port="4561" />
+</jdbc-perf-logger>
