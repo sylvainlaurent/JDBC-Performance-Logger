@@ -3,7 +3,7 @@
 
   <groupId>slaurent</groupId>
   <artifactId>jdbc-perf-logger</artifactId>
-  <version>0.0.1</version>
+  <version>0.0.2-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>JDBC Performance Logger Parent</name>
   <description>Parent/Reactor project for JDBC Performance Logger</description>
@@ -11,7 +11,7 @@
   <scm>
     <connection>scm:git:https://github.com/sylvainlaurent/JDBC-Performance-Logger.git</connection>
     <developerConnection>scm:git:https://github.com/sylvainlaurent/JDBC-Performance-Logger.git</developerConnection>
-    <tag>0.0.1</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <modules>
