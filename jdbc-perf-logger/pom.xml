@@ -83,6 +83,8 @@
           <localCheckout>true</localCheckout>
           <pushChanges>false</pushChanges>
           <tagNameFormat>@{project.version}</tagNameFormat>
+          <goals>package</goals>
+          <useReleaseProfile>false</useReleaseProfile>
         </configuration>
       </plugin>
     </plugins>

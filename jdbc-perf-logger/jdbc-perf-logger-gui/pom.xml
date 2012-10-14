@@ -64,6 +64,9 @@
               </jvmSettings>
             </program>
           </programs>
+          <binFileExtensions>
+            <unix>.sh</unix>
+          </binFileExtensions>
           <repositoryLayout>flat</repositoryLayout>
           <repositoryName>lib</repositoryName>
           <copyConfigurationDirectory>true</copyConfigurationDirectory>
@@ -86,6 +89,14 @@
             <descriptor>src/main/assembly/distrib.xml</descriptor>
           </descriptors>
         </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
