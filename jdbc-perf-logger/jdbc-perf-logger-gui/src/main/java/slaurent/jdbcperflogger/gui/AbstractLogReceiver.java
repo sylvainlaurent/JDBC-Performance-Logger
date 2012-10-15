@@ -27,8 +27,11 @@ public abstract class AbstractLogReceiver extends Thread {
         this.setDaemon(true);
     }
 
-    public boolean isConnected() {
-        return connected;
+    /**
+     * @return the current number of connections with this log receiver
+     */
+    public int getConnectionsCount() {
+        return connected ? 1 : 0;
     }
 
     public void pauseReceivingLogs() {

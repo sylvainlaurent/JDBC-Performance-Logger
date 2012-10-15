@@ -602,21 +602,22 @@ public class PerfLoggerPanel extends JPanel {
 
     private class RefreshDataTask extends TimerTask {
         private volatile long lastRefreshTime;
-        private boolean connected;
+        private int connectionsCount;
 
         @Override
         public void run() {
-            if (logRepository.getLastModificationTime() <= lastRefreshTime && connected == logReceiver.isConnected()) {
+            if (logRepository.getLastModificationTime() <= lastRefreshTime
+                    && connectionsCount == logReceiver.getConnectionsCount()) {
                 return;
             }
-            connected = logReceiver.isConnected();
+            connectionsCount = logReceiver.getConnectionsCount();
 
             lastRefreshTime = logRepository.getLastModificationTime();
             doRefreshData(currentSelectLogRunner);
 
             final StringBuilder txt = new StringBuilder();
-            txt.append(connected ? "Connected" : "Disconnected");
-            txt.append(" - ");
+            txt.append(connectionsCount);
+            txt.append(" connection(s) - ");
             txt.append(logRepository.count());
             txt.append(" statements logged - ");
             txt.append(TimeUnit.NANOSECONDS.toMillis(logRepository.getTotalExecAndFetchTimeNanos()));

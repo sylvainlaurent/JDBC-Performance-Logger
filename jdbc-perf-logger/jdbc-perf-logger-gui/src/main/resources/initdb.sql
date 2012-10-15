@@ -1,5 +1,8 @@
 set log 0;
 
+-- drop everything to be sure it works even if the schema changed...
+drop all objects;
+
 create table if not exists statement_log 
     (id identity, connectionId int, logId UUID not null, tstamp timestamp not null, statementType tinyInt not null, 
     rawSql varchar not null, filledSql varchar not null, 

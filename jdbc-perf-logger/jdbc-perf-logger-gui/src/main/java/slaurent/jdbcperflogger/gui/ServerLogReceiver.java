@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +14,7 @@ public class ServerLogReceiver extends AbstractLogReceiver {
     final static Logger LOGGER = LoggerFactory.getLogger(ServerLogReceiver.class);
 
     private ServerSocket serverSocket;
+    private final Set<AbstractLogReceiver> childReceivers = new CopyOnWriteArraySet<AbstractLogReceiver>();
 
     public ServerLogReceiver(int listenPort, LogRepository logRepository) {
         super(logRepository);
@@ -24,8 +27,6 @@ public class ServerLogReceiver extends AbstractLogReceiver {
         this.setName("ServerLogReceiver " + listenPort);
     }
 
-    // TODO : override mgt methods pour propager aux LogReceivers spawned par l'acceptor
-
     @Override
     public void dispose() {
         super.dispose();
@@ -34,6 +35,16 @@ public class ServerLogReceiver extends AbstractLogReceiver {
         } catch (final IOException e) {
             LOGGER.error("error while closing socket", e);
         }
+    }
+
+    @Override
+    public int getConnectionsCount() {
+        int cnt = 0;
+        // it's thread-safe to iterate over childReceivers because it's a CopyOnWriteArraySet
+        for (final AbstractLogReceiver receiver : childReceivers) {
+            cnt += receiver.getConnectionsCount();
+        }
+        return cnt;
     }
 
     @Override
@@ -52,11 +63,14 @@ public class ServerLogReceiver extends AbstractLogReceiver {
                                 handleConnection(socket);
                             } catch (final IOException e) {
                                 LOGGER.error("error while receiving logs from " + socket.getRemoteSocketAddress(), e);
+                            } finally {
+                                childReceivers.remove(this);
                             }
                         }
 
                     };
                     logReceiver.setName("LogReceiver " + socket.getRemoteSocketAddress());
+                    childReceivers.add(logReceiver);
                     logReceiver.start();
                 } catch (final SocketTimeoutException e) {
                     LOGGER.debug("timeout while accepting socket", e);

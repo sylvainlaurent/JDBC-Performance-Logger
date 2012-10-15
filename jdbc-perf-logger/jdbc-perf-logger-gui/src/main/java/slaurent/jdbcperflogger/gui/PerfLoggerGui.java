@@ -13,13 +13,6 @@ import javax.swing.ToolTipManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//TODO features
-//Barre de menu : open/save DB, setup connections
-//GUI pour choisir adresse remote
-
-//inverser sockets client et serveur, selon config
-//plusieurs panels, 1 seul receiver
-
 public class PerfLoggerGui implements IClientConnectionDelegate {
     private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerGui.class);
 
