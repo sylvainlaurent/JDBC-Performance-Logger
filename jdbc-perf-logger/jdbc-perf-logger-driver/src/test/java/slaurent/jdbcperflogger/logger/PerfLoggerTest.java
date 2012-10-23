@@ -7,9 +7,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import slaurent.jdbcperflogger.driver.DatabaseType;
-import slaurent.jdbcperflogger.driver.SqlTypedValue;
 import slaurent.jdbcperflogger.logger.PerfLogger;
 import slaurent.jdbcperflogger.model.PreparedStatementValuesHolder;
+import slaurent.jdbcperflogger.model.SqlTypedValue;
 
 public class PerfLoggerTest {
     @Test

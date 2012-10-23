@@ -17,11 +17,11 @@ import org.slf4j.LoggerFactory;
 
 import slaurent.jdbcperflogger.StatementType;
 import slaurent.jdbcperflogger.driver.DatabaseType;
-import slaurent.jdbcperflogger.driver.SqlTypedValue;
 import slaurent.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
 import slaurent.jdbcperflogger.model.BatchedPreparedStatementsLog;
 import slaurent.jdbcperflogger.model.PreparedStatementValuesHolder;
 import slaurent.jdbcperflogger.model.ResultSetLog;
+import slaurent.jdbcperflogger.model.SqlTypedValue;
 import slaurent.jdbcperflogger.model.StatementLog;
 
 public class PerfLogger {

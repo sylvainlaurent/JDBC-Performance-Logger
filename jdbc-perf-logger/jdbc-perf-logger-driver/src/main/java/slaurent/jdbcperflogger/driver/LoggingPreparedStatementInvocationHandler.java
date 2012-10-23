@@ -12,6 +12,7 @@ import java.util.UUID;
 import slaurent.jdbcperflogger.StatementType;
 import slaurent.jdbcperflogger.logger.PerfLogger;
 import slaurent.jdbcperflogger.model.PreparedStatementValuesHolder;
+import slaurent.jdbcperflogger.model.SqlTypedValue;
 
 public class LoggingPreparedStatementInvocationHandler extends LoggingStatementInvocationHandler {
     private static final String CLEAR_PARAMETERS = "clearParameters";

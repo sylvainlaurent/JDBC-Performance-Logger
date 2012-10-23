@@ -1,4 +1,4 @@
-package slaurent.jdbcperflogger.driver;
+package slaurent.jdbcperflogger.model;
 
 public class SqlTypedValue {
     public final Object value;
