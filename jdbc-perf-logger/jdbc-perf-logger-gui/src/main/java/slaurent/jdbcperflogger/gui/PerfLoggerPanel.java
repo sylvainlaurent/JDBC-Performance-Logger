@@ -11,7 +11,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.CharArrayWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -82,6 +81,7 @@ public class PerfLoggerPanel extends JPanel {
 
     private final AbstractLogReceiver logReceiver;
     private final LogRepository logRepository;
+    private final LogExporter logExporter;
     private final IClientConnectionDelegate clientConnectionDelegate;
     private volatile String txtFilter;
     private volatile Long minDurationNanos;
@@ -123,6 +123,7 @@ public class PerfLoggerPanel extends JPanel {
             IClientConnectionDelegate clientConnectionDelegate) {
         this.logReceiver = logReceiver;
         this.logRepository = logRepository;
+        logExporter = new LogExporter(logRepository);
         this.clientConnectionDelegate = clientConnectionDelegate;
         initialize();
     }
@@ -368,12 +369,21 @@ public class PerfLoggerPanel extends JPanel {
 
         lblStatus = new JLabel(" ");
 
-        final JButton btnExportSql = new JButton("Export...");
+        final JButton btnExportSql = new JButton("Export SQL...");
         btnExportSql.setToolTipText("Export all statements as a sql script");
         btnExportSql.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 exportSql();
+            }
+        });
+
+        final JButton btnExportCsv = new JButton("Export CSV...");
+        btnExportCsv.setToolTipText("Export all statements to a CSV file");
+        btnExportCsv.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                exportCsv();
             }
         });
 
@@ -388,11 +398,13 @@ public class PerfLoggerPanel extends JPanel {
         gl_panel.setHorizontalGroup(gl_panel.createParallelGroup(Alignment.LEADING).addGroup(
                 gl_panel.createSequentialGroup().addContainerGap()
                         .addComponent(lblStatus, GroupLayout.DEFAULT_SIZE, 751, Short.MAX_VALUE)
-                        .addPreferredGap(ComponentPlacement.RELATED).addComponent(btnClose)
-                        .addPreferredGap(ComponentPlacement.RELATED).addComponent(btnExportSql).addContainerGap()));
+                        .addPreferredGap(ComponentPlacement.RELATED).addComponent(btnExportSql)//
+                        .addPreferredGap(ComponentPlacement.RELATED).addComponent(btnExportCsv)//
+                        .addPreferredGap(ComponentPlacement.RELATED).addComponent(btnClose)//
+                        .addContainerGap()));
         gl_panel.setVerticalGroup(gl_panel.createParallelGroup(Alignment.LEADING).addGroup(
                 gl_panel.createParallelGroup(Alignment.BASELINE).addComponent(lblStatus).addComponent(btnExportSql)
-                        .addComponent(btnClose)));
+                        .addComponent(btnExportCsv).addComponent(btnClose)));
         panel.setLayout(gl_panel);
         this.setLayout(groupLayout);
 
@@ -458,10 +470,10 @@ public class PerfLoggerPanel extends JPanel {
                 txt1 = statementLog.getRawSql();
                 switch (statementLog.getStatementType()) {
                 case NON_PREPARED_BATCH_EXECUTION:
-                    txt1 = getBatchedExecutions(statementLog);
+                    txt1 = logExporter.getBatchedExecutions(statementLog);
                     break;
                 case PREPARED_BATCH_EXECUTION:
-                    txt2 = getBatchedExecutions(statementLog);
+                    txt2 = logExporter.getBatchedExecutions(statementLog);
                     break;
                 case BASE_PREPARED_STMT:
                 case PREPARED_QUERY_STMT:
@@ -515,23 +527,6 @@ public class PerfLoggerPanel extends JPanel {
         // scrollPaneSqlDetail2.setEnabled(txt2 != null);
     }
 
-    private String getBatchedExecutions(StatementLog statementLog) {
-        final StringBuilder strBuilder = new StringBuilder();
-        logRepository.getBatchStatementExecutions(statementLog.getLogId(), new ResultSetAnalyzer() {
-            @Override
-            public void analyze(ResultSet resultSet) throws SQLException {
-                while (resultSet.next()) {
-                    strBuilder.append("#");
-                    strBuilder.append(resultSet.getInt(1));
-                    strBuilder.append(": ");
-                    strBuilder.append(resultSet.getString(2));
-                    strBuilder.append("\n");
-                }
-            }
-        });
-        return strBuilder.toString();
-    }
-
     private void exportSql() {
         final JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileFilter(new FileNameExtensionFilter("SQL file", "sql"));
@@ -540,51 +535,19 @@ public class PerfLoggerPanel extends JPanel {
             if (!targetFile.getName().toLowerCase().endsWith(".sql")) {
                 targetFile = new File(targetFile.getAbsolutePath() + ".sql");
             }
-            final PrintWriter writer;
-            try {
-                writer = new PrintWriter(targetFile);
-            } catch (final FileNotFoundException e) {
-                throw new RuntimeException(e);
+            selectAllLogStatements.doSelect(logExporter.getSqlLogExporter(targetFile));
+        }
+    }
+
+    private void exportCsv() {
+        final JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new FileNameExtensionFilter("CSV file", "csv"));
+        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File targetFile = fileChooser.getSelectedFile();
+            if (!targetFile.getName().toLowerCase().endsWith(".csv")) {
+                targetFile = new File(targetFile.getAbsolutePath() + ".csv");
             }
-            try {
-                selectAllLogStatements.doSelect(new ResultSetAnalyzer() {
-                    @Override
-                    public void analyze(ResultSet resultSet) throws SQLException {
-
-                        final SimpleDateFormat tstampFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-                        while (resultSet.next()) {
-                            final Timestamp timestamp = resultSet.getTimestamp(LogRepository.TSTAMP_COLUMN);
-                            writer.print("/*");
-                            writer.print(tstampFormat.format(timestamp));
-                            writer.print(" exec=");
-                            writer.print(TimeUnit.NANOSECONDS.toMillis(resultSet
-                                    .getLong(LogRepository.EXEC_TIME_COLUMN)));
-                            writer.print("ms ");
-
-                            final int nbRows = resultSet.getInt(LogRepository.NB_ROWS_COLUMN);
-                            if (!resultSet.wasNull()) {
-                                writer.print(nbRows);
-                                writer.print(", row(s) fetched in ");
-                                writer.print(TimeUnit.NANOSECONDS.toMillis(resultSet
-                                        .getLong(LogRepository.FETCH_TIME_COLUMN)));
-                                writer.print("ms ");
-                            }
-
-                            writer.print("*/ ");
-
-                            final String filledSql = resultSet.getString(LogRepository.FILLED_SQL_COLUMN);
-                            writer.print(filledSql);
-                            if (!filledSql.endsWith(";")) {
-                                writer.print(";");
-                            }
-                            writer.println();
-                        }
-
-                    }
-                });
-            } finally {
-                writer.close();
-            }
+            selectAllLogStatements.doSelect(logExporter.getCsvLogExporter(targetFile));
         }
     }
 
