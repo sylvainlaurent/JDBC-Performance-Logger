@@ -39,4 +39,9 @@ public class ClientLogReceiver extends AbstractLogReceiver {
 
         }
     }
+
+    @Override
+    public boolean isServerMode() {
+        return false;
+    }
 }

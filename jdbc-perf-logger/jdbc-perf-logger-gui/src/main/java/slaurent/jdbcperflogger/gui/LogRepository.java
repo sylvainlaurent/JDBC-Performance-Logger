@@ -32,6 +32,8 @@ public class LogRepository {
     public static final String THREAD_NAME_COLUMN = "threadName";
     public static final String CONNECTION_ID_COLUMN = "connectionId";
     public static final String ERROR_COLUMN = "ERROR";
+    public static final String EXEC_COUNT_COLUMN = "EXEC_COUNT";
+    public static final String TOTAL_EXEC_TIME_COLUMN = "TOTAL_EXEC_TIME";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogRepository.class);
 
@@ -55,7 +57,7 @@ public class LogRepository {
         }
     }
 
-    public void close() {
+    public void dispose() {
         LOGGER.debug("closing H2 connection for log repository " + repoName);
         try {
             addStatementLog.close();
@@ -341,7 +343,7 @@ public class LogRepository {
         }
     }
 
-    public int count() {
+    public int countStatements() {
         try {
             final PreparedStatement statement = connection.prepareStatement("select count(1) from statement_log");
             try {

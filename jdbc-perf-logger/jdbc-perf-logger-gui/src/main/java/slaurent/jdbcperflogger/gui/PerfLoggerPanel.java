@@ -1,5 +1,16 @@
 package slaurent.jdbcperflogger.gui;
 
+import static slaurent.jdbcperflogger.gui.LogRepository.EXEC_COUNT_COLUMN;
+import static slaurent.jdbcperflogger.gui.LogRepository.EXEC_PLUS_FETCH_TIME_COLUMN;
+import static slaurent.jdbcperflogger.gui.LogRepository.EXEC_TIME_COLUMN;
+import static slaurent.jdbcperflogger.gui.LogRepository.FETCH_TIME_COLUMN;
+import static slaurent.jdbcperflogger.gui.LogRepository.FILLED_SQL_COLUMN;
+import static slaurent.jdbcperflogger.gui.LogRepository.RAW_SQL_COLUMN;
+import static slaurent.jdbcperflogger.gui.LogRepository.STMT_TYPE_COLUMN;
+import static slaurent.jdbcperflogger.gui.LogRepository.THREAD_NAME_COLUMN;
+import static slaurent.jdbcperflogger.gui.LogRepository.TOTAL_EXEC_TIME_COLUMN;
+import static slaurent.jdbcperflogger.gui.LogRepository.TSTAMP_COLUMN;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.KeyEventDispatcher;
@@ -67,16 +78,16 @@ public class PerfLoggerPanel extends JPanel {
 
     static {
         COLUMNS_WIDTH = new HashMap<String, Integer>();
-        COLUMNS_WIDTH.put("TSTAMP", 180);
-        COLUMNS_WIDTH.put("FETCH_TIME", 50);
-        COLUMNS_WIDTH.put("EXECUTION_TIME", 50);
-        COLUMNS_WIDTH.put("EXEC_PLUS_FETCH_TIME", 50);
-        COLUMNS_WIDTH.put("STATEMENTTYPE", 60);
-        COLUMNS_WIDTH.put("RAWSQL", 300);
-        COLUMNS_WIDTH.put("FILLEDSQL", 200);
-        COLUMNS_WIDTH.put("THREADNAME", 200);
-        COLUMNS_WIDTH.put("EXEC_COUNT", 100);
-        COLUMNS_WIDTH.put("TOTAL_EXEC_TIME", 100);
+        COLUMNS_WIDTH.put(TSTAMP_COLUMN, 180);
+        COLUMNS_WIDTH.put(FETCH_TIME_COLUMN, 50);
+        COLUMNS_WIDTH.put(EXEC_TIME_COLUMN, 50);
+        COLUMNS_WIDTH.put(EXEC_PLUS_FETCH_TIME_COLUMN, 50);
+        COLUMNS_WIDTH.put(STMT_TYPE_COLUMN, 60);
+        COLUMNS_WIDTH.put(RAW_SQL_COLUMN, 300);
+        COLUMNS_WIDTH.put(FILLED_SQL_COLUMN, 200);
+        COLUMNS_WIDTH.put(THREAD_NAME_COLUMN, 200);
+        COLUMNS_WIDTH.put(EXEC_COUNT_COLUMN, 100);
+        COLUMNS_WIDTH.put(TOTAL_EXEC_TIME_COLUMN, 100);
     }
 
     private final AbstractLogReceiver logReceiver;
@@ -206,7 +217,8 @@ public class PerfLoggerPanel extends JPanel {
         panelCopy1.setBorder(null);
         panelCopy1.setOpaque(false);
         panelCopy1.setLayout(new BoxLayout(panelCopy1, BoxLayout.X_AXIS));
-        final JButton btnCopy1 = new JButton("Copy");
+        final JButton btnCopy1 = new JButton("Copy raw SQL");
+        btnCopy1.setToolTipText("Copy the SQL statement unmodified (potentiall with '?' for bind variables");
         panelCopy1.add(btnCopy1);
         scrollPaneSqlDetail1.setRowHeaderView(panelCopy1);
 
@@ -227,7 +239,8 @@ public class PerfLoggerPanel extends JPanel {
         panelCopy2.setBorder(null);
         panelCopy2.setOpaque(false);
         panelCopy2.setLayout(new BoxLayout(panelCopy2, BoxLayout.X_AXIS));
-        final JButton btnCopy2 = new JButton("Copy");
+        final JButton btnCopy2 = new JButton("Copy filled SQL");
+        btnCopy2.setToolTipText("Copy the SQL statement to the clipboard, with the bind variables replaced by their actual value");
         panelCopy2.add(btnCopy2);
         scrollPaneSqlDetail2.setRowHeaderView(panelCopy2);
         btnCopy2.addActionListener(new ActionListener() {
@@ -394,6 +407,10 @@ public class PerfLoggerPanel extends JPanel {
                 clientConnectionDelegate.close(PerfLoggerPanel.this);
             }
         });
+        if (logReceiver.isServerMode()) {
+            btnClose.setEnabled(false);
+            btnClose.setToolTipText("Server connection cannot be closed, only GUI-initiated connections can be closed");
+        }
         final GroupLayout gl_panel = new GroupLayout(panel);
         gl_panel.setHorizontalGroup(gl_panel.createParallelGroup(Alignment.LEADING).addGroup(
                 gl_panel.createSequentialGroup().addContainerGap()
@@ -430,7 +447,6 @@ public class PerfLoggerPanel extends JPanel {
      * To be executed in EDT
      */
     private void refresh() {
-        // System.out.println("refresh");
         {
             final String txt = txtFldSqlFilter.getText();
             if (txt.length() == 0) {
@@ -563,6 +579,13 @@ public class PerfLoggerPanel extends JPanel {
         refreshDataTask.cancel();
     }
 
+    /**
+     * A {@link TimerTask} that regularly polls the associated {@link LogRepository} to check for new statements to
+     * display. If the UI must be refreshed it is later done in the EDT.
+     * 
+     * @author slaurent
+     * 
+     */
     private class RefreshDataTask extends TimerTask {
         private volatile long lastRefreshTime;
         private int connectionsCount;
@@ -579,9 +602,11 @@ public class PerfLoggerPanel extends JPanel {
             doRefreshData(currentSelectLogRunner);
 
             final StringBuilder txt = new StringBuilder();
-            txt.append(connectionsCount);
-            txt.append(" connection(s) - ");
-            txt.append(logRepository.count());
+            if (logReceiver.isServerMode()) {
+                txt.append(connectionsCount);
+                txt.append(" connection(s) - ");
+            }
+            txt.append(logRepository.countStatements());
             txt.append(" statements logged - ");
             txt.append(TimeUnit.NANOSECONDS.toMillis(logRepository.getTotalExecAndFetchTimeNanos()));
             txt.append("ms total execution time (with fetch)");

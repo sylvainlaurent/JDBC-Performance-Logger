@@ -93,5 +93,8 @@ public abstract class AbstractLogReceiver extends Thread {
             LOGGER.debug("Closing socket " + socket);
             socket.close();
         }
+
     }
+
+    public abstract boolean isServerMode();
 }

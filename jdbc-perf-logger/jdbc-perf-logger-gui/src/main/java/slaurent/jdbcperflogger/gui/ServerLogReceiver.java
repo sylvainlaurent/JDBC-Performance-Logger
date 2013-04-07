@@ -68,6 +68,11 @@ public class ServerLogReceiver extends AbstractLogReceiver {
                             }
                         }
 
+                        @Override
+                        public boolean isServerMode() {
+                            return true;
+                        }
+
                     };
                     logReceiver.setName("LogReceiver " + socket.getRemoteSocketAddress());
                     childReceivers.add(logReceiver);
@@ -94,4 +99,10 @@ public class ServerLogReceiver extends AbstractLogReceiver {
         }
 
     }
+
+    @Override
+    public boolean isServerMode() {
+        return true;
+    }
+
 }

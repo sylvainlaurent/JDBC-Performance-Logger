@@ -21,7 +21,7 @@ public class LogRepositoryTest {
 
     @After
     public void tearDown() {
-        repository.close();
+        repository.dispose();
     }
 
     @Test

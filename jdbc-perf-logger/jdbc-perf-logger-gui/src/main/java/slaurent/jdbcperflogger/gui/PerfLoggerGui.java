@@ -82,7 +82,7 @@ public class PerfLoggerGui implements IClientConnectionDelegate {
         tabbedPane.remove(perfLoggerPanel);
         perfLoggerPanel.dispose();
         perfLoggerPanel.getLogReceiver().dispose();
-        perfLoggerPanel.getLogRepository().close();
+        perfLoggerPanel.getLogRepository().dispose();
     }
 
     private PerfLoggerPanel connectToClient(String targetHost, int targetPort) {
