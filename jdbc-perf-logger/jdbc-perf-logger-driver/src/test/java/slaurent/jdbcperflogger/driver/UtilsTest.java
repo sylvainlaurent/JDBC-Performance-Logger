@@ -12,13 +12,13 @@ import org.junit.Test;
 
 public class UtilsTest {
 
-    @Test
-    public void testExtractAllInterfaces() {
-        final Class<?>[] intfs = Utils.extractAllInterfaces(HashSet.class);
-        final Set<Class<?>> coll = new HashSet<Class<?>>();
-        Collections.addAll(coll, intfs);
-        Assert.assertTrue(coll.contains(Collection.class));
-        Assert.assertTrue(coll.contains(Serializable.class));
-    }
+	@Test
+	public void testExtractAllInterfaces() {
+		final Class<?>[] intfs = Utils.extractAllInterfaces(HashSet.class);
+		final Set<Class<?>> coll = new HashSet<Class<?>>();
+		Collections.addAll(coll, intfs);
+		Assert.assertTrue(coll.contains(Collection.class));
+		Assert.assertTrue(coll.contains(Serializable.class));
+	}
 
 }
