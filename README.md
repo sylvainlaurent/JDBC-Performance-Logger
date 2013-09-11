@@ -17,15 +17,24 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 - Handling of batched statements
 - Logging of SQLExceptions
 
-## JDBC Driver setup
-- add the jdbc-logger-driver, slf4j-api jars and jdbcperflogger.xml file to the classpath of the JDBC-client application
-- configure jdbcperflogger.xml (see the file for indications). If both the driver and console are used on the same machine and the default TCP port 4561 is OK, there's nothing to do. 
+## How to setup the JDBC Driver
+- add the jdbc-logger-driver and slf4j-api jars to the classpath of the JDBC-client application
+- Prefix your current JDBC URL with `jdbcperflogger:`, example: `jdbcperflogger:jdbc:h2:mem:` or `jdbcperflogger:jdbc:oracle:thin:@myhost:1521:orcl`
+- (optional) add a `jdbcperflogger.xml` file to the classpath (see the example file for indications). If both the driver and console are used on the same machine, there's nothing to do: the driver will try to connect to the console on localhost:4561. 
+- (optional) the location of the config file can be overriden with the System property `jdbcperflogger.config.location`. Example : `java -Djdbcperflogger.config.location=/Users/me/myjdbcperflogger.xml`
 
-## Graphical console
+## How to use the graphical console
 - launch `bin/jdbc-performance-logger-gui` (unix/MacOS) or `bin\jdbc-performance-logger-gui.bat`
 - by default the console waits for connections from jdbc-logger-drivers on port 4561. All statements will be logged to the same tab
 - The console can also connect to a jdbc-logger-driver instance on a specific host and port. A tab is created for each host/port combination.
 - Once a tab is opened, the status of the connection is indicated at the bottom of the panel. If the connection is broken and was initiated by the console, the console will try to reconnect regularly. If the connection was initiated by the driver, the latter will try to reconnect regularly.
+
+## Tested databases
+- H2 (lightly)
+- Oracle 10.2
+
+## Current limitations
+- No DataSource nor XADataSource class provided
 
 ## Source code
 The source code is available on GitHub : https://github.com/sylvainlaurent/JDBC-Performance-Logger

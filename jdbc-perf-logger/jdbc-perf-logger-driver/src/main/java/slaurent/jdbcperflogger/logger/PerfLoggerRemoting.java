@@ -1,9 +1,14 @@
 package slaurent.jdbcperflogger.logger;
 
+import static slaurent.jdbcperflogger.driver.WrappingDriver.CONFIG_FILE_DEFAULT_LOCATION;
+import static slaurent.jdbcperflogger.driver.WrappingDriver.CONFIG_FILE_FALLBACK_LOCATION;
+import static slaurent.jdbcperflogger.driver.WrappingDriver.CONFIG_FILE_LOCATION_PROP_KEY;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.Set;
@@ -28,222 +33,153 @@ import slaurent.jdbcperflogger.driver.WrappingDriver;
 import slaurent.jdbcperflogger.model.LogMessage;
 
 public class PerfLoggerRemoting {
-	private final static Logger LOGGER = LoggerFactory
-			.getLogger(PerfLoggerRemoting.class);
-	private final static int DEFAULT_LISTEN_PORT = 4561;
+    private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerRemoting.class);
 
-	private final static Set<LogSender> senders = new CopyOnWriteArraySet<PerfLoggerRemoting.LogSender>();
-	static {
+    final static Set<LogSender> senders = new CopyOnWriteArraySet<PerfLoggerRemoting.LogSender>();
 
-		final InputStream configFileStream = WrappingDriver.class
-				.getResourceAsStream("/" + WrappingDriver.CONFIG_FILE);
-		if (configFileStream == null) {
-			LOGGER.warn("Cannot find "
-					+ WrappingDriver.CONFIG_FILE
-					+ " in the classpath, the default server socket will be listening on port "
-					+ DEFAULT_LISTEN_PORT);
-			new PerfLoggerServerThread(DEFAULT_LISTEN_PORT).start();
-		} else {
-			try {
-				final DocumentBuilderFactory dbf = DocumentBuilderFactory
-						.newInstance();
-				final DocumentBuilder docBuilder = dbf.newDocumentBuilder();
-				final Document doc = docBuilder.parse(configFileStream);
-				final Element root = (Element) doc.getElementsByTagName(
-						"jdbc-perf-logger").item(0);
-				final NodeList localServersList = root
-						.getElementsByTagName("local-server");
-				for (int i = 0; i < localServersList.getLength(); i++) {
-					final String port = localServersList.item(i)
-							.getAttributes().getNamedItem("port")
-							.getTextContent();
-					new PerfLoggerServerThread(Integer.parseInt(port)).start();
-				}
-				final NodeList targetClientList = root
-						.getElementsByTagName("target-console");
-				for (int i = 0; i < targetClientList.getLength(); i++) {
-					final NamedNodeMap attributes = targetClientList.item(i)
-							.getAttributes();
-					final String host = attributes.getNamedItem("host")
-							.getTextContent();
-					final String port = attributes.getNamedItem("port")
-							.getTextContent();
-					new PerfLoggerClientThread(host, Integer.parseInt(port))
-							.start();
-				}
-			} catch (final ParserConfigurationException e) {
-				throw new RuntimeException(e);
-			} catch (final IOException e) {
-				throw new RuntimeException(e);
-			} catch (final SAXException e) {
-				LOGGER.warn("Error parsing " + WrappingDriver.CONFIG_FILE, e);
-			}
-		}
+    static {
 
-	}
+        final InputStream configFileStream = openConfigFile();
 
-	private PerfLoggerRemoting() {
-	}
+        try {
+            final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            final DocumentBuilder docBuilder = dbf.newDocumentBuilder();
+            final Document doc = docBuilder.parse(configFileStream);
+            final Element root = (Element) doc.getElementsByTagName("jdbc-perf-logger").item(0);
+            final NodeList localServersList = root.getElementsByTagName("local-server");
+            for (int i = 0; i < localServersList.getLength(); i++) {
+                final String port = localServersList.item(i).getAttributes().getNamedItem("port").getTextContent();
+                new PerfLoggerServerThread(Integer.parseInt(port)).start();
+            }
+            final NodeList targetClientList = root.getElementsByTagName("target-console");
+            for (int i = 0; i < targetClientList.getLength(); i++) {
+                final NamedNodeMap attributes = targetClientList.item(i).getAttributes();
+                final String host = attributes.getNamedItem("host").getTextContent();
+                final String port = attributes.getNamedItem("port").getTextContent();
+                new PerfLoggerClientThread(host, Integer.parseInt(port)).start();
+            }
+        } catch (final ParserConfigurationException e) {
+            throw new RuntimeException(e);
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
+        } catch (final SAXException e) {
+            LOGGER.warn("Error parsing " + WrappingDriver.CONFIG_FILE_DEFAULT_LOCATION, e);
+        }
 
-	static void postLog(final LogMessage log) {
-		for (final LogSender sender : senders) {
-			sender.postLog(log);
-		}
-	}
+    }
 
-	static class PerfLoggerServerThread extends Thread {
-		private ServerSocket serverSocket;
+    static InputStream openConfigFile() {
+        String location = System.getProperty(CONFIG_FILE_LOCATION_PROP_KEY);
+        if (location == null) {
+            LOGGER.debug("No System property " + CONFIG_FILE_LOCATION_PROP_KEY + " defined, looking for config at "
+                    + CONFIG_FILE_DEFAULT_LOCATION);
+            location = CONFIG_FILE_DEFAULT_LOCATION;
+        }
 
-		PerfLoggerServerThread(final int serverPort) {
-			this.setDaemon(true);
-			this.setName("PerfLoggerServer acceptor port " + serverPort);
-			try {
-				serverSocket = new ServerSocket(serverPort);
-			} catch (final IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
+        InputStream configFileStream = openConfigFile(location);
+        if (configFileStream == null) {
+            location = CONFIG_FILE_FALLBACK_LOCATION;
+            configFileStream = openConfigFile(location);
+            if (configFileStream == null) {
+                throw new RuntimeException("Unexpected: cannot find " + CONFIG_FILE_FALLBACK_LOCATION);
+            }
+        }
+        LOGGER.info("Using config file " + location);
 
-		@Override
-		public void run() {
-			try {
-				while (true) {
-					try {
-						final Socket socket = serverSocket.accept();
-						LOGGER.debug("Got client connection from " + socket);
-						final LogSender sender = new LogSender(socket);
-						final Thread logSenderThread = new Thread(sender,
-								"PerfLoggerServer " + socket.getInetAddress()
-										+ ":" + socket.getPort());
-						logSenderThread.setDaemon(true);
-						logSenderThread.start();
-						senders.add(sender);
-					} catch (final IOException e) {
-						LOGGER.error("error while accepting socket", e);
-					}
-				}
-			} finally {
-				try {
-					serverSocket.close();
-				} catch (final IOException e) {
-					LOGGER.error("error while closing socket", e);
-				}
-			}
-		}
-	}
+        return configFileStream;
+    }
 
-	static class PerfLoggerClientThread extends Thread {
-		private final String host;
-		private final int port;
+    static InputStream openConfigFile(final String location) {
+        InputStream configFileStream = WrappingDriver.class.getResourceAsStream("/" + location);
+        if (configFileStream == null) {
+            LOGGER.debug("Cannot find config file " + location + " in the classpath, trying on filesystem");
 
-		PerfLoggerClientThread(final String host, final int port) {
-			this.setDaemon(true);
-			this.setName("PerfLoggerClient " + host + ":" + port);
-			this.host = host;
-			this.port = port;
-		}
+            try {
+                configFileStream = new FileInputStream(location);
+            } catch (final FileNotFoundException e) {
+                LOGGER.debug("Cannot find config file " + location + " on the filesystem");
+                // not found, just return null
+            }
+        }
+        return configFileStream;
 
-		@Override
-		public void run() {
-			while (true) {
-				final Socket socket;
-				try {
-					socket = new Socket(host, port);
-				} catch (final IOException e) {
-					LOGGER.debug("Unable to connect to " + host + ":" + port
-							+ ", will try again later", e);
-					quietSleep(30);
-					continue;
-				}
-				LOGGER.debug("Connected to " + host + ":" + socket);
-				try {
-					final LogSender sender = new LogSender(socket);
-					senders.add(sender);
-					sender.run();
-				} catch (final IOException e) {
-					LOGGER.info("Error in connection with " + host + ":" + port
-							+ ", will try again later", e);
-				}
-			}
-		}
+    }
 
-		private void quietSleep(final int seconds) {
-			try {
-				Thread.sleep(TimeUnit.SECONDS.toMillis(seconds));
-			} catch (final InterruptedException e) {
-			}
-		}
-	}
+    private PerfLoggerRemoting() {
+    }
 
-	static class LogSender implements Runnable {
-		private final Logger LOGGER = LoggerFactory.getLogger(LogSender.class);
+    static void postLog(final LogMessage log) {
+        for (final LogSender sender : senders) {
+            sender.postLog(log);
+        }
+    }
 
-		private final BlockingQueue<LogMessage> logsToSend = new LinkedBlockingQueue<LogMessage>(
-				10000);
-		private final Socket socket;
+    static class LogSender implements Runnable {
+        private final Logger LOGGER = LoggerFactory.getLogger(LogSender.class);
 
-		LogSender(final Socket socket) throws SocketException {
-			this.socket = socket;
-			socket.setKeepAlive(true);
-			socket.setSoTimeout((int) TimeUnit.SECONDS.toMillis(10));
-		}
+        private final BlockingQueue<LogMessage> logsToSend = new LinkedBlockingQueue<LogMessage>(10000);
+        private final Socket socket;
 
-		void postLog(final LogMessage log) {
-			final boolean posted = logsToSend.offer(log);
-			if (!posted) {
-				LOGGER.warn("queue full, dropping remote log of statement");
-			}
-		}
+        LogSender(final Socket socket) throws SocketException {
+            this.socket = socket;
+            socket.setKeepAlive(true);
+            socket.setSoTimeout((int) TimeUnit.SECONDS.toMillis(10));
+        }
 
-		@Override
-		public void run() {
-			ObjectOutputStream oos = null;
-			try {
-				oos = new ObjectOutputStream(socket.getOutputStream());
-				int cnt = 0;
-				while (true) {
-					try {
-						final LogMessage log = logsToSend.poll(10,
-								TimeUnit.SECONDS);
-						if (log != null) {
-							oos.writeObject(log);
-						} else {
-							// check the socket state
-							if (socket.isClosed() || !socket.isConnected()) {
-								// client disconnected
-								break;
-							}
-							oos.writeObject(null);
-						}
-						cnt = (cnt + 1) % 10;
-						if (cnt == 0) {
-							// avoid mem leak when the stream keeps back
-							// references to serialized objects
-							oos.reset();
-						}
-					} catch (final InterruptedException e) {
-						break;
-					}
-				}
-			} catch (final IOException e) {
-				LOGGER.warn("socket error", e);
-			} finally {
-				LOGGER.info("closing connection with {}:{}",
-						socket.getInetAddress(), socket.getPort());
-				senders.remove(this);
-				if (oos != null) {
-					try {
-						oos.close();
-					} catch (final IOException e) {
-					}
-				}
-				try {
-					socket.close();
-				} catch (final IOException e) {
-					LOGGER.error("error while closing socket", e);
-				}
-			}
-		}
-	}
+        void postLog(final LogMessage log) {
+            final boolean posted = logsToSend.offer(log);
+            if (!posted) {
+                LOGGER.warn("queue full, dropping remote log of statement");
+            }
+        }
+
+        @Override
+        public void run() {
+            ObjectOutputStream oos = null;
+            try {
+                oos = new ObjectOutputStream(socket.getOutputStream());
+                int cnt = 0;
+                while (true) {
+                    try {
+                        final LogMessage log = logsToSend.poll(10, TimeUnit.SECONDS);
+                        if (log != null) {
+                            oos.writeObject(log);
+                        } else {
+                            // check the socket state
+                            if (socket.isClosed() || !socket.isConnected()) {
+                                // client disconnected
+                                break;
+                            }
+                            oos.writeObject(null);
+                        }
+                        cnt = (cnt + 1) % 10;
+                        if (cnt == 0) {
+                            // avoid mem leak when the stream keeps back
+                            // references to serialized objects
+                            oos.reset();
+                        }
+                    } catch (final InterruptedException e) {
+                        break;
+                    }
+                }
+            } catch (final IOException e) {
+                LOGGER.warn("socket error", e);
+            } finally {
+                LOGGER.info("closing connection with {}:{}", socket.getInetAddress(), socket.getPort());
+                senders.remove(this);
+                if (oos != null) {
+                    try {
+                        oos.close();
+                    } catch (final IOException e) {
+                    }
+                }
+                try {
+                    socket.close();
+                } catch (final IOException e) {
+                    LOGGER.error("error while closing socket", e);
+                }
+            }
+        }
+    }
 
 }
