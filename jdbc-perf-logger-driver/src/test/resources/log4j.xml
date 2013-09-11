@@ -16,9 +16,6 @@
 	</appender>
 
 	<!-- Application Loggers -->
-	<logger name="com.slaurent.testmvc">
-		<level value="info" />
-	</logger>
 
 	<!-- Root Logger -->
 	<root>
