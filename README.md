@@ -19,9 +19,10 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 
 ## How to setup the JDBC Driver
 - add the jdbc-logger-driver and slf4j-api jars to the classpath of the JDBC-client application
+- Change the driver class name to `ch.sla.jdbcperflogger.driver.WrappingDriver`
 - Prefix your current JDBC URL with `jdbcperflogger:`, example: `jdbcperflogger:jdbc:h2:mem:` or `jdbcperflogger:jdbc:oracle:thin:@myhost:1521:orcl`
-- (optional) add a `jdbcperflogger.xml` file to the classpath (see the example file for indications). If both the driver and console are used on the same machine, there's nothing to do: the driver will try to connect to the console on localhost:4561. 
-- (optional) the location of the config file can be overriden with the System property `jdbcperflogger.config.location`. Example : `java -Djdbcperflogger.config.location=/Users/me/myjdbcperflogger.xml`
+- (optional) add a `jdbcperflogger.xml` file to the classpath (see the [example file](/jdbc-perf-logger-gui/src/main/config/example-jdbcperflogger.xml/) for indications). If both the driver and console are used on the same machine, there's nothing to do: the driver will try to connect to the console on localhost:4561. 
+- (optional) the location of the config file can be overriden with the System property `jdbcperflogger.config.location`. Example : `java -Djdbcperflogger.config.location=/Users/me/myjdbcperflogger.xml ....`
 
 ## How to use the graphical console
 - launch `bin/jdbc-performance-logger-gui` (unix/MacOS) or `bin\jdbc-performance-logger-gui.bat`

@@ -4,8 +4,7 @@
 org.eclipse.core.resources.prefs
 org.eclipse.m2e.core.prefs
 target
-/release.properties
-/pom.xml.*
 /.git
-/jdbc-perf-logger-driver
-/jdbc-perf-logger-gui
+/logdb
+/pom.xml.*
+/release.properties
