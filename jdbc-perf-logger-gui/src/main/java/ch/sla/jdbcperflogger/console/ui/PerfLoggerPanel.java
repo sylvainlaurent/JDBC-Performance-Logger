@@ -1,5 +1,6 @@
 package ch.sla.jdbcperflogger.console.ui;
 
+import static ch.sla.jdbcperflogger.console.db.LogRepository.ERROR_COLUMN;
 import static ch.sla.jdbcperflogger.console.db.LogRepository.EXEC_COUNT_COLUMN;
 import static ch.sla.jdbcperflogger.console.db.LogRepository.EXEC_PLUS_FETCH_TIME_COLUMN;
 import static ch.sla.jdbcperflogger.console.db.LogRepository.EXEC_TIME_COLUMN;
@@ -23,28 +24,15 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.io.CharArrayWriter;
-import java.io.File;
-import java.io.PrintWriter;
 import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -53,90 +41,53 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.event.UndoableEditListener;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 
-import ch.sla.jdbcperflogger.console.db.LogRepository;
-import ch.sla.jdbcperflogger.console.db.ResultSetAnalyzer;
-import ch.sla.jdbcperflogger.console.net.AbstractLogReceiver;
-import ch.sla.jdbcperflogger.model.StatementLog;
+import ch.sla.jdbcperflogger.console.ui.PerfLoggerController.GroupBy;
 
+@SuppressWarnings("serial")
 public class PerfLoggerPanel extends JPanel {
-
-    private static final long serialVersionUID = 1L;
-    private static final String GROUP_BY_FILLED_SQL = "Filled SQL";
-    private static final String GROUP_BY_RAW_SQL = "Raw SQL";
-    private static final String NO_GROUPING = "-";
 
     private static final Map<String, Integer> COLUMNS_WIDTH;
 
     static {
         COLUMNS_WIDTH = new HashMap<String, Integer>();
-        COLUMNS_WIDTH.put(TSTAMP_COLUMN, 180);
+        COLUMNS_WIDTH.put(TSTAMP_COLUMN, 100);
         COLUMNS_WIDTH.put(FETCH_TIME_COLUMN, 50);
         COLUMNS_WIDTH.put(EXEC_TIME_COLUMN, 50);
         COLUMNS_WIDTH.put(EXEC_PLUS_FETCH_TIME_COLUMN, 50);
-        COLUMNS_WIDTH.put(STMT_TYPE_COLUMN, 60);
-        COLUMNS_WIDTH.put(RAW_SQL_COLUMN, 300);
+        COLUMNS_WIDTH.put(STMT_TYPE_COLUMN, 80);
+        COLUMNS_WIDTH.put(RAW_SQL_COLUMN, 350);
         COLUMNS_WIDTH.put(FILLED_SQL_COLUMN, 200);
         COLUMNS_WIDTH.put(THREAD_NAME_COLUMN, 200);
         COLUMNS_WIDTH.put(EXEC_COUNT_COLUMN, 100);
         COLUMNS_WIDTH.put(TOTAL_EXEC_TIME_COLUMN, 100);
+        COLUMNS_WIDTH.put(ERROR_COLUMN, 0);
     }
 
-    private final AbstractLogReceiver logReceiver;
-    private final LogRepository logRepository;
-    private final LogExporter logExporter;
-    private final IClientConnectionDelegate clientConnectionDelegate;
-    private volatile String txtFilter;
-    private volatile Long minDurationNanos;
+    private final PerfLoggerController perfLoggerController;
     private JTextField txtFldSqlFilter;
     private JTextField txtFldMinDuration;
     private JTable table;
     private ResultSetDataModel dataModel;
-    private RefreshDataTask refreshDataTask;
-    private JComboBox<String> comboBoxGroupBy;
-    private RSyntaxTextArea txtFieldSqlDetail1;
-    private RSyntaxTextArea txtFieldSqlDetail2;
-    private JLabel lblStatus;
-    private boolean tableStructureChanged = true;
+    private JComboBox<GroupBy> comboBoxGroupBy;
+    private JButton btnClose;
 
-    private final SelectLogRunner selectAllLogStatements = new SelectLogRunner() {
-        @Override
-        public void doSelect(ResultSetAnalyzer resultSetAnalyzer) {
-            logRepository.getStatements(txtFilter, minDurationNanos, resultSetAnalyzer);
-        }
-    };
-    private final SelectLogRunner selectLogStatementsGroupByRawSql = new SelectLogRunner() {
-        @Override
-        public void doSelect(ResultSetAnalyzer resultSetAnalyzer) {
-            logRepository.getStatementsGroupByRawSQL(txtFilter, minDurationNanos, resultSetAnalyzer);
-        }
-    };
-    private final SelectLogRunner selectLogStatementsGroupByFilledSql = new SelectLogRunner() {
-        @Override
-        public void doSelect(ResultSetAnalyzer resultSetAnalyzer) {
-            logRepository.getStatementsGroupByFilledSQL(txtFilter, minDurationNanos, resultSetAnalyzer);
-        }
-    };
+    RSyntaxTextArea txtFieldSqlDetail1;
+    RSyntaxTextArea txtFieldSqlDetail2;
+    JLabel lblStatus;
+    JButton btnPause;
 
-    private SelectLogRunner currentSelectLogRunner = selectAllLogStatements;
-
-    public PerfLoggerPanel(AbstractLogReceiver logReceiver, LogRepository logRepository,
-            IClientConnectionDelegate clientConnectionDelegate) {
-        this.logReceiver = logReceiver;
-        this.logRepository = logRepository;
-        logExporter = new LogExporter(logRepository);
-        this.clientConnectionDelegate = clientConnectionDelegate;
+    public PerfLoggerPanel(PerfLoggerController perfLoggerController) {
+        this.perfLoggerController = perfLoggerController;
         initialize();
     }
 
@@ -192,52 +143,58 @@ public class PerfLoggerPanel extends JPanel {
         gbc_lblText.gridy = 0;
         filterPanel.add(lblText, gbc_lblText);
 
-        txtFldSqlFilter = new JTextField();
-        final GridBagConstraints gbc_txtFldSqlFilter = new GridBagConstraints();
-        gbc_txtFldSqlFilter.anchor = GridBagConstraints.BASELINE;
-        gbc_txtFldSqlFilter.fill = GridBagConstraints.HORIZONTAL;
-        gbc_txtFldSqlFilter.insets = new Insets(0, 0, 0, 5);
-        gbc_txtFldSqlFilter.gridx = 1;
-        gbc_txtFldSqlFilter.gridy = 0;
-        filterPanel.add(txtFldSqlFilter, gbc_txtFldSqlFilter);
-        txtFldSqlFilter.setColumns(10);
+        {
+            txtFldSqlFilter = new JTextField();
+            final GridBagConstraints gbc_txtFldSqlFilter = new GridBagConstraints();
+            gbc_txtFldSqlFilter.anchor = GridBagConstraints.BASELINE;
+            gbc_txtFldSqlFilter.fill = GridBagConstraints.HORIZONTAL;
+            gbc_txtFldSqlFilter.insets = new Insets(0, 0, 0, 5);
+            gbc_txtFldSqlFilter.gridx = 1;
+            gbc_txtFldSqlFilter.gridy = 0;
+            filterPanel.add(txtFldSqlFilter, gbc_txtFldSqlFilter);
+            txtFldSqlFilter.setColumns(10);
 
-        final JLabel lblDurationms = new JLabel("Exec duration (ms) >=");
-        final GridBagConstraints gbc_lblDurationms = new GridBagConstraints();
-        gbc_lblDurationms.anchor = GridBagConstraints.BASELINE_TRAILING;
-        gbc_lblDurationms.insets = new Insets(0, 0, 0, 5);
-        gbc_lblDurationms.gridx = 2;
-        gbc_lblDurationms.gridy = 0;
-        filterPanel.add(lblDurationms, gbc_lblDurationms);
-
-        txtFldMinDuration = new JTextField();
-        final GridBagConstraints gbc_txtFldMinDuration = new GridBagConstraints();
-        gbc_txtFldMinDuration.anchor = GridBagConstraints.BASELINE;
-        gbc_txtFldMinDuration.fill = GridBagConstraints.HORIZONTAL;
-        gbc_txtFldMinDuration.gridx = 3;
-        gbc_txtFldMinDuration.gridy = 0;
-        filterPanel.add(txtFldMinDuration, gbc_txtFldMinDuration);
-        txtFldMinDuration.getDocument().addUndoableEditListener(new UndoableEditListener() {
-            @Override
-            public void undoableEditHappened(UndoableEditEvent e) {
-                if (txtFldMinDuration.getText().length() > 0) {
-                    try {
-                        new BigDecimal(txtFldMinDuration.getText());
-                    } catch (final NumberFormatException exc) {
-                        e.getEdit().undo();
-                        return;
-                    }
+            txtFldSqlFilter.getDocument().addUndoableEditListener(new UndoableEditListener() {
+                @Override
+                public void undoableEditHappened(UndoableEditEvent e) {
+                    perfLoggerController.setTextFilter(txtFldSqlFilter.getText());
                 }
-                refresh();
-            }
-        });
-        txtFldMinDuration.setColumns(5);
-        txtFldSqlFilter.getDocument().addUndoableEditListener(new UndoableEditListener() {
-            @Override
-            public void undoableEditHappened(UndoableEditEvent e) {
-                refresh();
-            }
-        });
+            });
+        }
+        {
+            final JLabel lblDurationms = new JLabel("Exec duration (ms) >=");
+            final GridBagConstraints gbc_lblDurationms = new GridBagConstraints();
+            gbc_lblDurationms.anchor = GridBagConstraints.BASELINE_TRAILING;
+            gbc_lblDurationms.insets = new Insets(0, 0, 0, 5);
+            gbc_lblDurationms.gridx = 2;
+            gbc_lblDurationms.gridy = 0;
+            filterPanel.add(lblDurationms, gbc_lblDurationms);
+        }
+        {
+            txtFldMinDuration = new JTextField();
+            final GridBagConstraints gbc_txtFldMinDuration = new GridBagConstraints();
+            gbc_txtFldMinDuration.anchor = GridBagConstraints.BASELINE;
+            gbc_txtFldMinDuration.fill = GridBagConstraints.HORIZONTAL;
+            gbc_txtFldMinDuration.gridx = 3;
+            gbc_txtFldMinDuration.gridy = 0;
+            txtFldMinDuration.setColumns(5);
+            filterPanel.add(txtFldMinDuration, gbc_txtFldMinDuration);
+            txtFldMinDuration.getDocument().addUndoableEditListener(new UndoableEditListener() {
+                @Override
+                public void undoableEditHappened(UndoableEditEvent e) {
+                    Long minDurationMs = null;
+                    if (txtFldMinDuration.getText().length() > 0) {
+                        try {
+                            minDurationMs = new BigDecimal(txtFldMinDuration.getText()).longValue();
+                        } catch (final NumberFormatException exc) {
+                            e.getEdit().undo();
+                            return;
+                        }
+                    }
+                    perfLoggerController.setMinDurationFilter(minDurationMs);
+                }
+            });
+        }
 
         final JPanel groupingPanel = new JPanel();
         groupingPanel.setBorder(new TitledBorder(null, "Group by", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -254,20 +211,19 @@ public class PerfLoggerPanel extends JPanel {
         gbl_groupingPanel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
         groupingPanel.setLayout(gbl_groupingPanel);
 
-        comboBoxGroupBy = new JComboBox<String>();
+        comboBoxGroupBy = new JComboBox<GroupBy>();
         final GridBagConstraints gbc_comboBoxGroupBy = new GridBagConstraints();
         gbc_comboBoxGroupBy.anchor = GridBagConstraints.BASELINE_TRAILING;
         gbc_comboBoxGroupBy.gridx = 0;
         gbc_comboBoxGroupBy.gridy = 0;
         groupingPanel.add(comboBoxGroupBy, gbc_comboBoxGroupBy);
-        comboBoxGroupBy.setModel(new DefaultComboBoxModel<String>(new String[] { NO_GROUPING, GROUP_BY_RAW_SQL,
-                GROUP_BY_FILLED_SQL }));
+        comboBoxGroupBy
+                .setModel(new DefaultComboBoxModel<GroupBy>(EnumSet.allOf(GroupBy.class).toArray(new GroupBy[0])));
         comboBoxGroupBy.setSelectedIndex(0);
         comboBoxGroupBy.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                tableStructureChanged = true;
-                refresh();
+                perfLoggerController.setGroupBy(comboBoxGroupBy.getItemAt(comboBoxGroupBy.getSelectedIndex()));
             }
         });
 
@@ -285,7 +241,7 @@ public class PerfLoggerPanel extends JPanel {
         gbl_controlPanel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
         controlPanel.setLayout(gbl_controlPanel);
 
-        final JButton btnPause = new JButton("Pause");
+        btnPause = new JButton("Pause");
         final GridBagConstraints gbc_btnPause = new GridBagConstraints();
         gbc_btnPause.anchor = GridBagConstraints.BASELINE;
         gbc_btnPause.insets = new Insets(0, 0, 0, 5);
@@ -302,21 +258,14 @@ public class PerfLoggerPanel extends JPanel {
         btnClear.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                logRepository.clear();
-                refresh();
+                perfLoggerController.onClear();
             }
         });
         btnPause.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (logReceiver.isPaused()) {
-                    logReceiver.resumeReceivingLogs();
-                    btnPause.setText("Pause");
-                } else {
-                    logReceiver.pauseReceivingLogs();
-                    btnPause.setText("Resume");
-                }
+                perfLoggerController.onPause();
             }
         });
 
@@ -349,7 +298,7 @@ public class PerfLoggerPanel extends JPanel {
                     if (lsm.getMinSelectionIndex() >= 0) {
                         logId = dataModel.getIdAtRow(table.convertRowIndexToModel(lsm.getMinSelectionIndex()));
                     }
-                    statementSelected(logId);
+                    perfLoggerController.onSelectStatement(logId);
                 }
             }
         });
@@ -472,11 +421,11 @@ public class PerfLoggerPanel extends JPanel {
         gbl_bottomPanel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
         bottomPanel.setLayout(gbl_bottomPanel);
 
-        final JButton btnClose = new JButton("Close");
+        btnClose = new JButton("Close");
         btnClose.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                clientConnectionDelegate.close(PerfLoggerPanel.this);
+                perfLoggerController.onClose();
             }
         });
 
@@ -485,7 +434,7 @@ public class PerfLoggerPanel extends JPanel {
         btnExportCsv.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                exportCsv();
+                perfLoggerController.onExportCsv();
             }
         });
 
@@ -494,7 +443,7 @@ public class PerfLoggerPanel extends JPanel {
         btnExportSql.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                exportSql();
+                perfLoggerController.onExportSql();
             }
         });
 
@@ -524,268 +473,35 @@ public class PerfLoggerPanel extends JPanel {
         gbc_btnClose.gridy = 0;
         bottomPanel.add(btnClose, gbc_btnClose);
 
-        final Timer timer = new Timer(true);
-        refreshDataTask = new RefreshDataTask();
-        timer.schedule(refreshDataTask, 1000, 1000);
-
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
             @Override
             public boolean dispatchKeyEvent(KeyEvent e) {
                 if (e.getKeyCode() == java.awt.event.KeyEvent.VK_BACK_SPACE
                         && e.getModifiers() == java.awt.event.InputEvent.CTRL_MASK && e.getID() == KeyEvent.KEY_PRESSED) {
-                    logRepository.clear();
-                    refresh();
+                    perfLoggerController.onClear();
                     return true;
                 }
                 return false;
             }
         });
-        if (logReceiver.isServerMode()) {
-            btnClose.setEnabled(false);
-            btnClose.setToolTipText("Server connection cannot be closed, only GUI-initiated connections can be closed");
-        }
 
     }
 
-    /**
-     * To be executed in EDT
-     */
-    private void refresh() {
-        {
-            final String txt = txtFldSqlFilter.getText();
-            if (txt.length() == 0) {
-                txtFilter = null;
-            } else {
-                txtFilter = txt;
-            }
-        }
-        {
-            final String txt = txtFldMinDuration.getText();
-            if (txt.length() == 0) {
-                minDurationNanos = null;
-            } else {
-                minDurationNanos = TimeUnit.MILLISECONDS.toNanos(new BigDecimal(txt).longValue());
-            }
-        }
-        if (NO_GROUPING.equals(comboBoxGroupBy.getSelectedItem())) {
-            currentSelectLogRunner = selectAllLogStatements;
-        } else if (GROUP_BY_RAW_SQL.equals(comboBoxGroupBy.getSelectedItem())) {
-            currentSelectLogRunner = selectLogStatementsGroupByRawSql;
-        } else if (GROUP_BY_FILLED_SQL.equals(comboBoxGroupBy.getSelectedItem())) {
-            currentSelectLogRunner = selectLogStatementsGroupByFilledSql;
-        } else {
-            throw new IllegalArgumentException("unexpected value " + comboBoxGroupBy.getSelectedItem());
-        }
-
-        refreshDataTask.forceRefresh();
+    void setCloseEnable(boolean enabled) {
+        btnClose.setEnabled(false);
+        btnClose.setToolTipText("Server connection cannot be closed, only GUI-initiated connections can be closed");
     }
 
-    private void statementSelected(Long logId) {
-        String txt1 = "";
-        String txt2 = "";
-        if (logId != null) {
-            final StatementLog statementLog = logRepository.getStatementLog(logId);
-            final Object selectedItem = comboBoxGroupBy.getSelectedItem();
-            if (NO_GROUPING.equals(selectedItem)) {
-                txt1 = statementLog.getRawSql();
-                switch (statementLog.getStatementType()) {
-                case NON_PREPARED_BATCH_EXECUTION:
-                    txt1 = logExporter.getBatchedExecutions(statementLog);
-                    break;
-                case PREPARED_BATCH_EXECUTION:
-                    txt2 = logExporter.getBatchedExecutions(statementLog);
-                    break;
-                case BASE_PREPARED_STMT:
-                case PREPARED_QUERY_STMT:
-                    txt2 = statementLog.getFilledSql();
-                    break;
-                default:
-                    break;
+    void setData(List<Object[]> rows, List<String> columnNames, List<Class<?>> columnTypes,
+            boolean tableStructureChanged) {
+        dataModel.setNewData(rows, columnNames, columnTypes);
+        if (tableStructureChanged) {
+            for (int i = 0; i < dataModel.getColumnCount(); i++) {
+                final Integer width = COLUMNS_WIDTH.get(dataModel.getColumnName(i));
+                if (width != null) {
+                    table.getColumnModel().getColumn(i).setPreferredWidth(width.intValue());
                 }
-            } else if (GROUP_BY_RAW_SQL.equals(selectedItem)) {
-                switch (statementLog.getStatementType()) {
-                case BASE_NON_PREPARED_STMT:
-                case BASE_PREPARED_STMT:
-                case PREPARED_BATCH_EXECUTION:
-                case PREPARED_QUERY_STMT:
-                case NON_PREPARED_QUERY_STMT:
-                    txt1 = statementLog.getRawSql();
-                    break;
-                case NON_PREPARED_BATCH_EXECUTION:
-                    txt1 = "Cannot display details in \"Group by\" modes";
-                }
-            } else if (GROUP_BY_FILLED_SQL.equals(selectedItem)) {
-                switch (statementLog.getStatementType()) {
-                case BASE_NON_PREPARED_STMT:
-                case PREPARED_BATCH_EXECUTION:
-                case NON_PREPARED_QUERY_STMT:
-                    txt1 = statementLog.getRawSql();
-                    break;
-                case BASE_PREPARED_STMT:
-                case PREPARED_QUERY_STMT:
-                    txt1 = statementLog.getRawSql();
-                    txt2 = statementLog.getFilledSql();
-                    break;
-                case NON_PREPARED_BATCH_EXECUTION:
-                    txt1 = "Cannot display details in \"Group by\" modes";
-                }
-            } else {
-                throw new IllegalArgumentException("unexpected selectedItem " + selectedItem);
-            }
-
-            if (statementLog.getSqlException() != null) {
-                final CharArrayWriter writer = new CharArrayWriter();
-                statementLog.getSqlException().printStackTrace(new PrintWriter(writer));
-                txt2 += writer.toString();
             }
         }
-        txtFieldSqlDetail1.setText(txt1);
-        txtFieldSqlDetail1.select(0, 0);
-        txtFieldSqlDetail2.setText(txt2);
-        txtFieldSqlDetail2.select(0, 0);
-        // scrollPaneSqlDetail1.setEnabled(txt1 != null);
-        // scrollPaneSqlDetail2.setEnabled(txt2 != null);
-    }
-
-    private void exportSql() {
-        final JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new FileNameExtensionFilter("SQL file", "sql"));
-        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File targetFile = fileChooser.getSelectedFile();
-            if (!targetFile.getName().toLowerCase().endsWith(".sql")) {
-                targetFile = new File(targetFile.getAbsolutePath() + ".sql");
-            }
-            selectAllLogStatements.doSelect(logExporter.getSqlLogExporter(targetFile));
-        }
-    }
-
-    private void exportCsv() {
-        final JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new FileNameExtensionFilter("CSV file", "csv"));
-        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File targetFile = fileChooser.getSelectedFile();
-            if (!targetFile.getName().toLowerCase().endsWith(".csv")) {
-                targetFile = new File(targetFile.getAbsolutePath() + ".csv");
-            }
-            selectAllLogStatements.doSelect(logExporter.getCsvLogExporter(targetFile));
-        }
-    }
-
-    public AbstractLogReceiver getLogReceiver() {
-        return logReceiver;
-    }
-
-    public LogRepository getLogRepository() {
-        return logRepository;
-    }
-
-    public void dispose() {
-        refreshDataTask.cancel();
-    }
-
-    /**
-     * A {@link TimerTask} that regularly polls the associated {@link LogRepository} to check for new statements to
-     * display. If the UI must be refreshed it is later done in the EDT.
-     * 
-     * @author slaurent
-     * 
-     */
-    private class RefreshDataTask extends TimerTask {
-        private volatile long lastRefreshTime;
-        private int connectionsCount;
-
-        @Override
-        public void run() {
-            if (logRepository.getLastModificationTime() <= lastRefreshTime
-                    && connectionsCount == logReceiver.getConnectionsCount()) {
-                return;
-            }
-            connectionsCount = logReceiver.getConnectionsCount();
-
-            lastRefreshTime = logRepository.getLastModificationTime();
-            doRefreshData(currentSelectLogRunner);
-
-            final StringBuilder txt = new StringBuilder();
-            if (logReceiver.isServerMode()) {
-                txt.append(connectionsCount);
-                txt.append(" connection(s) - ");
-            }
-            txt.append(logRepository.countStatements());
-            txt.append(" statements logged - ");
-            txt.append(TimeUnit.NANOSECONDS.toMillis(logRepository.getTotalExecAndFetchTimeNanos()));
-            txt.append("ms total execution time (with fetch)");
-            if ((txtFilter != null && txtFilter.length() > 0)
-                    || (minDurationNanos != null && minDurationNanos.longValue() > 0)) {
-                txt.append(" - ");
-                txt.append(TimeUnit.NANOSECONDS.toMillis(logRepository.getTotalExecAndFetchTimeNanos(txtFilter,
-                        minDurationNanos)));
-                txt.append("ms total filtered");
-            }
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    lblStatus.setText(txt.toString());
-                }
-            });
-        }
-
-        void forceRefresh() {
-            lastRefreshTime = -1L;
-        }
-
-        void doRefreshData(SelectLogRunner selectLogRunner) {
-            selectLogRunner.doSelect(new ResultSetAnalyzer() {
-                @Override
-                public void analyze(ResultSet resultSet) throws SQLException {
-                    final ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-                    final int columnCount = resultSetMetaData.getColumnCount();
-
-                    final List<String> tempColumnNames = new ArrayList<String>();
-                    final List<Class<?>> tempColumnTypes = new ArrayList<Class<?>>();
-                    final List<Object[]> tempRows = new ArrayList<Object[]>();
-                    try {
-                        for (int i = 1; i <= columnCount; i++) {
-                            tempColumnNames.add(resultSetMetaData.getColumnLabel(i).toUpperCase());
-                            if (resultSetMetaData.getColumnType(i) == Types.TIMESTAMP) {
-                                tempColumnTypes.add(String.class);
-                            } else {
-                                tempColumnTypes.add(Class.forName(resultSetMetaData.getColumnClassName(i)));
-                            }
-                        }
-
-                        final SimpleDateFormat tstampFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-                        while (resultSet.next()) {
-                            final Object[] row = new Object[columnCount];
-                            for (int i = 1; i <= columnCount; i++) {
-                                row[i - 1] = resultSet.getObject(i);
-                                if (row[i - 1] instanceof Timestamp) {
-                                    row[i - 1] = tstampFormat.format(row[i - 1]);
-                                }
-                            }
-                            tempRows.add(row);
-                        }
-                    } catch (final ClassNotFoundException e) {
-                        throw new RuntimeException(e);
-                    }
-
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            dataModel.setNewData(tempRows, tempColumnNames, tempColumnTypes);
-                            if (tableStructureChanged) {
-                                for (int i = 0; i < dataModel.getColumnCount(); i++) {
-                                    final Integer width = COLUMNS_WIDTH.get(dataModel.getColumnName(i));
-                                    if (width != null) {
-                                        table.getColumnModel().getColumn(i).setPreferredWidth(width.intValue());
-                                    }
-                                }
-                                tableStructureChanged = false;
-                            }
-                        }
-                    });
-                }
-            });
-        }
-
     }
 }

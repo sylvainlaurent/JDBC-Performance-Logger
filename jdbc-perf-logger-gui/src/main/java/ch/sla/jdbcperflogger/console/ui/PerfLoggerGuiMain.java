@@ -1,13 +1,10 @@
 package ch.sla.jdbcperflogger.console.ui;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Frame;
 
-import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
-import javax.swing.SwingConstants;
 import javax.swing.ToolTipManager;
 
 import org.slf4j.Logger;
@@ -18,22 +15,21 @@ import ch.sla.jdbcperflogger.console.net.AbstractLogReceiver;
 import ch.sla.jdbcperflogger.console.net.ClientLogReceiver;
 import ch.sla.jdbcperflogger.console.net.ServerLogReceiver;
 
-public class PerfLoggerGui implements IClientConnectionDelegate {
-    private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerGui.class);
+public class PerfLoggerGuiMain implements IClientConnectionDelegate {
+    private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerGuiMain.class);
 
-    private JFrame frmJdbcPerformanceLogger;
-    private JTabbedPane tabbedPane;
+    private PerfLoggerGuiMainFrame frmJdbcPerformanceLogger;
 
     /**
      * Launch the application.
      */
     public static void main(String[] args) {
-        LOGGER.debug("PerfLoggerGui starting...");
+        LOGGER.debug("PerfLoggerGuiMain starting...");
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
                 try {
-                    final PerfLoggerGui window = new PerfLoggerGui();
+                    final PerfLoggerGuiMain window = new PerfLoggerGuiMain();
                     window.frmJdbcPerformanceLogger.setVisible(true);
                 } catch (final Exception e) {
                     e.printStackTrace();
@@ -45,7 +41,7 @@ public class PerfLoggerGui implements IClientConnectionDelegate {
     /**
      * Create the application.
      */
-    public PerfLoggerGui() {
+    public PerfLoggerGuiMain() {
         initialize();
     }
 
@@ -55,56 +51,47 @@ public class PerfLoggerGui implements IClientConnectionDelegate {
     private void initialize() {
         ToolTipManager.sharedInstance().setInitialDelay(500);
 
-        frmJdbcPerformanceLogger = new JFrame();
-        frmJdbcPerformanceLogger.setMinimumSize(new Dimension(600, 300));
-        frmJdbcPerformanceLogger.setTitle("JDBC Performance Logger");
-        frmJdbcPerformanceLogger.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        tabbedPane = new JTabbedPane(SwingConstants.TOP);
-        frmJdbcPerformanceLogger.getContentPane().add(tabbedPane, BorderLayout.CENTER);
+        frmJdbcPerformanceLogger = new PerfLoggerGuiMainFrame();
 
         final JPanel welcomePanel = new WelcomePanel(this);
-        tabbedPane.addTab("Welcome", null, welcomePanel, null);
+        frmJdbcPerformanceLogger.addTab("Welcome", welcomePanel);
 
         // TODO make server port configurable
-        final PerfLoggerPanel serverPerfLoggerPanel = createServer(4561);
-        tabbedPane.addTab("*:4561", serverPerfLoggerPanel);
+        final PerfLoggerController serverPerfLoggerController = createServer(4561);
+        frmJdbcPerformanceLogger.addTab("*:4561", serverPerfLoggerController.getPanel());
 
         frmJdbcPerformanceLogger.pack();
-        frmJdbcPerformanceLogger.setMinimumSize(frmJdbcPerformanceLogger.getSize());
-        frmJdbcPerformanceLogger.setBounds(100, 100, 900, 600);
+        frmJdbcPerformanceLogger.setExtendedState(Frame.MAXIMIZED_BOTH);
+        frmJdbcPerformanceLogger.setMinimumSize(new Dimension(600, 500));
 
     }
 
     @Override
     public void createClientConnection(String host, int port) {
-        final PerfLoggerPanel clientPerfLoggerPanel = connectToClient(host, port);
-        tabbedPane.addTab(host + ":" + port, clientPerfLoggerPanel);
+        final PerfLoggerController clientPerfLoggerController = connectToClient(host, port);
+        frmJdbcPerformanceLogger.addTab(host + ":" + port, clientPerfLoggerController.getPanel());
     }
 
     @Override
     public void close(PerfLoggerPanel perfLoggerPanel) {
-        tabbedPane.remove(perfLoggerPanel);
-        perfLoggerPanel.dispose();
-        perfLoggerPanel.getLogReceiver().dispose();
-        perfLoggerPanel.getLogRepository().dispose();
+        frmJdbcPerformanceLogger.removeTab(perfLoggerPanel);
     }
 
-    private PerfLoggerPanel connectToClient(String targetHost, int targetPort) {
+    private PerfLoggerController connectToClient(String targetHost, int targetPort) {
         final LogRepository logRepository = new LogRepository(targetHost + "_" + targetPort);
         final AbstractLogReceiver logReceiver = new ClientLogReceiver(targetHost, targetPort, logRepository);
         logReceiver.start();
 
-        return new PerfLoggerPanel(logReceiver, logRepository, this);
+        return new PerfLoggerController(this, logReceiver, logRepository);
     }
 
-    private PerfLoggerPanel createServer(int listeningPort) {
+    private PerfLoggerController createServer(int listeningPort) {
         final LogRepository logRepository = new LogRepository("server_" + listeningPort);
 
         final AbstractLogReceiver logReceiver = new ServerLogReceiver(listeningPort, logRepository);
         logReceiver.start();
 
-        return new PerfLoggerPanel(logReceiver, logRepository, this);
+        return new PerfLoggerController(this, logReceiver, logRepository);
     }
 
 }

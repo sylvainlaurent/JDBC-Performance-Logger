@@ -189,7 +189,7 @@ public class LogRepository {
     }
 
     public void getStatements(String filter, Long minDurationNanos, ResultSetAnalyzer analyzer) {
-        String sql = "select id, tstamp, statementType, rawSql, filledSql, " //
+        String sql = "select id, tstamp, statementType, rawSql, " //
                 + "exec_plus_fetch_time, execution_time, fetch_time, nbRowsIterated, threadName, connectionId, error " //
                 + "from v_statement_log ";
         sql += getWhereClause(filter, minDurationNanos);
