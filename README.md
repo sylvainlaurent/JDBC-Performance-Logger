@@ -17,6 +17,10 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 - Handling of batched statements
 - Logging of SQLExceptions
 
+## Requirements
+- java 6 or later for the driver
+- java 7 or later for the GUI
+
 ## How to setup the JDBC Driver
 - add the jdbc-logger-driver and slf4j-api jars to the classpath of the JDBC-client application
 - Change the driver class name to `ch.sla.jdbcperflogger.driver.WrappingDriver`

@@ -13,6 +13,9 @@ import static ch.sla.jdbcperflogger.gui.LogRepository.TSTAMP_COLUMN;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
 import java.awt.Toolkit;
@@ -38,10 +41,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -51,10 +51,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -70,9 +70,9 @@ import ch.sla.jdbcperflogger.model.StatementLog;
 public class PerfLoggerPanel extends JPanel {
 
     private static final long serialVersionUID = 1L;
-    private static final String GROUP_BY_FILLED_SQL = "Group by filled SQL";
-    private static final String GROUP_BY_RAW_SQL = "Group by raw SQL";
-    private static final String NO_GROUPING = "No grouping";
+    private static final String GROUP_BY_FILLED_SQL = "Filled SQL";
+    private static final String GROUP_BY_RAW_SQL = "Raw SQL";
+    private static final String NO_GROUPING = "-";
 
     private static final Map<String, Integer> COLUMNS_WIDTH;
 
@@ -101,12 +101,10 @@ public class PerfLoggerPanel extends JPanel {
     private JTable table;
     private ResultSetDataModel dataModel;
     private RefreshDataTask refreshDataTask;
-    private JComboBox comboBoxGroupBy;
+    private JComboBox<String> comboBoxGroupBy;
     private RSyntaxTextArea txtFieldSqlDetail1;
     private RSyntaxTextArea txtFieldSqlDetail2;
     private JLabel lblStatus;
-    private JScrollPane scrollPaneSqlDetail2;
-    private JScrollPane scrollPaneSqlDetail1;
     private boolean tableStructureChanged = true;
 
     private final SelectLogRunner selectAllLogStatements = new SelectLogRunner() {
@@ -143,6 +141,181 @@ public class PerfLoggerPanel extends JPanel {
      * Initialize the contents of the frame.
      */
     private void initialize() {
+        // logListPanel.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+        dataModel = new ResultSetDataModel();
+        final GridBagLayout gridBagLayout = new GridBagLayout();
+        gridBagLayout.columnWidths = new int[] { 36, 0 };
+        gridBagLayout.rowHeights = new int[] { 30, 316, 29, 0 };
+        gridBagLayout.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
+        gridBagLayout.rowWeights = new double[] { 0.0, 1.0, 0.0, Double.MIN_VALUE };
+        setLayout(gridBagLayout);
+
+        final JPanel topPanel = new JPanel();
+        final GridBagConstraints gbc_topPanel = new GridBagConstraints();
+        gbc_topPanel.fill = GridBagConstraints.BOTH;
+        gbc_topPanel.insets = new Insets(0, 0, 5, 0);
+        gbc_topPanel.gridx = 0;
+        gbc_topPanel.gridy = 0;
+        add(topPanel, gbc_topPanel);
+        final GridBagLayout gbl_topPanel = new GridBagLayout();
+        gbl_topPanel.columnWidths = new int[] { 51, 0, 0, 0 };
+        gbl_topPanel.rowHeights = new int[] { 30, 0 };
+        gbl_topPanel.columnWeights = new double[] { 1.0, 0.0, 0.0, Double.MIN_VALUE };
+        gbl_topPanel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
+        topPanel.setLayout(gbl_topPanel);
+
+        final JPanel filterPanel = new JPanel();
+        filterPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Filter",
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        final GridBagConstraints gbc_filterPanel = new GridBagConstraints();
+        gbc_filterPanel.fill = GridBagConstraints.BOTH;
+        gbc_filterPanel.insets = new Insets(0, 0, 0, 5);
+        gbc_filterPanel.gridx = 0;
+        gbc_filterPanel.gridy = 0;
+        topPanel.add(filterPanel, gbc_filterPanel);
+        final GridBagLayout gbl_filterPanel = new GridBagLayout();
+        gbl_filterPanel.columnWidths = new int[] { 51, 246, 0, 54, 0 };
+        gbl_filterPanel.rowHeights = new int[] { 30, 0 };
+        gbl_filterPanel.columnWeights = new double[] { 0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE };
+        gbl_filterPanel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
+        filterPanel.setLayout(gbl_filterPanel);
+
+        final JLabel lblText = new JLabel("Text:");
+        final GridBagConstraints gbc_lblText = new GridBagConstraints();
+        gbc_lblText.anchor = GridBagConstraints.BASELINE_TRAILING;
+        gbc_lblText.insets = new Insets(0, 0, 0, 5);
+        gbc_lblText.gridx = 0;
+        gbc_lblText.gridy = 0;
+        filterPanel.add(lblText, gbc_lblText);
+
+        txtFldSqlFilter = new JTextField();
+        final GridBagConstraints gbc_txtFldSqlFilter = new GridBagConstraints();
+        gbc_txtFldSqlFilter.anchor = GridBagConstraints.BASELINE;
+        gbc_txtFldSqlFilter.fill = GridBagConstraints.HORIZONTAL;
+        gbc_txtFldSqlFilter.insets = new Insets(0, 0, 0, 5);
+        gbc_txtFldSqlFilter.gridx = 1;
+        gbc_txtFldSqlFilter.gridy = 0;
+        filterPanel.add(txtFldSqlFilter, gbc_txtFldSqlFilter);
+        txtFldSqlFilter.setColumns(10);
+
+        final JLabel lblDurationms = new JLabel("Exec duration (ms) >=");
+        final GridBagConstraints gbc_lblDurationms = new GridBagConstraints();
+        gbc_lblDurationms.anchor = GridBagConstraints.BASELINE_TRAILING;
+        gbc_lblDurationms.insets = new Insets(0, 0, 0, 5);
+        gbc_lblDurationms.gridx = 2;
+        gbc_lblDurationms.gridy = 0;
+        filterPanel.add(lblDurationms, gbc_lblDurationms);
+
+        txtFldMinDuration = new JTextField();
+        final GridBagConstraints gbc_txtFldMinDuration = new GridBagConstraints();
+        gbc_txtFldMinDuration.anchor = GridBagConstraints.BASELINE;
+        gbc_txtFldMinDuration.fill = GridBagConstraints.HORIZONTAL;
+        gbc_txtFldMinDuration.gridx = 3;
+        gbc_txtFldMinDuration.gridy = 0;
+        filterPanel.add(txtFldMinDuration, gbc_txtFldMinDuration);
+        txtFldMinDuration.getDocument().addUndoableEditListener(new UndoableEditListener() {
+            @Override
+            public void undoableEditHappened(UndoableEditEvent e) {
+                if (txtFldMinDuration.getText().length() > 0) {
+                    try {
+                        new BigDecimal(txtFldMinDuration.getText());
+                    } catch (final NumberFormatException exc) {
+                        e.getEdit().undo();
+                        return;
+                    }
+                }
+                refresh();
+            }
+        });
+        txtFldMinDuration.setColumns(5);
+        txtFldSqlFilter.getDocument().addUndoableEditListener(new UndoableEditListener() {
+            @Override
+            public void undoableEditHappened(UndoableEditEvent e) {
+                refresh();
+            }
+        });
+
+        final JPanel groupingPanel = new JPanel();
+        groupingPanel.setBorder(new TitledBorder(null, "Group by", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        final GridBagConstraints gbc_groupingPanel = new GridBagConstraints();
+        gbc_groupingPanel.fill = GridBagConstraints.BOTH;
+        gbc_groupingPanel.insets = new Insets(0, 0, 0, 5);
+        gbc_groupingPanel.gridx = 1;
+        gbc_groupingPanel.gridy = 0;
+        topPanel.add(groupingPanel, gbc_groupingPanel);
+        final GridBagLayout gbl_groupingPanel = new GridBagLayout();
+        gbl_groupingPanel.columnWidths = new int[] { 0, 0 };
+        gbl_groupingPanel.rowHeights = new int[] { 30, 0 };
+        gbl_groupingPanel.columnWeights = new double[] { 0.0, Double.MIN_VALUE };
+        gbl_groupingPanel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
+        groupingPanel.setLayout(gbl_groupingPanel);
+
+        comboBoxGroupBy = new JComboBox<String>();
+        final GridBagConstraints gbc_comboBoxGroupBy = new GridBagConstraints();
+        gbc_comboBoxGroupBy.anchor = GridBagConstraints.BASELINE_TRAILING;
+        gbc_comboBoxGroupBy.gridx = 0;
+        gbc_comboBoxGroupBy.gridy = 0;
+        groupingPanel.add(comboBoxGroupBy, gbc_comboBoxGroupBy);
+        comboBoxGroupBy.setModel(new DefaultComboBoxModel<String>(new String[] { NO_GROUPING, GROUP_BY_RAW_SQL,
+                GROUP_BY_FILLED_SQL }));
+        comboBoxGroupBy.setSelectedIndex(0);
+        comboBoxGroupBy.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                tableStructureChanged = true;
+                refresh();
+            }
+        });
+
+        final JPanel controlPanel = new JPanel();
+        controlPanel.setBorder(new TitledBorder(null, "Control", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        final GridBagConstraints gbc_controlPanel = new GridBagConstraints();
+        gbc_controlPanel.fill = GridBagConstraints.BOTH;
+        gbc_controlPanel.gridx = 2;
+        gbc_controlPanel.gridy = 0;
+        topPanel.add(controlPanel, gbc_controlPanel);
+        final GridBagLayout gbl_controlPanel = new GridBagLayout();
+        gbl_controlPanel.columnWidths = new int[] { 0, 0, 0 };
+        gbl_controlPanel.rowHeights = new int[] { 30, 0 };
+        gbl_controlPanel.columnWeights = new double[] { 0.0, 0.0, Double.MIN_VALUE };
+        gbl_controlPanel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
+        controlPanel.setLayout(gbl_controlPanel);
+
+        final JButton btnPause = new JButton("Pause");
+        final GridBagConstraints gbc_btnPause = new GridBagConstraints();
+        gbc_btnPause.anchor = GridBagConstraints.BASELINE;
+        gbc_btnPause.insets = new Insets(0, 0, 0, 5);
+        gbc_btnPause.gridx = 0;
+        gbc_btnPause.gridy = 0;
+        controlPanel.add(btnPause, gbc_btnPause);
+
+        final JButton btnClear = new JButton("Clear");
+        final GridBagConstraints gbc_btnClear = new GridBagConstraints();
+        gbc_btnClear.anchor = GridBagConstraints.BASELINE;
+        gbc_btnClear.gridx = 1;
+        gbc_btnClear.gridy = 0;
+        controlPanel.add(btnClear, gbc_btnClear);
+        btnClear.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                logRepository.clear();
+                refresh();
+            }
+        });
+        btnPause.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (logReceiver.isPaused()) {
+                    logReceiver.resumeReceivingLogs();
+                    btnPause.setText("Pause");
+                } else {
+                    logReceiver.pauseReceivingLogs();
+                    btnPause.setText("Resume");
+                }
+            }
+        });
 
         final JSplitPane splitPane = new JSplitPane();
         splitPane.setResizeWeight(0.8);
@@ -153,9 +326,6 @@ public class PerfLoggerPanel extends JPanel {
 
         final JScrollPane logListPanel = new JScrollPane();
         logListPanel.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-        // logListPanel.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-
-        dataModel = new ResultSetDataModel();
         table = new CustomTable(dataModel);
         table.setSelectionForeground(Color.blue);
         table.setSelectionBackground(Color.yellow);
@@ -186,21 +356,19 @@ public class PerfLoggerPanel extends JPanel {
         sqlDetailPanel.setBorder(new TitledBorder(null, "SQL detail", TitledBorder.LEADING, TitledBorder.TOP, null,
                 null));
         splitPane.setBottomComponent(sqlDetailPanel);
+        final GridBagLayout gbl_sqlDetailPanel = new GridBagLayout();
+        gbl_sqlDetailPanel.columnWidths = new int[] { 842, 0 };
+        gbl_sqlDetailPanel.rowHeights = new int[] { 112, 0 };
+        gbl_sqlDetailPanel.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
+        gbl_sqlDetailPanel.rowWeights = new double[] { 1.0, Double.MIN_VALUE };
+        sqlDetailPanel.setLayout(gbl_sqlDetailPanel);
 
         final JSplitPane splitPane_1 = new JSplitPane();
         splitPane_1.setResizeWeight(0.5);
         splitPane_1.setContinuousLayout(true);
         splitPane_1.setOrientation(JSplitPane.VERTICAL_SPLIT);
-        final GroupLayout gl_sqlDetailPanel = new GroupLayout(sqlDetailPanel);
-        gl_sqlDetailPanel.setHorizontalGroup(gl_sqlDetailPanel.createParallelGroup(Alignment.LEADING).addGroup(
-                gl_sqlDetailPanel.createSequentialGroup().addContainerGap()
-                        .addComponent(splitPane_1, GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE).addContainerGap()));
-        gl_sqlDetailPanel.setVerticalGroup(gl_sqlDetailPanel.createParallelGroup(Alignment.LEADING)
-                .addGroup(
-                        gl_sqlDetailPanel.createSequentialGroup().addContainerGap().addComponent(splitPane_1)
-                                .addContainerGap()));
 
-        scrollPaneSqlDetail1 = new JScrollPane();
+        final JScrollPane scrollPaneSqlDetail1 = new JScrollPane();
         scrollPaneSqlDetail1.setMinimumSize(new Dimension(23, 30));
         splitPane_1.setLeftComponent(scrollPaneSqlDetail1);
         scrollPaneSqlDetail1.setOpaque(false);
@@ -216,13 +384,29 @@ public class PerfLoggerPanel extends JPanel {
         final JPanel panelCopy1 = new JPanel();
         panelCopy1.setBorder(null);
         panelCopy1.setOpaque(false);
-        panelCopy1.setLayout(new BoxLayout(panelCopy1, BoxLayout.X_AXIS));
+        final GridBagLayout gbl_panelCopy1 = new GridBagLayout();
+        gbl_panelCopy1.columnWidths = new int[] { 130, 0 };
+        gbl_panelCopy1.rowHeights = new int[] { 29, 0 };
+        gbl_panelCopy1.columnWeights = new double[] { 0.0, Double.MIN_VALUE };
+        gbl_panelCopy1.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
+        panelCopy1.setLayout(gbl_panelCopy1);
+        scrollPaneSqlDetail1.setRowHeaderView(panelCopy1);
         final JButton btnCopy1 = new JButton("Copy raw SQL");
         btnCopy1.setToolTipText("Copy the SQL statement unmodified (potentiall with '?' for bind variables");
-        panelCopy1.add(btnCopy1);
-        scrollPaneSqlDetail1.setRowHeaderView(panelCopy1);
+        final GridBagConstraints gbc_btnCopy1 = new GridBagConstraints();
+        gbc_btnCopy1.anchor = GridBagConstraints.WEST;
+        gbc_btnCopy1.gridx = 0;
+        gbc_btnCopy1.gridy = 0;
+        panelCopy1.add(btnCopy1, gbc_btnCopy1);
+        btnCopy1.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                final StringSelection stringSelection = new StringSelection(txtFieldSqlDetail1.getText());
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, stringSelection);
+            }
+        });
 
-        scrollPaneSqlDetail2 = new JScrollPane();
+        final JScrollPane scrollPaneSqlDetail2 = new JScrollPane();
         scrollPaneSqlDetail2.setMinimumSize(new Dimension(23, 30));
         splitPane_1.setRightComponent(scrollPaneSqlDetail2);
         scrollPaneSqlDetail2.setOpaque(false);
@@ -238,11 +422,20 @@ public class PerfLoggerPanel extends JPanel {
         final JPanel panelCopy2 = new JPanel();
         panelCopy2.setBorder(null);
         panelCopy2.setOpaque(false);
-        panelCopy2.setLayout(new BoxLayout(panelCopy2, BoxLayout.X_AXIS));
+        final GridBagLayout gbl_panelCopy2 = new GridBagLayout();
+        gbl_panelCopy2.columnWidths = new int[] { 140, 0 };
+        gbl_panelCopy2.rowHeights = new int[] { 29, 0 };
+        gbl_panelCopy2.columnWeights = new double[] { 0.0, Double.MIN_VALUE };
+        gbl_panelCopy2.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
+        panelCopy2.setLayout(gbl_panelCopy2);
+        scrollPaneSqlDetail2.setRowHeaderView(panelCopy2);
         final JButton btnCopy2 = new JButton("Copy filled SQL");
         btnCopy2.setToolTipText("Copy the SQL statement to the clipboard, with the bind variables replaced by their actual value");
-        panelCopy2.add(btnCopy2);
-        scrollPaneSqlDetail2.setRowHeaderView(panelCopy2);
+        final GridBagConstraints gbc_btnCopy2 = new GridBagConstraints();
+        gbc_btnCopy2.anchor = GridBagConstraints.WEST;
+        gbc_btnCopy2.gridx = 0;
+        gbc_btnCopy2.gridy = 0;
+        panelCopy2.add(btnCopy2, gbc_btnCopy2);
         btnCopy2.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -250,144 +443,37 @@ public class PerfLoggerPanel extends JPanel {
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, stringSelection);
             }
         });
-        btnCopy1.addActionListener(new ActionListener() {
+        final GridBagConstraints gbc_splitPane_1 = new GridBagConstraints();
+        gbc_splitPane_1.fill = GridBagConstraints.BOTH;
+        gbc_splitPane_1.gridx = 0;
+        gbc_splitPane_1.gridy = 0;
+        sqlDetailPanel.add(splitPane_1, gbc_splitPane_1);
+        final GridBagConstraints gbc_splitPane = new GridBagConstraints();
+        gbc_splitPane.fill = GridBagConstraints.BOTH;
+        gbc_splitPane.insets = new Insets(0, 0, 5, 0);
+        gbc_splitPane.gridx = 0;
+        gbc_splitPane.gridy = 1;
+        add(splitPane, gbc_splitPane);
+
+        final JPanel bottomPanel = new JPanel();
+        final GridBagConstraints gbc_bottomPanel = new GridBagConstraints();
+        gbc_bottomPanel.anchor = GridBagConstraints.NORTH;
+        gbc_bottomPanel.fill = GridBagConstraints.HORIZONTAL;
+        gbc_bottomPanel.gridx = 0;
+        gbc_bottomPanel.gridy = 2;
+        add(bottomPanel, gbc_bottomPanel);
+        final GridBagLayout gbl_bottomPanel = new GridBagLayout();
+        gbl_bottomPanel.columnWidths = new int[] { 507, 125, 125, 79, 0 };
+        gbl_bottomPanel.rowHeights = new int[] { 29, 0 };
+        gbl_bottomPanel.columnWeights = new double[] { 1.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
+        gbl_bottomPanel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
+        bottomPanel.setLayout(gbl_bottomPanel);
+
+        final JButton btnClose = new JButton("Close");
+        btnClose.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                final StringSelection stringSelection = new StringSelection(txtFieldSqlDetail1.getText());
-                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, stringSelection);
-            }
-        });
-        sqlDetailPanel.setLayout(gl_sqlDetailPanel);
-
-        final JLabel lblFilter = new JLabel("Filter:");
-
-        txtFldSqlFilter = new JTextField();
-        txtFldSqlFilter.setColumns(10);
-        txtFldSqlFilter.getDocument().addUndoableEditListener(new UndoableEditListener() {
-            @Override
-            public void undoableEditHappened(UndoableEditEvent e) {
-                refresh();
-            }
-        });
-
-        final JLabel lblDurationms = new JLabel("Exec duration (ms) >=");
-
-        txtFldMinDuration = new JTextField();
-        txtFldMinDuration.getDocument().addUndoableEditListener(new UndoableEditListener() {
-            @Override
-            public void undoableEditHappened(UndoableEditEvent e) {
-                if (txtFldMinDuration.getText().length() > 0) {
-                    try {
-                        new BigDecimal(txtFldMinDuration.getText());
-                    } catch (final NumberFormatException exc) {
-                        e.getEdit().undo();
-                        return;
-                    }
-                }
-                refresh();
-            }
-        });
-        txtFldMinDuration.setColumns(4);
-
-        comboBoxGroupBy = new JComboBox();
-        comboBoxGroupBy.setModel(new DefaultComboBoxModel(new String[] { NO_GROUPING, GROUP_BY_RAW_SQL,
-                GROUP_BY_FILLED_SQL }));
-        comboBoxGroupBy.setSelectedIndex(0);
-        comboBoxGroupBy.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                tableStructureChanged = true;
-                refresh();
-            }
-        });
-
-        final JButton btnClear = new JButton("Clear");
-        btnClear.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                logRepository.clear();
-                refresh();
-            }
-        });
-
-        final JButton btnPause = new JButton("Pause");
-        btnPause.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (logReceiver.isPaused()) {
-                    logReceiver.resumeReceivingLogs();
-                    btnPause.setText("Pause");
-                } else {
-                    logReceiver.pauseReceivingLogs();
-                    btnPause.setText("Resume");
-                }
-            }
-        });
-
-        final JPanel panel = new JPanel();
-
-        final GroupLayout groupLayout = new GroupLayout(this);
-        groupLayout.setHorizontalGroup(groupLayout.createParallelGroup(Alignment.LEADING).addGroup(
-                groupLayout
-                        .createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(
-                                groupLayout
-                                        .createParallelGroup(Alignment.LEADING)
-                                        .addGroup(
-                                                groupLayout
-                                                        .createSequentialGroup()
-                                                        .addComponent(lblFilter, GroupLayout.PREFERRED_SIZE,
-                                                                GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
-                                                        .addPreferredGap(ComponentPlacement.RELATED)
-                                                        .addComponent(txtFldSqlFilter, GroupLayout.PREFERRED_SIZE, 246,
-                                                                Short.MAX_VALUE)
-                                                        .addPreferredGap(ComponentPlacement.UNRELATED)
-                                                        .addComponent(lblDurationms)
-                                                        .addPreferredGap(ComponentPlacement.RELATED)
-                                                        .addComponent(txtFldMinDuration, GroupLayout.PREFERRED_SIZE,
-                                                                GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                                                        .addPreferredGap(ComponentPlacement.RELATED)
-                                                        .addComponent(comboBoxGroupBy, GroupLayout.PREFERRED_SIZE,
-                                                                GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
-                                                        .addPreferredGap(ComponentPlacement.UNRELATED)
-                                                        .addComponent(btnClear)
-                                                        .addPreferredGap(ComponentPlacement.RELATED)
-                                                        .addComponent(btnPause))
-                                        .addGroup(groupLayout.createSequentialGroup().addComponent(splitPane))
-                                        .addComponent(panel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
-                                                Short.MAX_VALUE)).addContainerGap()));
-        groupLayout.setVerticalGroup(groupLayout.createParallelGroup(Alignment.LEADING).addGroup(
-                groupLayout
-                        .createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(
-                                groupLayout
-                                        .createParallelGroup(Alignment.BASELINE)
-                                        .addComponent(lblFilter)
-                                        .addComponent(txtFldSqlFilter, GroupLayout.PREFERRED_SIZE,
-                                                GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(lblDurationms)
-                                        .addComponent(txtFldMinDuration, GroupLayout.PREFERRED_SIZE,
-                                                GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(comboBoxGroupBy, GroupLayout.PREFERRED_SIZE,
-                                                GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(btnClear).addComponent(btnPause))
-                        .addPreferredGap(ComponentPlacement.UNRELATED)
-                        .addComponent(splitPane, GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE)
-                        .addPreferredGap(ComponentPlacement.RELATED)
-                        .addComponent(panel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-                                GroupLayout.PREFERRED_SIZE).addContainerGap()));
-
-        lblStatus = new JLabel(" ");
-
-        final JButton btnExportSql = new JButton("Export SQL...");
-        btnExportSql.setToolTipText("Export all statements as a sql script");
-        btnExportSql.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                exportSql();
+                clientConnectionDelegate.close(PerfLoggerPanel.this);
             }
         });
 
@@ -400,30 +486,40 @@ public class PerfLoggerPanel extends JPanel {
             }
         });
 
-        final JButton btnClose = new JButton("Close");
-        btnClose.addActionListener(new ActionListener() {
+        final JButton btnExportSql = new JButton("Export SQL...");
+        btnExportSql.setToolTipText("Export all statements as a sql script");
+        btnExportSql.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                clientConnectionDelegate.close(PerfLoggerPanel.this);
+                exportSql();
             }
         });
-        if (logReceiver.isServerMode()) {
-            btnClose.setEnabled(false);
-            btnClose.setToolTipText("Server connection cannot be closed, only GUI-initiated connections can be closed");
-        }
-        final GroupLayout gl_panel = new GroupLayout(panel);
-        gl_panel.setHorizontalGroup(gl_panel.createParallelGroup(Alignment.LEADING).addGroup(
-                gl_panel.createSequentialGroup().addContainerGap()
-                        .addComponent(lblStatus, GroupLayout.DEFAULT_SIZE, 751, Short.MAX_VALUE)
-                        .addPreferredGap(ComponentPlacement.RELATED).addComponent(btnExportSql)//
-                        .addPreferredGap(ComponentPlacement.RELATED).addComponent(btnExportCsv)//
-                        .addPreferredGap(ComponentPlacement.RELATED).addComponent(btnClose)//
-                        .addContainerGap()));
-        gl_panel.setVerticalGroup(gl_panel.createParallelGroup(Alignment.LEADING).addGroup(
-                gl_panel.createParallelGroup(Alignment.BASELINE).addComponent(lblStatus).addComponent(btnExportSql)
-                        .addComponent(btnExportCsv).addComponent(btnClose)));
-        panel.setLayout(gl_panel);
-        this.setLayout(groupLayout);
+
+        lblStatus = new JLabel(" ");
+        final GridBagConstraints gbc_lblStatus = new GridBagConstraints();
+        gbc_lblStatus.anchor = GridBagConstraints.BASELINE;
+        gbc_lblStatus.fill = GridBagConstraints.HORIZONTAL;
+        gbc_lblStatus.insets = new Insets(0, 0, 0, 5);
+        gbc_lblStatus.gridx = 0;
+        gbc_lblStatus.gridy = 0;
+        bottomPanel.add(lblStatus, gbc_lblStatus);
+        final GridBagConstraints gbc_btnExportSql = new GridBagConstraints();
+        gbc_btnExportSql.anchor = GridBagConstraints.BASELINE_LEADING;
+        gbc_btnExportSql.insets = new Insets(0, 0, 0, 5);
+        gbc_btnExportSql.gridx = 1;
+        gbc_btnExportSql.gridy = 0;
+        bottomPanel.add(btnExportSql, gbc_btnExportSql);
+        final GridBagConstraints gbc_btnExportCsv = new GridBagConstraints();
+        gbc_btnExportCsv.anchor = GridBagConstraints.BASELINE_LEADING;
+        gbc_btnExportCsv.insets = new Insets(0, 0, 0, 5);
+        gbc_btnExportCsv.gridx = 2;
+        gbc_btnExportCsv.gridy = 0;
+        bottomPanel.add(btnExportCsv, gbc_btnExportCsv);
+        final GridBagConstraints gbc_btnClose = new GridBagConstraints();
+        gbc_btnClose.anchor = GridBagConstraints.BASELINE_LEADING;
+        gbc_btnClose.gridx = 3;
+        gbc_btnClose.gridy = 0;
+        bottomPanel.add(btnClose, gbc_btnClose);
 
         final Timer timer = new Timer(true);
         refreshDataTask = new RefreshDataTask();
@@ -441,6 +537,11 @@ public class PerfLoggerPanel extends JPanel {
                 return false;
             }
         });
+        if (logReceiver.isServerMode()) {
+            btnClose.setEnabled(false);
+            btnClose.setToolTipText("Server connection cannot be closed, only GUI-initiated connections can be closed");
+        }
+
     }
 
     /**
