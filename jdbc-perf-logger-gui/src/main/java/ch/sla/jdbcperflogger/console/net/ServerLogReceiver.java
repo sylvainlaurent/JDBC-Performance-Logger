@@ -1,4 +1,4 @@
-package ch.sla.jdbcperflogger.gui;
+package ch.sla.jdbcperflogger.console.net;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -9,6 +9,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import ch.sla.jdbcperflogger.console.db.LogRepository;
 
 public class ServerLogReceiver extends AbstractLogReceiver {
     final static Logger LOGGER = LoggerFactory.getLogger(ServerLogReceiver.class);

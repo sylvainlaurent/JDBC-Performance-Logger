@@ -1,4 +1,4 @@
-package ch.sla.jdbcperflogger.gui;
+package ch.sla.jdbcperflogger.console.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -12,6 +12,11 @@ import javax.swing.ToolTipManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import ch.sla.jdbcperflogger.console.db.LogRepository;
+import ch.sla.jdbcperflogger.console.net.AbstractLogReceiver;
+import ch.sla.jdbcperflogger.console.net.ClientLogReceiver;
+import ch.sla.jdbcperflogger.console.net.ServerLogReceiver;
 
 public class PerfLoggerGui implements IClientConnectionDelegate {
     private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerGui.class);

@@ -65,7 +65,7 @@
         <configuration>
           <programs>
             <program>
-              <mainClass>ch.sla.jdbcperflogger.gui.PerfLoggerGui</mainClass>
+              <mainClass>ch.sla.jdbcperflogger.console.ui.PerfLoggerGui</mainClass>
               <name>jdbc-perf-logger-gui</name>
               <jvmSettings>
                 <initialMemorySize>20m</initialMemorySize>

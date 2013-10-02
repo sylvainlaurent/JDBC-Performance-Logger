@@ -1,4 +1,4 @@
-package ch.sla.jdbcperflogger.gui;
+package ch.sla.jdbcperflogger.console.ui;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.table.AbstractTableModel;
 
 import ch.sla.jdbcperflogger.StatementType;
+import ch.sla.jdbcperflogger.console.db.LogRepository;
 
 class ResultSetDataModel extends AbstractTableModel {
 

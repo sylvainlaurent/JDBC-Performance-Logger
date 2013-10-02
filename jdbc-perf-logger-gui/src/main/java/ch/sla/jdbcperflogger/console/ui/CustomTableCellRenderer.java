@@ -1,4 +1,4 @@
-package ch.sla.jdbcperflogger.gui;
+package ch.sla.jdbcperflogger.console.ui;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -8,6 +8,7 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import ch.sla.jdbcperflogger.StatementType;
+import ch.sla.jdbcperflogger.console.db.LogRepository;
 
 public class CustomTableCellRenderer extends DefaultTableCellRenderer {
 

@@ -1,4 +1,4 @@
-package ch.sla.jdbcperflogger.gui;
+package ch.sla.jdbcperflogger.console.db;
 
 import java.sql.SQLException;
 import java.util.UUID;
@@ -9,7 +9,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import ch.sla.jdbcperflogger.StatementType;
-import ch.sla.jdbcperflogger.gui.LogRepository;
 import ch.sla.jdbcperflogger.model.StatementLog;
 
 public class LogRepositoryTest {

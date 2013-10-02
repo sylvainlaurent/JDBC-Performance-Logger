@@ -1,4 +1,4 @@
-package ch.sla.jdbcperflogger.gui;
+package ch.sla.jdbcperflogger.console.ui;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -7,6 +7,8 @@ import java.awt.event.MouseEvent;
 import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
+
+import ch.sla.jdbcperflogger.console.db.LogRepository;
 
 public class CustomTable extends JTable {
     private static final long serialVersionUID = 1L;

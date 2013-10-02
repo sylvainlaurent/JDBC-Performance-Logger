@@ -1,4 +1,4 @@
-package ch.sla.jdbcperflogger.gui;
+package ch.sla.jdbcperflogger.console.ui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

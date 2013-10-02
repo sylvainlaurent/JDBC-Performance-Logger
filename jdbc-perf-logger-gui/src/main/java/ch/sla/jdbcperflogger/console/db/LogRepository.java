@@ -1,4 +1,4 @@
-package ch.sla.jdbcperflogger.gui;
+package ch.sla.jdbcperflogger.console.db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

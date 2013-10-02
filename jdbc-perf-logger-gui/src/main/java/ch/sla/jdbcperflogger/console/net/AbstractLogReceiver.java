@@ -1,4 +1,4 @@
-package ch.sla.jdbcperflogger.gui;
+package ch.sla.jdbcperflogger.console.net;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,6 +9,7 @@ import java.net.SocketTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.sla.jdbcperflogger.console.db.LogRepository;
 import ch.sla.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.BatchedPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.ResultSetLog;

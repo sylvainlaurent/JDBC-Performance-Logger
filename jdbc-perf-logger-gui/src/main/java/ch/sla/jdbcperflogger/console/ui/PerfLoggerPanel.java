@@ -1,15 +1,15 @@
-package ch.sla.jdbcperflogger.gui;
+package ch.sla.jdbcperflogger.console.ui;
 
-import static ch.sla.jdbcperflogger.gui.LogRepository.EXEC_COUNT_COLUMN;
-import static ch.sla.jdbcperflogger.gui.LogRepository.EXEC_PLUS_FETCH_TIME_COLUMN;
-import static ch.sla.jdbcperflogger.gui.LogRepository.EXEC_TIME_COLUMN;
-import static ch.sla.jdbcperflogger.gui.LogRepository.FETCH_TIME_COLUMN;
-import static ch.sla.jdbcperflogger.gui.LogRepository.FILLED_SQL_COLUMN;
-import static ch.sla.jdbcperflogger.gui.LogRepository.RAW_SQL_COLUMN;
-import static ch.sla.jdbcperflogger.gui.LogRepository.STMT_TYPE_COLUMN;
-import static ch.sla.jdbcperflogger.gui.LogRepository.THREAD_NAME_COLUMN;
-import static ch.sla.jdbcperflogger.gui.LogRepository.TOTAL_EXEC_TIME_COLUMN;
-import static ch.sla.jdbcperflogger.gui.LogRepository.TSTAMP_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepository.EXEC_COUNT_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepository.EXEC_PLUS_FETCH_TIME_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepository.EXEC_TIME_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepository.FETCH_TIME_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepository.FILLED_SQL_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepository.RAW_SQL_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepository.STMT_TYPE_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepository.THREAD_NAME_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepository.TOTAL_EXEC_TIME_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepository.TSTAMP_COLUMN;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -65,6 +65,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 
+import ch.sla.jdbcperflogger.console.db.LogRepository;
+import ch.sla.jdbcperflogger.console.db.ResultSetAnalyzer;
+import ch.sla.jdbcperflogger.console.net.AbstractLogReceiver;
 import ch.sla.jdbcperflogger.model.StatementLog;
 
 public class PerfLoggerPanel extends JPanel {

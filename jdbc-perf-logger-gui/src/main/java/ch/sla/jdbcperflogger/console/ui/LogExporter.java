@@ -1,4 +1,4 @@
-package ch.sla.jdbcperflogger.gui;
+package ch.sla.jdbcperflogger.console.ui;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -10,6 +10,8 @@ import java.text.SimpleDateFormat;
 import java.util.concurrent.TimeUnit;
 
 import ch.sla.jdbcperflogger.StatementType;
+import ch.sla.jdbcperflogger.console.db.LogRepository;
+import ch.sla.jdbcperflogger.console.db.ResultSetAnalyzer;
 import ch.sla.jdbcperflogger.model.StatementLog;
 
 public class LogExporter {
