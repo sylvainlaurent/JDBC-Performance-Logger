@@ -77,6 +77,9 @@ public class ServerLogReceiver extends AbstractLogReceiver {
 
                     };
                     logReceiver.setName("LogReceiver " + socket.getRemoteSocketAddress());
+                    if (isPaused()) {
+                        logReceiver.pauseReceivingLogs();
+                    }
                     childReceivers.add(logReceiver);
                     logReceiver.start();
                 } catch (final SocketTimeoutException e) {
@@ -105,6 +108,22 @@ public class ServerLogReceiver extends AbstractLogReceiver {
     @Override
     public boolean isServerMode() {
         return true;
+    }
+
+    @Override
+    public void pauseReceivingLogs() {
+        super.pauseReceivingLogs();
+        for (final AbstractLogReceiver child : childReceivers) {
+            child.pauseReceivingLogs();
+        }
+    }
+
+    @Override
+    public void resumeReceivingLogs() {
+        super.resumeReceivingLogs();
+        for (final AbstractLogReceiver child : childReceivers) {
+            child.resumeReceivingLogs();
+        }
     }
 
 }
