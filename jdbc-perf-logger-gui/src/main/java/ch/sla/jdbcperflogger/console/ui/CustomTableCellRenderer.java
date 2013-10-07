@@ -3,7 +3,6 @@ package ch.sla.jdbcperflogger.console.ui;
 import java.awt.Color;
 import java.awt.Component;
 
-import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
@@ -17,8 +16,8 @@ public class CustomTableCellRenderer extends DefaultTableCellRenderer {
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
             int row, int column) {
-        final Component component = super
-                .getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+        final CustomTableCellRenderer component = (CustomTableCellRenderer) super.getTableCellRendererComponent(table,
+                value, isSelected, hasFocus, row, column);
 
         final ResultSetDataModel dataModel = (ResultSetDataModel) table.getModel();
         if (LogRepository.STMT_TYPE_COLUMN.equals(dataModel.getColumnName(column))) {
@@ -28,29 +27,35 @@ public class CustomTableCellRenderer extends DefaultTableCellRenderer {
                 switch (statementType) {
                 case BASE_NON_PREPARED_STMT:
                     component.setForeground(Color.ORANGE);
+                    component.setText("S");
                     break;
                 case NON_PREPARED_QUERY_STMT:
                     component.setForeground(Color.RED);
+                    component.setText("Q");
                     break;
                 case NON_PREPARED_BATCH_EXECUTION:
                     component.setForeground(Color.MAGENTA);
+                    component.setText("B");
                     break;
                 case PREPARED_BATCH_EXECUTION:
                     component.setForeground(Color.BLUE);
+                    component.setText("PB");
                     break;
                 case BASE_PREPARED_STMT:
                     component.setForeground(Color.CYAN);
+                    component.setText("PS");
                     break;
                 case PREPARED_QUERY_STMT:
                     component.setForeground(Color.GREEN);
+                    component.setText("PQ");
                     break;
                 }
             }
         }
-
-        if (component instanceof JComponent && value != null) {
-            ((JComponent) component).setToolTipText(value.toString());
+        if (value != null) {
+            component.setToolTipText(value.toString());
         }
+
         return component;
     }
 }
