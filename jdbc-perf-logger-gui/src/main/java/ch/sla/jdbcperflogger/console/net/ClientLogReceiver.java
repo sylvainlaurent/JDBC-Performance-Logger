@@ -11,10 +11,12 @@ import org.slf4j.LoggerFactory;
 import ch.sla.jdbcperflogger.console.db.LogRepository;
 
 public class ClientLogReceiver extends AbstractLogReceiver {
+    @SuppressWarnings("null")
     final static Logger LOGGER = LoggerFactory.getLogger(ClientLogReceiver.class);
 
     final InetSocketAddress targetRemoteAddress;
 
+    @SuppressWarnings("null")
     public ClientLogReceiver(String targetHost, int targetPort, LogRepository logRepository) {
         super(logRepository);
         targetRemoteAddress = InetSocketAddress.createUnresolved(targetHost, targetPort);

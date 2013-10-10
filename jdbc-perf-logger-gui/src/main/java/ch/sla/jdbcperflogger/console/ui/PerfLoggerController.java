@@ -15,6 +15,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -25,6 +27,7 @@ import ch.sla.jdbcperflogger.console.db.ResultSetAnalyzer;
 import ch.sla.jdbcperflogger.console.net.AbstractLogReceiver;
 import ch.sla.jdbcperflogger.model.StatementLog;
 
+@ParametersAreNonnullByDefault
 public class PerfLoggerController {
     private final AbstractLogReceiver logReceiver;
     private final LogRepository logRepository;
@@ -32,34 +35,47 @@ public class PerfLoggerController {
     private final LogExporter logExporter;
     private final PerfLoggerPanel perfLoggerPanel;
 
-    private interface SelectLogRunner {
-        void doSelect(ResultSetAnalyzer resultSetAnalyzer);
+    private abstract class SelectLogRunner {
+        abstract void doSelect(ResultSetAnalyzer resultSetAnalyzer);
+
+        @Nullable
+        protected String getTxtFilter() {
+            return filterType == FilterType.FILTER ? txtFilter : null;
+        }
+
+        @Nullable
+        protected Long getMinDurationNanoFilter() {
+            return filterType == FilterType.FILTER ? minDurationNanos : null;
+        }
     }
 
     private final SelectLogRunner selectAllLogStatements = new SelectLogRunner() {
         @Override
         public void doSelect(ResultSetAnalyzer resultSetAnalyzer) {
-            logRepository.getStatements(txtFilter, minDurationNanos, resultSetAnalyzer);
+            logRepository.getStatements(getTxtFilter(), getMinDurationNanoFilter(), resultSetAnalyzer);
         }
     };
     private final SelectLogRunner selectLogStatementsGroupByRawSql = new SelectLogRunner() {
         @Override
         public void doSelect(ResultSetAnalyzer resultSetAnalyzer) {
-            logRepository.getStatementsGroupByRawSQL(txtFilter, minDurationNanos, resultSetAnalyzer);
+            logRepository.getStatementsGroupByRawSQL(getTxtFilter(), getMinDurationNanoFilter(), resultSetAnalyzer);
         }
     };
     private final SelectLogRunner selectLogStatementsGroupByFilledSql = new SelectLogRunner() {
         @Override
         public void doSelect(ResultSetAnalyzer resultSetAnalyzer) {
-            logRepository.getStatementsGroupByFilledSQL(txtFilter, minDurationNanos, resultSetAnalyzer);
+            logRepository.getStatementsGroupByFilledSQL(getTxtFilter(), getMinDurationNanoFilter(), resultSetAnalyzer);
         }
     };
+    @Nullable
     private volatile String txtFilter;
+    @Nullable
     private volatile Long minDurationNanos;
     private SelectLogRunner currentSelectLogRunner = selectAllLogStatements;
-    private RefreshDataTask refreshDataTask;
+    private final RefreshDataTask refreshDataTask;
     private boolean tableStructureChanged = true;
     private GroupBy groupBy = GroupBy.NONE;
+    private FilterType filterType = FilterType.FILTER;
 
     PerfLoggerController(IClientConnectionDelegate clientConnectionDelegate, AbstractLogReceiver logReceiver,
             LogRepository logRepository) {
@@ -70,23 +86,18 @@ public class PerfLoggerController {
         logExporter = new LogExporter(logRepository);
 
         perfLoggerPanel = new PerfLoggerPanel(this);
-        initGUI();
-    }
-
-    private void initGUI() {
         perfLoggerPanel.setCloseEnable(!logReceiver.isServerMode());
+
         final Timer timer = new Timer(true);
         refreshDataTask = new RefreshDataTask();
         timer.schedule(refreshDataTask, 1000, 1000);
-
     }
 
     JPanel getPanel() {
         return perfLoggerPanel;
     }
 
-    void setTextFilter(String filter) {
-        System.out.println(filter);
+    void setTextFilter(@Nullable String filter) {
         if (filter == null || filter.isEmpty()) {
             txtFilter = null;
         } else {
@@ -95,7 +106,7 @@ public class PerfLoggerController {
         refresh();
     }
 
-    void setMinDurationFilter(Long durationMs) {
+    void setMinDurationFilter(@Nullable Long durationMs) {
         if (durationMs == null) {
             minDurationNanos = null;
         } else {
@@ -118,6 +129,11 @@ public class PerfLoggerController {
             break;
         }
         tableStructureChanged = true;
+        refresh();
+    }
+
+    void setFilterType(FilterType filterType) {
+        this.filterType = filterType;
         refresh();
     }
 
@@ -161,15 +177,25 @@ public class PerfLoggerController {
      * To be executed in EDT
      */
     private void refresh() {
+        if (filterType == FilterType.FILTER) {
+            perfLoggerPanel.table.setTxtToHighlight(null);
+            perfLoggerPanel.table.setMinDurationNanoToHighlight(null);
+        } else {
+            perfLoggerPanel.table.setTxtToHighlight(txtFilter);
+            perfLoggerPanel.table.setMinDurationNanoToHighlight(minDurationNanos);
+        }
+
         refreshDataTask.forceRefresh();
     }
 
     private void statementSelected(Long logId) {
         String txt1 = "";
         String txt2 = "";
+        StatementLog statementLog = null;
         if (logId != null) {
-            final StatementLog statementLog = logRepository.getStatementLog(logId);
-
+            statementLog = logRepository.getStatementLog(logId);
+        }
+        if (statementLog != null) {
             switch (groupBy) {
             case NONE:
                 txt1 = statementLog.getRawSql();
@@ -219,9 +245,10 @@ public class PerfLoggerController {
                 break;
             }
 
-            if (statementLog.getSqlException() != null) {
+            final Throwable sqlException = statementLog.getSqlException();
+            if (sqlException != null) {
                 final CharArrayWriter writer = new CharArrayWriter();
-                statementLog.getSqlException().printStackTrace(new PrintWriter(writer));
+                sqlException.printStackTrace(new PrintWriter(writer));
                 txt2 += writer.toString();
             }
         }
@@ -288,8 +315,10 @@ public class PerfLoggerController {
             txt.append(" statements logged - ");
             txt.append(TimeUnit.NANOSECONDS.toMillis(logRepository.getTotalExecAndFetchTimeNanos()));
             txt.append("ms total execution time (with fetch)");
-            if ((txtFilter != null && txtFilter.length() > 0)
-                    || (minDurationNanos != null && minDurationNanos.longValue() > 0)) {
+            final String txtFilterFinal = txtFilter;
+            final Long minDurationNanosFinal = minDurationNanos;
+            if ((txtFilterFinal != null && txtFilterFinal.length() > 0)
+                    || (minDurationNanosFinal != null && minDurationNanosFinal.longValue() > 0)) {
                 txt.append(" - ");
                 txt.append(TimeUnit.NANOSECONDS.toMillis(logRepository.getTotalExecAndFetchTimeNanos(txtFilter,
                         minDurationNanos)));
@@ -356,6 +385,30 @@ public class PerfLoggerController {
     }
 
     enum GroupBy {
-        NONE, RAW_SQL, FILLED_SQL;
+        NONE("-"), RAW_SQL("Raw SQL"), FILLED_SQL("Filled SQL");
+        final private String title;
+
+        GroupBy(String title) {
+            this.title = title;
+        }
+
+        @Override
+        public String toString() {
+            return title;
+        }
+    }
+
+    enum FilterType {
+        HIGHLIGHT("Highlight"), FILTER("Filter");
+        final private String title;
+
+        FilterType(String title) {
+            this.title = title;
+        }
+
+        @Override
+        public String toString() {
+            return title;
+        }
     }
 }

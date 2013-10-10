@@ -4,6 +4,8 @@ import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,6 +14,7 @@ import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.model.StatementLog;
 
 public class LogRepositoryTest {
+    @Nullable
     private LogRepository repository;
 
     @Before
@@ -21,7 +24,10 @@ public class LogRepositoryTest {
 
     @After
     public void tearDown() {
-        repository.dispose();
+        final LogRepository repository2 = repository;
+        if (repository2 != null) {
+            repository2.dispose();
+        }
     }
 
     @Test
@@ -34,8 +40,11 @@ public class LogRepositoryTest {
         final StatementLog log = new StatementLog(123, UUID.randomUUID(), System.currentTimeMillis(),
                 TimeUnit.MILLISECONDS.toNanos(256), StatementType.BASE_NON_PREPARED_STMT, "myrawsql", Thread
                         .currentThread().getName(), new SQLException());
-        repository.addStatementLog(log);
-        repository.addStatementLog(log);
-        repository.getStatementLog(1);
+        final LogRepository repository2 = repository;
+        if (repository2 != null) {
+            repository2.addStatementLog(log);
+            repository2.addStatementLog(log);
+            repository2.getStatementLog(1);
+        }
     }
 }

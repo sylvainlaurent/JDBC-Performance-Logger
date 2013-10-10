@@ -32,11 +32,12 @@
       <artifactId>slf4j-log4j12</artifactId>
       <scope>test</scope>
     </dependency>
-    <!--<dependency>
-      <groupId>org.apache.tomcat</groupId>
-      <artifactId>tomcat-jdbc</artifactId>
-      <version>7.0.32</version>
-      <optional>true</optional>
-    </dependency>-->
+    <!--<dependency> <groupId>org.apache.tomcat</groupId> <artifactId>tomcat-jdbc</artifactId> <version>7.0.32</version> 
+      <optional>true</optional> </dependency> -->
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
+    </dependency>
+
   </dependencies>
 </project>

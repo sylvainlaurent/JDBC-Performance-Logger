@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Frame;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import javax.swing.JPanel;
 import javax.swing.ToolTipManager;
 
@@ -15,10 +16,12 @@ import ch.sla.jdbcperflogger.console.net.AbstractLogReceiver;
 import ch.sla.jdbcperflogger.console.net.ClientLogReceiver;
 import ch.sla.jdbcperflogger.console.net.ServerLogReceiver;
 
+@ParametersAreNonnullByDefault
 public class PerfLoggerGuiMain implements IClientConnectionDelegate {
+    @SuppressWarnings("null")
     private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerGuiMain.class);
 
-    private PerfLoggerGuiMainFrame frmJdbcPerformanceLogger;
+    private final PerfLoggerGuiMainFrame frmJdbcPerformanceLogger;
 
     /**
      * Launch the application.
@@ -42,13 +45,6 @@ public class PerfLoggerGuiMain implements IClientConnectionDelegate {
      * Create the application.
      */
     public PerfLoggerGuiMain() {
-        initialize();
-    }
-
-    /**
-     * Initialize the contents of the frame.
-     */
-    private void initialize() {
         ToolTipManager.sharedInstance().setInitialDelay(500);
 
         frmJdbcPerformanceLogger = new PerfLoggerGuiMainFrame();

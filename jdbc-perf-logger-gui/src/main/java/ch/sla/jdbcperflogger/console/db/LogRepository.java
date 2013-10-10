@@ -9,6 +9,9 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.h2.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,16 +31,17 @@ public class LogRepository {
     public static final String EXEC_TIME_COLUMN = "execution_time";
     public static final String FETCH_TIME_COLUMN = "fetch_time";
     public static final String NB_ROWS_COLUMN = "nbRowsIterated";
-    public static final String EXEC_PLUS_FETCH_TIME_COLUMN = "exec_plus_fetch_time";
+    public static final String EXEC_PLUS_FETCH_TIME_COLUMN = "EXEC_PLUS_FETCH_TIME";
     public static final String THREAD_NAME_COLUMN = "threadName";
     public static final String CONNECTION_ID_COLUMN = "connectionId";
     public static final String ERROR_COLUMN = "ERROR";
     public static final String EXEC_COUNT_COLUMN = "EXEC_COUNT";
     public static final String TOTAL_EXEC_TIME_COLUMN = "TOTAL_EXEC_TIME";
 
+    @SuppressWarnings("null")
     private static final Logger LOGGER = LoggerFactory.getLogger(LogRepository.class);
 
-    private Connection connection;
+    private final Connection connection;
     private final String repoName;
     private boolean dbInitialized;
     private PreparedStatement addStatementLog;
@@ -45,13 +49,36 @@ public class LogRepository {
     private PreparedStatement addBatchedStatementLog;
     private long lastModificationTime = System.currentTimeMillis();
 
+    @SuppressWarnings("null")
     public LogRepository(String name) {
         repoName = name;
         try {
             Driver.class.getClass();
             LOGGER.debug("Opening H2 connection for log repository " + name);
             connection = DriverManager.getConnection("jdbc:h2:file:logdb/logrepository_" + name + ";DB_CLOSE_DELAY=1");
-            initDb();
+            synchronized (LogRepository.class) {
+                if (!dbInitialized) {
+                    final Statement stmt = connection.createStatement();
+                    try {
+                        stmt.execute("runscript from 'classpath:initdb.sql' charset 'UTF-8'");
+                    } finally {
+                        stmt.close();
+                    }
+
+                    dbInitialized = true;
+                }
+            }
+
+            addStatementLog = connection
+                    .prepareStatement("insert into statement_log (logId, tstamp, statementType, rawSql, filledSql, " //
+                            + "executionDurationNanos, threadName, exception, connectionId)"//
+                            + " values(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            updateStatementLog = connection
+                    .prepareStatement("update statement_log set fetchDurationNanos=?, nbRowsIterated=? where logId=?");
+
+            addBatchedStatementLog = connection
+                    .prepareStatement("insert into batched_statement_log (logId, batched_stmt_order, filledSql)"
+                            + " values(?, ?, ?)");
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }
@@ -68,33 +95,6 @@ public class LogRepository {
             LOGGER.error("error while closing the connection", e);
             // swallow, nothing we can do
         }
-        connection = null;
-    }
-
-    private void initDb() throws SQLException {
-        synchronized (LogRepository.class) {
-            if (!dbInitialized) {
-                final Statement stmt = connection.createStatement();
-                try {
-                    stmt.execute("runscript from 'classpath:initdb.sql' charset 'UTF-8'");
-                } finally {
-                    stmt.close();
-                }
-
-                dbInitialized = true;
-            }
-        }
-
-        addStatementLog = connection
-                .prepareStatement("insert into statement_log (logId, tstamp, statementType, rawSql, filledSql, " //
-                        + "executionDurationNanos, threadName, exception, connectionId)"//
-                        + " values(?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        updateStatementLog = connection
-                .prepareStatement("update statement_log set fetchDurationNanos=?, nbRowsIterated=? where logId=?");
-
-        addBatchedStatementLog = connection
-                .prepareStatement("insert into batched_statement_log (logId, batched_stmt_order, filledSql)"
-                        + " values(?, ?, ?)");
     }
 
     public synchronized void addStatementLog(StatementLog log) {
@@ -188,7 +188,7 @@ public class LogRepository {
         }
     }
 
-    public void getStatements(String filter, Long minDurationNanos, ResultSetAnalyzer analyzer) {
+    public void getStatements(@Nullable String filter, @Nullable Long minDurationNanos, ResultSetAnalyzer analyzer) {
         String sql = "select id, tstamp, statementType, rawSql, " //
                 + "exec_plus_fetch_time, execution_time, fetch_time, nbRowsIterated, threadName, connectionId, error " //
                 + "from v_statement_log ";
@@ -196,8 +196,12 @@ public class LogRepository {
         sql += "order by tstamp";
 
         try {
+            @SuppressWarnings("null")
+            @Nonnull
             final PreparedStatement statement = connection.prepareStatement(sql);
             applyParametersForWhereClause(filter, minDurationNanos, statement);
+            @SuppressWarnings("null")
+            @Nonnull
             final ResultSet resultSet = statement.executeQuery();
             try {
                 analyzer.analyze(resultSet);
@@ -211,7 +215,8 @@ public class LogRepository {
 
     }
 
-    public void getStatementsGroupByRawSQL(String filter, Long minDurationNanos, ResultSetAnalyzer analyzer) {
+    public void getStatementsGroupByRawSQL(@Nullable String filter, @Nullable Long minDurationNanos,
+            ResultSetAnalyzer analyzer) {
         String sql = "select min(id) as ID, statementType, rawSql, count(1) as exec_count, " //
                 + "sum(executionDurationNanos) as total_exec_time, "//
                 + "max(executionDurationNanos) as max_exec_time, " //
@@ -228,8 +233,12 @@ public class LogRepository {
         sql += "order by total_exec_time desc";
 
         try {
+            @SuppressWarnings("null")
+            @Nonnull
             final PreparedStatement statement = connection.prepareStatement(sql);
             applyParametersForWhereClause(filter, minDurationNanos, statement);
+            @SuppressWarnings("null")
+            @Nonnull
             final ResultSet resultSet = statement.executeQuery();
             try {
                 analyzer.analyze(resultSet);
@@ -243,7 +252,8 @@ public class LogRepository {
 
     }
 
-    public void getStatementsGroupByFilledSQL(String filter, Long minDurationNanos, ResultSetAnalyzer analyzer) {
+    public void getStatementsGroupByFilledSQL(@Nullable String filter, @Nullable Long minDurationNanos,
+            ResultSetAnalyzer analyzer) {
         String sql = "select min(id) as ID, statementType, rawSql, filledSql, count(1) as exec_count, " //
                 + "sum(executionDurationNanos) as total_exec_time, "//
                 + "max(executionDurationNanos) as max_exec_time, " //
@@ -260,8 +270,12 @@ public class LogRepository {
         sql += "order by total_exec_time desc";
 
         try {
+            @SuppressWarnings("null")
+            @Nonnull
             final PreparedStatement statement = connection.prepareStatement(sql);
             applyParametersForWhereClause(filter, minDurationNanos, statement);
+            @SuppressWarnings("null")
+            @Nonnull
             final ResultSet resultSet = statement.executeQuery();
             try {
                 analyzer.analyze(resultSet);
@@ -275,7 +289,7 @@ public class LogRepository {
 
     }
 
-    private String getWhereClause(String filter, Long minDurationNanos) {
+    private String getWhereClause(@Nullable String filter, @Nullable Long minDurationNanos) {
         String sql = "";
         boolean whereAdded = false;
         if (filter != null) {
@@ -294,8 +308,8 @@ public class LogRepository {
         return sql;
     }
 
-    private void applyParametersForWhereClause(String filter, Long minDurationNanos, PreparedStatement statement)
-            throws SQLException {
+    private void applyParametersForWhereClause(@Nullable String filter, @Nullable Long minDurationNanos,
+            PreparedStatement statement) throws SQLException {
         if (filter != null) {
             statement.setString(1, "%" + filter.toUpperCase() + "%");
             statement.setString(2, "%" + filter.toUpperCase() + "%");
@@ -310,6 +324,7 @@ public class LogRepository {
         return lastModificationTime;
     }
 
+    @Nullable
     public StatementLog getStatementLog(long id) {
         try {
             final PreparedStatement statement = connection
@@ -378,11 +393,13 @@ public class LogRepository {
         }
     }
 
-    public long getTotalExecAndFetchTimeNanos(String filter, Long minDurationNanos) {
+    public long getTotalExecAndFetchTimeNanos(@Nullable String filter, @Nullable Long minDurationNanos) {
         String sql = "select sum(exec_plus_fetch_time) from v_statement_log ";
         sql += getWhereClause(filter, minDurationNanos);
 
         try {
+            @SuppressWarnings("null")
+            @Nonnull
             final PreparedStatement statement = connection.prepareStatement(sql);
             applyParametersForWhereClause(filter, minDurationNanos, statement);
             try {
@@ -407,6 +424,8 @@ public class LogRepository {
         try {
             final PreparedStatement statement = connection.prepareStatement(sql);
             statement.setObject(1, logId);
+            @SuppressWarnings("null")
+            @Nonnull
             final ResultSet resultSet = statement.executeQuery();
             try {
                 analyzer.analyze(resultSet);

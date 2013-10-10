@@ -51,6 +51,7 @@ import javax.swing.event.UndoableEditListener;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 
+import ch.sla.jdbcperflogger.console.ui.PerfLoggerController.FilterType;
 import ch.sla.jdbcperflogger.console.ui.PerfLoggerController.GroupBy;
 
 @SuppressWarnings("serial")
@@ -76,9 +77,10 @@ public class PerfLoggerPanel extends JPanel {
     private final PerfLoggerController perfLoggerController;
     private JTextField txtFldSqlFilter;
     private JTextField txtFldMinDuration;
-    private JTable table;
+    CustomTable table;
     private ResultSetDataModel dataModel;
     private JComboBox<GroupBy> comboBoxGroupBy;
+    private JComboBox<FilterType> comboBoxFilterType;
     private JButton btnClose;
     private JButton btnPause;
 
@@ -129,17 +131,35 @@ public class PerfLoggerPanel extends JPanel {
         gbc_filterPanel.gridy = 0;
         topPanel.add(filterPanel, gbc_filterPanel);
         final GridBagLayout gbl_filterPanel = new GridBagLayout();
-        gbl_filterPanel.columnWidths = new int[] { 51, 246, 0, 54, 0 };
+        gbl_filterPanel.columnWidths = new int[] { 0, 51, 246, 0, 54, 0 };
         gbl_filterPanel.rowHeights = new int[] { 30, 0 };
-        gbl_filterPanel.columnWeights = new double[] { 0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE };
+        gbl_filterPanel.columnWeights = new double[] { 0.0, 0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE };
         gbl_filterPanel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
         filterPanel.setLayout(gbl_filterPanel);
+
+        comboBoxFilterType = new JComboBox<FilterType>();
+        comboBoxFilterType.setModel(new DefaultComboBoxModel<FilterType>(EnumSet.allOf(FilterType.class).toArray(
+                new FilterType[0])));
+        comboBoxFilterType.setSelectedItem(FilterType.FILTER);
+        comboBoxFilterType.addActionListener(new ActionListener() {
+            @SuppressWarnings("null")
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                perfLoggerController.setFilterType(comboBoxFilterType.getItemAt(comboBoxFilterType.getSelectedIndex()));
+            }
+        });
+        final GridBagConstraints gbc_filterTypeComboBox = new GridBagConstraints();
+        gbc_filterTypeComboBox.insets = new Insets(0, 0, 0, 5);
+        gbc_filterTypeComboBox.fill = GridBagConstraints.HORIZONTAL;
+        gbc_filterTypeComboBox.gridx = 0;
+        gbc_filterTypeComboBox.gridy = 0;
+        filterPanel.add(comboBoxFilterType, gbc_filterTypeComboBox);
 
         final JLabel lblText = new JLabel("Text:");
         final GridBagConstraints gbc_lblText = new GridBagConstraints();
         gbc_lblText.anchor = GridBagConstraints.BASELINE_TRAILING;
         gbc_lblText.insets = new Insets(0, 0, 0, 5);
-        gbc_lblText.gridx = 0;
+        gbc_lblText.gridx = 1;
         gbc_lblText.gridy = 0;
         filterPanel.add(lblText, gbc_lblText);
 
@@ -149,7 +169,7 @@ public class PerfLoggerPanel extends JPanel {
             gbc_txtFldSqlFilter.anchor = GridBagConstraints.BASELINE;
             gbc_txtFldSqlFilter.fill = GridBagConstraints.HORIZONTAL;
             gbc_txtFldSqlFilter.insets = new Insets(0, 0, 0, 5);
-            gbc_txtFldSqlFilter.gridx = 1;
+            gbc_txtFldSqlFilter.gridx = 2;
             gbc_txtFldSqlFilter.gridy = 0;
             filterPanel.add(txtFldSqlFilter, gbc_txtFldSqlFilter);
             txtFldSqlFilter.setColumns(10);
@@ -166,7 +186,7 @@ public class PerfLoggerPanel extends JPanel {
             final GridBagConstraints gbc_lblDurationms = new GridBagConstraints();
             gbc_lblDurationms.anchor = GridBagConstraints.BASELINE_TRAILING;
             gbc_lblDurationms.insets = new Insets(0, 0, 0, 5);
-            gbc_lblDurationms.gridx = 2;
+            gbc_lblDurationms.gridx = 3;
             gbc_lblDurationms.gridy = 0;
             filterPanel.add(lblDurationms, gbc_lblDurationms);
         }
@@ -175,7 +195,7 @@ public class PerfLoggerPanel extends JPanel {
             final GridBagConstraints gbc_txtFldMinDuration = new GridBagConstraints();
             gbc_txtFldMinDuration.anchor = GridBagConstraints.BASELINE;
             gbc_txtFldMinDuration.fill = GridBagConstraints.HORIZONTAL;
-            gbc_txtFldMinDuration.gridx = 3;
+            gbc_txtFldMinDuration.gridx = 4;
             gbc_txtFldMinDuration.gridy = 0;
             txtFldMinDuration.setColumns(5);
             filterPanel.add(txtFldMinDuration, gbc_txtFldMinDuration);
@@ -222,6 +242,7 @@ public class PerfLoggerPanel extends JPanel {
                 .setModel(new DefaultComboBoxModel<GroupBy>(EnumSet.allOf(GroupBy.class).toArray(new GroupBy[0])));
         comboBoxGroupBy.setSelectedIndex(0);
         comboBoxGroupBy.addActionListener(new ActionListener() {
+            @SuppressWarnings("null")
             @Override
             public void actionPerformed(ActionEvent e) {
                 perfLoggerController.setGroupBy(comboBoxGroupBy.getItemAt(comboBoxGroupBy.getSelectedIndex()));
@@ -287,7 +308,9 @@ public class PerfLoggerPanel extends JPanel {
                     if (lsm.getMinSelectionIndex() >= 0) {
                         logId = dataModel.getIdAtRow(table.convertRowIndexToModel(lsm.getMinSelectionIndex()));
                     }
-                    perfLoggerController.onSelectStatement(logId);
+                    if (logId != null) {
+                        perfLoggerController.onSelectStatement(logId);
+                    }
                 }
             }
         });

@@ -75,8 +75,11 @@ public class WelcomePanel extends JPanel {
         btnConnect.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                clientConnectionCreator.createClientConnection(txtTargetHost.getText(),
-                        Integer.parseInt(txtTargetPort.getText()));
+                final String targetHost = txtTargetHost.getText();
+                if (targetHost != null) {
+                    clientConnectionCreator.createClientConnection(targetHost,
+                            Integer.parseInt(txtTargetPort.getText()));
+                }
             }
         });
 

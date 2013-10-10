@@ -9,11 +9,15 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.console.db.LogRepository;
 import ch.sla.jdbcperflogger.console.db.ResultSetAnalyzer;
 import ch.sla.jdbcperflogger.model.StatementLog;
 
+@ParametersAreNonnullByDefault
 public class LogExporter {
     private final LogRepository logRepository;
 
@@ -29,6 +33,7 @@ public class LogExporter {
         return new CsvLogExporter(exportFile);
     }
 
+    @SuppressWarnings("null")
     String getBatchedExecutions(StatementLog statementLog) {
         final StringBuilder strBuilder = new StringBuilder();
         logRepository.getBatchStatementExecutions(statementLog.getLogId(), new ResultSetAnalyzer() {
@@ -89,7 +94,9 @@ public class LogExporter {
                         writer.print(stmtType.name());
                         writer.println("*/");
                         final StatementLog statementLog = logRepository.getStatementLog(resultSet.getLong("ID"));
-                        writer.println(getBatchedExecutions(statementLog));
+                        if (statementLog != null) {
+                            writer.println(getBatchedExecutions(statementLog));
+                        }
                         break;
                     default:
                         writer.print("*/ ");
@@ -183,7 +190,10 @@ public class LogExporter {
             }
         }
 
-        private String escapeStrings(String orig) {
+        private String escapeStrings(@Nullable String orig) {
+            if (orig == null) {
+                return "";
+            }
             return orig;
         }
     }
