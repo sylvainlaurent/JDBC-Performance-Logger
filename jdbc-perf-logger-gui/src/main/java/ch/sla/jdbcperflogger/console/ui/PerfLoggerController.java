@@ -134,10 +134,10 @@ public class PerfLoggerController {
     void onPause() {
         if (logReceiver.isPaused()) {
             logReceiver.resumeReceivingLogs();
-            perfLoggerPanel.btnPause.setText("Pause");
+            perfLoggerPanel.setPaused(false);
         } else {
             logReceiver.pauseReceivingLogs();
-            perfLoggerPanel.btnPause.setText("Resume");
+            perfLoggerPanel.setPaused(true);
         }
 
     }
@@ -225,10 +225,10 @@ public class PerfLoggerController {
                 txt2 += writer.toString();
             }
         }
-        perfLoggerPanel.txtFieldSqlDetail1.setText(txt1);
-        perfLoggerPanel.txtFieldSqlDetail1.select(0, 0);
-        perfLoggerPanel.txtFieldSqlDetail2.setText(txt2);
-        perfLoggerPanel.txtFieldSqlDetail2.select(0, 0);
+        perfLoggerPanel.txtFieldRawSql.setText(txt1);
+        perfLoggerPanel.txtFieldRawSql.select(0, 0);
+        perfLoggerPanel.txtFieldFilledSql.setText(txt2);
+        perfLoggerPanel.txtFieldFilledSql.select(0, 0);
         // scrollPaneSqlDetail1.setEnabled(txt1 != null);
         // scrollPaneSqlDetail2.setEnabled(txt2 != null);
     }
