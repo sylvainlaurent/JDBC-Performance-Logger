@@ -6,6 +6,7 @@ This project uses the following third-party libraries/resources :
 - Findbugs / JSR305 : The Apache Software License, Version 2.0. http://findbugs.sourceforge.net/
 - Firesoft RSyntaxArea : LGPL 2.1. http://fifesoft.com/rsyntaxtextarea/
 - SLF4J : QOS.ch license, identical to MIT. http://www.slf4j.org/
+- Icons from the Tango Desktop Project : licenses under the Creative Commons License. http://en.wikipedia.org/wiki/Tango_Desktop_Project
 
 
 Among those, the binary distribution redistributes the following :
@@ -14,3 +15,4 @@ Among those, the binary distribution redistributes the following :
 - Findbugs / JSR305
 - Firesoft RSyntaxArea
 - SLF4J
+- Icons from the Tango Desktop Project
