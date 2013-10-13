@@ -1,0 +1,16 @@
+This project uses the following third-party libraries/resources : 
+
+- H2Database : dual licensed and available under a modified version of the MPL 1.1 (Mozilla Public License) or under the (unmodified) EPL 1.0 (Eclipse Public License). An original copy of the license agreement can be found at: http://www.h2database.com/html/license.html
+- JUnit : Eclipse Public License 1.0. https://github.com/junit-team/junit
+- Log4J : The Apache Software License, Version 2.0. http://logging.apache.org/log4j/1.2/
+- Findbugs / JSR305 : The Apache Software License, Version 2.0. http://findbugs.sourceforge.net/
+- Firesoft RSyntaxArea : LGPL 2.1. http://fifesoft.com/rsyntaxtextarea/
+- SLF4J : QOS.ch license, identical to MIT. http://www.slf4j.org/
+
+
+Among those, the binary distribution redistributes the following :
+- H2Database
+- Log4J
+- Findbugs / JSR305
+- Firesoft RSyntaxArea
+- SLF4J

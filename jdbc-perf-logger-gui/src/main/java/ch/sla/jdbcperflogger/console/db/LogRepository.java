@@ -1,3 +1,18 @@
+/* 
+ *  Copyright 2013 Sylvain LAURENT
+ *     
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package ch.sla.jdbcperflogger.console.db;
 
 import java.sql.Connection;
@@ -50,7 +65,7 @@ public class LogRepository {
     private long lastModificationTime = System.currentTimeMillis();
 
     @SuppressWarnings("null")
-    public LogRepository(String name) {
+    public LogRepository(final String name) {
         repoName = name;
         try {
             Driver.class.getClass();
@@ -97,7 +112,7 @@ public class LogRepository {
         }
     }
 
-    public synchronized void addStatementLog(StatementLog log) {
+    public synchronized void addStatementLog(final StatementLog log) {
         try {
             int i = 1;
             addStatementLog.setObject(i++, log.getLogId());
@@ -116,7 +131,7 @@ public class LogRepository {
         lastModificationTime = System.currentTimeMillis();
     }
 
-    public synchronized void updateLogWithResultSetLog(ResultSetLog log) {
+    public synchronized void updateLogWithResultSetLog(final ResultSetLog log) {
         try {
             updateStatementLog.setLong(1, log.getExecutionTimeNanos());
             updateStatementLog.setInt(2, log.getNbRowsIterated());
@@ -128,7 +143,7 @@ public class LogRepository {
         lastModificationTime = System.currentTimeMillis();
     }
 
-    public synchronized void addBatchedPreparedStatementsLog(BatchedPreparedStatementsLog log) {
+    public synchronized void addBatchedPreparedStatementsLog(final BatchedPreparedStatementsLog log) {
         try {
             addStatementLog.setObject(1, log.getLogId());
             addStatementLog.setTimestamp(2, new Timestamp(log.getTimestamp()));
@@ -153,7 +168,7 @@ public class LogRepository {
         lastModificationTime = System.currentTimeMillis();
     }
 
-    public synchronized void addBatchedNonPreparedStatementsLog(BatchedNonPreparedStatementsLog log) {
+    public synchronized void addBatchedNonPreparedStatementsLog(final BatchedNonPreparedStatementsLog log) {
         try {
             addStatementLog.setObject(1, log.getLogId());
             addStatementLog.setTimestamp(2, new Timestamp(log.getTimestamp()));
@@ -188,7 +203,8 @@ public class LogRepository {
         }
     }
 
-    public void getStatements(@Nullable String filter, @Nullable Long minDurationNanos, ResultSetAnalyzer analyzer) {
+    public void getStatements(@Nullable final String filter, @Nullable final Long minDurationNanos,
+            final ResultSetAnalyzer analyzer) {
         String sql = "select id, tstamp, statementType, rawSql, " //
                 + "exec_plus_fetch_time, execution_time, fetch_time, nbRowsIterated, threadName, connectionId, error " //
                 + "from v_statement_log ";
@@ -215,8 +231,8 @@ public class LogRepository {
 
     }
 
-    public void getStatementsGroupByRawSQL(@Nullable String filter, @Nullable Long minDurationNanos,
-            ResultSetAnalyzer analyzer) {
+    public void getStatementsGroupByRawSQL(@Nullable final String filter, @Nullable final Long minDurationNanos,
+            final ResultSetAnalyzer analyzer) {
         String sql = "select min(id) as ID, statementType, rawSql, count(1) as exec_count, " //
                 + "sum(executionDurationNanos) as total_exec_time, "//
                 + "max(executionDurationNanos) as max_exec_time, " //
@@ -252,8 +268,8 @@ public class LogRepository {
 
     }
 
-    public void getStatementsGroupByFilledSQL(@Nullable String filter, @Nullable Long minDurationNanos,
-            ResultSetAnalyzer analyzer) {
+    public void getStatementsGroupByFilledSQL(@Nullable final String filter, @Nullable final Long minDurationNanos,
+            final ResultSetAnalyzer analyzer) {
         String sql = "select min(id) as ID, statementType, rawSql, filledSql, count(1) as exec_count, " //
                 + "sum(executionDurationNanos) as total_exec_time, "//
                 + "max(executionDurationNanos) as max_exec_time, " //
@@ -289,7 +305,7 @@ public class LogRepository {
 
     }
 
-    private String getWhereClause(@Nullable String filter, @Nullable Long minDurationNanos) {
+    private String getWhereClause(@Nullable final String filter, @Nullable final Long minDurationNanos) {
         String sql = "";
         boolean whereAdded = false;
         if (filter != null) {
@@ -308,8 +324,8 @@ public class LogRepository {
         return sql;
     }
 
-    private void applyParametersForWhereClause(@Nullable String filter, @Nullable Long minDurationNanos,
-            PreparedStatement statement) throws SQLException {
+    private void applyParametersForWhereClause(@Nullable final String filter, @Nullable final Long minDurationNanos,
+            final PreparedStatement statement) throws SQLException {
         if (filter != null) {
             statement.setString(1, "%" + filter.toUpperCase() + "%");
             statement.setString(2, "%" + filter.toUpperCase() + "%");
@@ -325,7 +341,7 @@ public class LogRepository {
     }
 
     @Nullable
-    public StatementLog getStatementLog(long id) {
+    public StatementLog getStatementLog(final long id) {
         try {
             final PreparedStatement statement = connection
                     .prepareStatement("select logId, tstamp, statementType, rawSql, filledSql, " //
@@ -393,7 +409,7 @@ public class LogRepository {
         }
     }
 
-    public long getTotalExecAndFetchTimeNanos(@Nullable String filter, @Nullable Long minDurationNanos) {
+    public long getTotalExecAndFetchTimeNanos(@Nullable final String filter, @Nullable final Long minDurationNanos) {
         String sql = "select sum(exec_plus_fetch_time) from v_statement_log ";
         sql += getWhereClause(filter, minDurationNanos);
 
@@ -417,7 +433,7 @@ public class LogRepository {
 
     }
 
-    public void getBatchStatementExecutions(UUID logId, ResultSetAnalyzer analyzer) {
+    public void getBatchStatementExecutions(final UUID logId, final ResultSetAnalyzer analyzer) {
         String sql = "select batched_stmt_order, filledSql from batched_statement_log where logId=? ";
         sql += "order by batched_stmt_order";
 

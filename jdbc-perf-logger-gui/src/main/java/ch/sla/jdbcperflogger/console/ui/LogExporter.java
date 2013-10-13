@@ -1,3 +1,18 @@
+/* 
+ *  Copyright 2013 Sylvain LAURENT
+ *     
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package ch.sla.jdbcperflogger.console.ui;
 
 import java.io.File;
@@ -21,24 +36,24 @@ import ch.sla.jdbcperflogger.model.StatementLog;
 public class LogExporter {
     private final LogRepository logRepository;
 
-    LogExporter(LogRepository logRepository) {
+    LogExporter(final LogRepository logRepository) {
         this.logRepository = logRepository;
     }
 
-    SqlLogExporter getSqlLogExporter(File exportFile) {
+    SqlLogExporter getSqlLogExporter(final File exportFile) {
         return new SqlLogExporter(exportFile);
     }
 
-    CsvLogExporter getCsvLogExporter(File exportFile) {
+    CsvLogExporter getCsvLogExporter(final File exportFile) {
         return new CsvLogExporter(exportFile);
     }
 
     @SuppressWarnings("null")
-    String getBatchedExecutions(StatementLog statementLog) {
+    String getBatchedExecutions(final StatementLog statementLog) {
         final StringBuilder strBuilder = new StringBuilder();
         logRepository.getBatchStatementExecutions(statementLog.getLogId(), new ResultSetAnalyzer() {
             @Override
-            public void analyze(ResultSet resultSet) throws SQLException {
+            public void analyze(final ResultSet resultSet) throws SQLException {
                 while (resultSet.next()) {
                     strBuilder.append("/* #");
                     strBuilder.append(resultSet.getInt(1));
@@ -54,12 +69,12 @@ public class LogExporter {
     private class SqlLogExporter implements ResultSetAnalyzer {
         private final File exportFile;
 
-        SqlLogExporter(File exportFile) {
+        SqlLogExporter(final File exportFile) {
             this.exportFile = exportFile;
         }
 
         @Override
-        public void analyze(ResultSet resultSet) throws SQLException {
+        public void analyze(final ResultSet resultSet) throws SQLException {
             final PrintWriter writer;
             try {
                 writer = new PrintWriter(exportFile);
@@ -119,12 +134,12 @@ public class LogExporter {
     private class CsvLogExporter implements ResultSetAnalyzer {
         private final File exportFile;
 
-        CsvLogExporter(File exportFile) {
+        CsvLogExporter(final File exportFile) {
             this.exportFile = exportFile;
         }
 
         @Override
-        public void analyze(ResultSet resultSet) throws SQLException {
+        public void analyze(final ResultSet resultSet) throws SQLException {
             final PrintWriter writer;
             try {
                 writer = new PrintWriter(exportFile);
@@ -190,7 +205,7 @@ public class LogExporter {
             }
         }
 
-        private String escapeStrings(@Nullable String orig) {
+        private String escapeStrings(@Nullable final String orig) {
             if (orig == null) {
                 return "";
             }

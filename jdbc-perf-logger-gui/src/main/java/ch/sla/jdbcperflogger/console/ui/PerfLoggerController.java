@@ -1,3 +1,18 @@
+/* 
+ *  Copyright 2013 Sylvain LAURENT
+ *     
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package ch.sla.jdbcperflogger.console.ui;
 
 import java.io.CharArrayWriter;
@@ -51,19 +66,19 @@ public class PerfLoggerController {
 
     private final SelectLogRunner selectAllLogStatements = new SelectLogRunner() {
         @Override
-        public void doSelect(ResultSetAnalyzer resultSetAnalyzer) {
+        public void doSelect(final ResultSetAnalyzer resultSetAnalyzer) {
             logRepository.getStatements(getTxtFilter(), getMinDurationNanoFilter(), resultSetAnalyzer);
         }
     };
     private final SelectLogRunner selectLogStatementsGroupByRawSql = new SelectLogRunner() {
         @Override
-        public void doSelect(ResultSetAnalyzer resultSetAnalyzer) {
+        public void doSelect(final ResultSetAnalyzer resultSetAnalyzer) {
             logRepository.getStatementsGroupByRawSQL(getTxtFilter(), getMinDurationNanoFilter(), resultSetAnalyzer);
         }
     };
     private final SelectLogRunner selectLogStatementsGroupByFilledSql = new SelectLogRunner() {
         @Override
-        public void doSelect(ResultSetAnalyzer resultSetAnalyzer) {
+        public void doSelect(final ResultSetAnalyzer resultSetAnalyzer) {
             logRepository.getStatementsGroupByFilledSQL(getTxtFilter(), getMinDurationNanoFilter(), resultSetAnalyzer);
         }
     };
@@ -77,8 +92,8 @@ public class PerfLoggerController {
     private GroupBy groupBy = GroupBy.NONE;
     private FilterType filterType = FilterType.FILTER;
 
-    PerfLoggerController(IClientConnectionDelegate clientConnectionDelegate, AbstractLogReceiver logReceiver,
-            LogRepository logRepository) {
+    PerfLoggerController(final IClientConnectionDelegate clientConnectionDelegate,
+            final AbstractLogReceiver logReceiver, final LogRepository logRepository) {
         this.clientConnectionDelegate = clientConnectionDelegate;
         this.logReceiver = logReceiver;
         this.logRepository = logRepository;
@@ -97,7 +112,7 @@ public class PerfLoggerController {
         return perfLoggerPanel;
     }
 
-    void setTextFilter(@Nullable String filter) {
+    void setTextFilter(@Nullable final String filter) {
         if (filter == null || filter.isEmpty()) {
             txtFilter = null;
         } else {
@@ -106,7 +121,7 @@ public class PerfLoggerController {
         refresh();
     }
 
-    void setMinDurationFilter(@Nullable Long durationMs) {
+    void setMinDurationFilter(@Nullable final Long durationMs) {
         if (durationMs == null) {
             minDurationNanos = null;
         } else {
@@ -115,7 +130,7 @@ public class PerfLoggerController {
         refresh();
     }
 
-    void setGroupBy(GroupBy groupBy) {
+    void setGroupBy(final GroupBy groupBy) {
         this.groupBy = groupBy;
         switch (groupBy) {
         case NONE:
@@ -132,12 +147,12 @@ public class PerfLoggerController {
         refresh();
     }
 
-    void setFilterType(FilterType filterType) {
+    void setFilterType(final FilterType filterType) {
         this.filterType = filterType;
         refresh();
     }
 
-    void onSelectStatement(Long logId) {
+    void onSelectStatement(final Long logId) {
         statementSelected(logId);
     }
 
@@ -188,7 +203,7 @@ public class PerfLoggerController {
         refreshDataTask.forceRefresh();
     }
 
-    private void statementSelected(Long logId) {
+    private void statementSelected(final Long logId) {
         String txt1 = "";
         String txt2 = "";
         StatementLog statementLog = null;
@@ -336,10 +351,10 @@ public class PerfLoggerController {
             lastRefreshTime = -1L;
         }
 
-        void doRefreshData(SelectLogRunner selectLogRunner) {
+        void doRefreshData(final SelectLogRunner selectLogRunner) {
             selectLogRunner.doSelect(new ResultSetAnalyzer() {
                 @Override
-                public void analyze(ResultSet resultSet) throws SQLException {
+                public void analyze(final ResultSet resultSet) throws SQLException {
                     final ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
                     final int columnCount = resultSetMetaData.getColumnCount();
 
@@ -388,7 +403,7 @@ public class PerfLoggerController {
         NONE("-"), RAW_SQL("Raw SQL"), FILLED_SQL("Filled SQL");
         final private String title;
 
-        GroupBy(String title) {
+        GroupBy(final String title) {
             this.title = title;
         }
 
@@ -402,7 +417,7 @@ public class PerfLoggerController {
         HIGHLIGHT("Highlight"), FILTER("Filter");
         final private String title;
 
-        FilterType(String title) {
+        FilterType(final String title) {
             this.title = title;
         }
 

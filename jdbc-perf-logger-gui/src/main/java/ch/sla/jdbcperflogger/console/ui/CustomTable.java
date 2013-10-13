@@ -1,3 +1,18 @@
+/* 
+ *  Copyright 2013 Sylvain LAURENT
+ *     
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package ch.sla.jdbcperflogger.console.ui;
 
 import static ch.sla.jdbcperflogger.console.db.LogRepository.ERROR_COLUMN;
@@ -21,7 +36,7 @@ public class CustomTable extends JTable {
     private String txtToHighlightUpper;
     private Long minDurationNanoToHighlight;
 
-    CustomTable(ResultSetDataModel tm) {
+    CustomTable(final ResultSetDataModel tm) {
         super(tm);
     }
 
@@ -32,7 +47,7 @@ public class CustomTable extends JTable {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public String getToolTipText(MouseEvent e) {
+            public String getToolTipText(final MouseEvent e) {
                 final java.awt.Point p = e.getPoint();
                 final int index = columnModel.getColumnIndexAtX(p.x);
                 if (index >= 0) {
@@ -45,7 +60,7 @@ public class CustomTable extends JTable {
     }
 
     @Override
-    public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+    public Component prepareRenderer(final TableCellRenderer renderer, final int row, final int column) {
         final Component component = super.prepareRenderer(renderer, row, column);
 
         if (this.getSelectedRow() != row) {
@@ -80,7 +95,7 @@ public class CustomTable extends JTable {
         return component;
     }
 
-    public void setTxtToHighlight(String txtToHighlight) {
+    public void setTxtToHighlight(final String txtToHighlight) {
         if (txtToHighlight != null) {
             txtToHighlightUpper = txtToHighlight.toUpperCase();
         } else {
@@ -88,7 +103,7 @@ public class CustomTable extends JTable {
         }
     }
 
-    public void setMinDurationNanoToHighlight(Long minDurationNanoToHighlight) {
+    public void setMinDurationNanoToHighlight(final Long minDurationNanoToHighlight) {
         this.minDurationNanoToHighlight = minDurationNanoToHighlight;
     }
 }

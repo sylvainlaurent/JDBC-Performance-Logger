@@ -9,6 +9,13 @@
   <name>JDBC Performance Logger Parent</name>
   <description>Parent/Reactor project for JDBC Performance Logger</description>
 
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+    </license>
+  </licenses>
+
   <scm>
     <connection>scm:git:https://github.com/sylvainlaurent/JDBC-Performance-Logger.git</connection>
     <developerConnection>scm:git:https://github.com/sylvainlaurent/JDBC-Performance-Logger.git</developerConnection>
