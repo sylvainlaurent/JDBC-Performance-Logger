@@ -1,7 +1,7 @@
 set log 0;
 
 -- drop everything to be sure it works even if the schema changed...
-drop all objects;
+--drop all objects;
 
 create table if not exists statement_log 
     (id identity, connectionId int, logId UUID not null, tstamp timestamp not null, statementType tinyInt not null, 
@@ -13,9 +13,11 @@ create index if not exists idx_logId on statement_log(logId);
 create index if not exists idx_duration on statement_log(executionDurationNanos desc);
 create index if not exists idx_rawSql on statement_log(rawSql);
 create index if not exists idx_tstamp on statement_log(tstamp);
+create index if not exists idx_tstamp_desc on statement_log(tstamp desc);
 
 create table if not exists batched_statement_log 
     (id identity, logId UUID not null, batched_stmt_order int not null, filledSql varchar not null);
+
 create index if not exists idx_batched_logId on batched_statement_log(logId);
 
 create or replace view v_statement_log

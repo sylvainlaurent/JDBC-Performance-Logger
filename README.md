@@ -33,6 +33,7 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 - by default the console waits for connections from jdbc-logger-drivers on port 4561. All statements will be logged to the same tab
 - The console can also connect to a jdbc-logger-driver instance on a specific host and port. A tab is created for each host/port combination.
 - Once a tab is opened, the status of the connection is indicated at the bottom of the panel. If the connection is broken and was initiated by the console, the console will try to reconnect regularly. If the connection was initiated by the driver, the latter will try to reconnect regularly.
+- by default the console only keeps the last 20'000 statements. The number can be changed by adding the System property `maxLoggedStatements` when launching the console.
 
 ## Tested databases
 - H2 (lightly)

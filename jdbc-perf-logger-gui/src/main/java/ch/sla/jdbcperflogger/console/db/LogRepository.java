@@ -15,6 +15,7 @@
  */
 package ch.sla.jdbcperflogger.console.db;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -22,12 +23,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.h2.Driver;
+import org.h2.constant.ErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +58,9 @@ public class LogRepository {
     public static final String EXEC_COUNT_COLUMN = "EXEC_COUNT";
     public static final String TOTAL_EXEC_TIME_COLUMN = "TOTAL_EXEC_TIME";
 
+    private static final int NB_ROWS_MAX = Integer.parseInt(System.getProperty("maxLoggedStatements", "20000"));
+    private static final long CLEAN_UP_PERIOD_MS = TimeUnit.SECONDS.toMillis(30);
+
     @SuppressWarnings("null")
     private static final Logger LOGGER = LoggerFactory.getLogger(LogRepository.class);
 
@@ -63,14 +71,13 @@ public class LogRepository {
     private PreparedStatement updateStatementLog;
     private PreparedStatement addBatchedStatementLog;
     private long lastModificationTime = System.currentTimeMillis();
+    private final Timer cleanupTimer;
 
     @SuppressWarnings("null")
     public LogRepository(final String name) {
         repoName = name;
         try {
-            Driver.class.getClass();
-            LOGGER.debug("Opening H2 connection for log repository " + name);
-            connection = DriverManager.getConnection("jdbc:h2:file:logdb/logrepository_" + name + ";DB_CLOSE_DELAY=1");
+            connection = createDbConnection("logdb/logrepository_" + name);
             synchronized (LogRepository.class) {
                 if (!dbInitialized) {
                     final Statement stmt = connection.createStatement();
@@ -94,13 +101,47 @@ public class LogRepository {
             addBatchedStatementLog = connection
                     .prepareStatement("insert into batched_statement_log (logId, batched_stmt_order, filledSql)"
                             + " values(?, ?, ?)");
+
+            cleanupTimer = new Timer(true);
+            cleanupTimer.schedule(new CleanupTask(), CLEAN_UP_PERIOD_MS, CLEAN_UP_PERIOD_MS);
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
+    private Connection createDbConnection(final String path) throws SQLException {
+        return createDbConnection(path, false);
+    }
+
+    private Connection createDbConnection(final String path, final boolean inRecursion) throws SQLException {
+        Driver.class.getClass();
+        LOGGER.debug("Opening H2 connection for log repository " + path);
+        try {
+            @SuppressWarnings("null")
+            @Nonnull
+            final Connection conn = DriverManager.getConnection("jdbc:h2:file:" + path + ";DB_CLOSE_DELAY=1");
+            LOGGER.debug("connection commit mode auto={}", conn.getAutoCommit());
+            return conn;
+        } catch (final SQLException exc) {
+            if (exc.getErrorCode() == ErrorCode.FILE_CORRUPTED_1) {
+                if (inRecursion) {
+                    throw exc;
+                }
+                LOGGER.warn("Unexpected error while opening DB connection, will delete DB files and try agaoin", exc);
+
+                final File dbFile = new File(path + ".h2.db");
+                dbFile.delete();
+                final File dbTraceFile = new File(path + ".trace.db");
+                dbTraceFile.delete();
+                return createDbConnection(path, true);
+            }
+            throw exc;
+        }
+    }
+
     public void dispose() {
         LOGGER.debug("closing H2 connection for log repository " + repoName);
+        cleanupTimer.cancel();
         try {
             addStatementLog.close();
             updateStatementLog.close();
@@ -196,8 +237,8 @@ public class LogRepository {
 
     public void clear() {
         try {
-            connection.prepareStatement("truncate table statement_log").execute();
             connection.prepareStatement("truncate table batched_statement_log").execute();
+            connection.prepareStatement("truncate table statement_log").execute();
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }
@@ -455,4 +496,52 @@ public class LogRepository {
 
     }
 
+    public void deleteOldRowsIfTooMany() {
+        try {
+            // first select the oldest timestamp to keep, then use it in the delete clause
+            // using 2 queries is actually much faster with H2 than a single delete with a subquery
+            LOGGER.debug("searching for most recent timestamp of log statements to delete");
+            final PreparedStatement selectTstampStmt = connection
+                    .prepareStatement("select tstamp from statement_log order by tstamp desc limit 1 offset "
+                            + NB_ROWS_MAX);
+            final ResultSet tstampResultSet = selectTstampStmt.executeQuery();
+            if (tstampResultSet.next()) {
+                final Timestamp timestamp = tstampResultSet.getTimestamp(1);
+                if (timestamp != null) {
+                    int nbRowsDeleted;
+                    {
+                        LOGGER.debug("Will delete all log statements earlier than {}", timestamp);
+                        final PreparedStatement deleteStmt = connection
+                                .prepareStatement("delete from statement_log where tstamp < ?");
+                        deleteStmt.setTimestamp(1, timestamp);
+                        nbRowsDeleted = deleteStmt.executeUpdate();
+                        LOGGER.debug("Deleted {} old statements", nbRowsDeleted);
+                        deleteStmt.close();
+                    }
+                    if (nbRowsDeleted > 0) {
+                        final Statement deleteStmt = connection.createStatement();
+                        nbRowsDeleted = deleteStmt
+                                .executeUpdate("delete from batched_statement_log where logId not in "//
+                                        + "(select logId from statement_log)");
+                        // nbRowsDeleted = deleteStmt2.executeUpdate();
+                        LOGGER.debug("Deleted {} old batched_statements", nbRowsDeleted);
+                        deleteStmt.close();
+                    }
+                }
+            }
+            tstampResultSet.close();
+            selectTstampStmt.close();
+        } catch (final SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private class CleanupTask extends TimerTask {
+
+        @Override
+        public void run() {
+            deleteOldRowsIfTooMany();
+        }
+
+    }
 }
