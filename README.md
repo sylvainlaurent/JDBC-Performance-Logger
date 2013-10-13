@@ -43,3 +43,8 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 
 ## Source code
 The source code is available on GitHub : https://github.com/sylvainlaurent/JDBC-Performance-Logger
+
+## License
+This software is licensed under the Apache Sotware License version 2.0, see [LICENSE.txt](LICENSE.txt).
+
+This software uses and redistributes third-party software, see [3rdparty_license.txt](3rdparty_license.txt).
