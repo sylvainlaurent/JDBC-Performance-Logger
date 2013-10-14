@@ -512,7 +512,7 @@ public class LogRepository {
                     {
                         LOGGER.debug("Will delete all log statements earlier than {}", timestamp);
                         final PreparedStatement deleteStmt = connection
-                                .prepareStatement("delete from statement_log where tstamp < ?");
+                                .prepareStatement("delete from statement_log where tstamp <= ?");
                         deleteStmt.setTimestamp(1, timestamp);
                         nbRowsDeleted = deleteStmt.executeUpdate();
                         LOGGER.debug("Deleted {} old statements", nbRowsDeleted);
@@ -526,6 +526,8 @@ public class LogRepository {
                         // nbRowsDeleted = deleteStmt2.executeUpdate();
                         LOGGER.debug("Deleted {} old batched_statements", nbRowsDeleted);
                         deleteStmt.close();
+
+                        lastModificationTime = System.currentTimeMillis();
                     }
                 }
             }
