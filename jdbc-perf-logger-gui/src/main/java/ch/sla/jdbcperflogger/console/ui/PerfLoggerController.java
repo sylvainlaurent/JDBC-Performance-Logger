@@ -64,7 +64,13 @@ public class PerfLoggerController {
     private final SelectLogRunner selectAllLogStatements = new SelectLogRunner() {
         @Override
         public void doSelect(final ResultSetAnalyzer resultSetAnalyzer) {
-            logRepository.getStatements(getTxtFilter(), getMinDurationNanoFilter(), resultSetAnalyzer);
+            logRepository.getStatements(getTxtFilter(), getMinDurationNanoFilter(), resultSetAnalyzer, false);
+        }
+    };
+    private final SelectLogRunner selectAllLogStatementsWithFilledSql = new SelectLogRunner() {
+        @Override
+        public void doSelect(final ResultSetAnalyzer resultSetAnalyzer) {
+            logRepository.getStatements(getTxtFilter(), getMinDurationNanoFilter(), resultSetAnalyzer, true);
         }
     };
     private final SelectLogRunner selectLogStatementsGroupByRawSql = new SelectLogRunner() {
@@ -285,7 +291,7 @@ public class PerfLoggerController {
             if (!targetFile.getName().toLowerCase().endsWith(".sql")) {
                 targetFile = new File(targetFile.getAbsolutePath() + ".sql");
             }
-            selectAllLogStatements.doSelect(logExporter.getSqlLogExporter(targetFile));
+            selectAllLogStatementsWithFilledSql.doSelect(logExporter.getSqlLogExporter(targetFile));
         }
     }
 
@@ -297,7 +303,7 @@ public class PerfLoggerController {
             if (!targetFile.getName().toLowerCase().endsWith(".csv")) {
                 targetFile = new File(targetFile.getAbsolutePath() + ".csv");
             }
-            selectAllLogStatements.doSelect(logExporter.getCsvLogExporter(targetFile));
+            selectAllLogStatementsWithFilledSql.doSelect(logExporter.getCsvLogExporter(targetFile));
         }
     }
 

@@ -245,10 +245,13 @@ public class LogRepository {
     }
 
     public void getStatements(@Nullable final String filter, @Nullable final Long minDurationNanos,
-            final ResultSetAnalyzer analyzer) {
+            final ResultSetAnalyzer analyzer, final boolean withFilledSql) {
         String sql = "select id, tstamp, statementType, rawSql, " //
-                + "exec_plus_fetch_time, execution_time, fetch_time, nbRowsIterated, threadName, connectionId, error " //
-                + "from v_statement_log ";
+                + "exec_plus_fetch_time, execution_time, fetch_time, nbRowsIterated, threadName, connectionId, error ";
+        if (withFilledSql) {
+            sql += ", " + FILLED_SQL_COLUMN;
+        }
+        sql += " from v_statement_log ";
         sql += getWhereClause(filter, minDurationNanos);
         sql += "order by tstamp";
 
