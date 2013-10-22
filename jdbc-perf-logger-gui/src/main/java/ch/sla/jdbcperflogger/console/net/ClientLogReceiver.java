@@ -27,7 +27,7 @@ import ch.sla.jdbcperflogger.console.db.LogRepository;
 
 public class ClientLogReceiver extends AbstractLogReceiver {
     @SuppressWarnings("null")
-    final static Logger LOGGER = LoggerFactory.getLogger(ClientLogReceiver.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(ClientLogReceiver.class);
 
     final InetSocketAddress targetRemoteAddress;
 

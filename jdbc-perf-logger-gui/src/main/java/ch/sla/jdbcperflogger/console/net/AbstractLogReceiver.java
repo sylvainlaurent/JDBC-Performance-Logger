@@ -32,7 +32,7 @@ import ch.sla.jdbcperflogger.model.StatementLog;
 
 public abstract class AbstractLogReceiver extends Thread {
     @SuppressWarnings("null")
-    final static Logger LOGGER = LoggerFactory.getLogger(AbstractLogReceiver.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(AbstractLogReceiver.class);
 
     protected final LogRepository logRepository;
     protected volatile boolean connected;
