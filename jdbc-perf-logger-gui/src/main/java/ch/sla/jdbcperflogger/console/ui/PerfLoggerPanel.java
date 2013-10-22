@@ -40,6 +40,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -81,7 +82,7 @@ public class PerfLoggerPanel extends JPanel {
 
     static {
         COLUMNS_WIDTH = new HashMap<String, Integer>();
-        COLUMNS_WIDTH.put(TSTAMP_COLUMN, 100);
+        COLUMNS_WIDTH.put(TSTAMP_COLUMN, 150);
         COLUMNS_WIDTH.put(FETCH_TIME_COLUMN, 50);
         COLUMNS_WIDTH.put(EXEC_TIME_COLUMN, 50);
         COLUMNS_WIDTH.put(EXEC_PLUS_FETCH_TIME_COLUMN, 50);
@@ -107,8 +108,9 @@ public class PerfLoggerPanel extends JPanel {
     RSyntaxTextArea txtFieldRawSql;
     RSyntaxTextArea txtFieldFilledSql;
     JLabel lblStatus;
+    private StatementTimestampTableCellRenderer stmtTimestampCellRenderer;
 
-    public PerfLoggerPanel(PerfLoggerController perfLoggerController) {
+    public PerfLoggerPanel(final PerfLoggerController perfLoggerController) {
         this.perfLoggerController = perfLoggerController;
         initialize();
     }
@@ -164,7 +166,7 @@ public class PerfLoggerPanel extends JPanel {
         comboBoxFilterType.addActionListener(new ActionListener() {
             @SuppressWarnings("null")
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 perfLoggerController.setFilterType(comboBoxFilterType.getItemAt(comboBoxFilterType.getSelectedIndex()));
             }
         });
@@ -196,7 +198,7 @@ public class PerfLoggerPanel extends JPanel {
 
             txtFldSqlFilter.getDocument().addUndoableEditListener(new UndoableEditListener() {
                 @Override
-                public void undoableEditHappened(UndoableEditEvent e) {
+                public void undoableEditHappened(final UndoableEditEvent e) {
                     perfLoggerController.setTextFilter(txtFldSqlFilter.getText());
                 }
             });
@@ -221,7 +223,7 @@ public class PerfLoggerPanel extends JPanel {
             filterPanel.add(txtFldMinDuration, gbc_txtFldMinDuration);
             txtFldMinDuration.getDocument().addUndoableEditListener(new UndoableEditListener() {
                 @Override
-                public void undoableEditHappened(UndoableEditEvent e) {
+                public void undoableEditHappened(final UndoableEditEvent e) {
                     Long minDurationMs = null;
                     if (txtFldMinDuration.getText().length() > 0) {
                         try {
@@ -264,7 +266,7 @@ public class PerfLoggerPanel extends JPanel {
         comboBoxGroupBy.addActionListener(new ActionListener() {
             @SuppressWarnings("null")
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 perfLoggerController.setGroupBy(comboBoxGroupBy.getItemAt(comboBoxGroupBy.getSelectedIndex()));
             }
         });
@@ -280,7 +282,7 @@ public class PerfLoggerPanel extends JPanel {
         btnPause.addActionListener(new ActionListener() {
 
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 perfLoggerController.onPause();
             }
         });
@@ -294,7 +296,7 @@ public class PerfLoggerPanel extends JPanel {
         btnClear.setIcon(new ImageIcon(PerfLoggerPanel.class.getResource("/icons/32px-Edit-clear.png")));
         btnClear.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 perfLoggerController.onClear();
             }
         });
@@ -313,6 +315,8 @@ public class PerfLoggerPanel extends JPanel {
         table.setSelectionBackground(Color.yellow);
         table.setDefaultRenderer(Byte.class, new CustomTableCellRenderer());
         table.setDefaultRenderer(String.class, new CustomTableCellRenderer());
+        stmtTimestampCellRenderer = new StatementTimestampTableCellRenderer();
+        table.setDefaultRenderer(Timestamp.class, stmtTimestampCellRenderer);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.setFillsViewportHeight(true);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -321,7 +325,7 @@ public class PerfLoggerPanel extends JPanel {
 
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
-            public void valueChanged(ListSelectionEvent e) {
+            public void valueChanged(final ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
                     final ListSelectionModel lsm = (ListSelectionModel) e.getSource();
                     Long logId = null;
@@ -376,7 +380,7 @@ public class PerfLoggerPanel extends JPanel {
         btnCopy1.setToolTipText("Copy the SQL statement unmodified (potentiall with '?' for bind variables");
         btnCopy1.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 final StringSelection stringSelection = new StringSelection(txtFieldRawSql.getText());
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, stringSelection);
             }
@@ -430,7 +434,7 @@ public class PerfLoggerPanel extends JPanel {
         txtFieldFilledSql.setLineWrap(true);
         btnCopy2.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 final StringSelection stringSelection = new StringSelection(txtFieldFilledSql.getText());
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, stringSelection);
             }
@@ -460,7 +464,7 @@ public class PerfLoggerPanel extends JPanel {
         btnClose = new JButton("Close");
         btnClose.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 perfLoggerController.onClose();
             }
         });
@@ -469,7 +473,7 @@ public class PerfLoggerPanel extends JPanel {
         btnExportCsv.setToolTipText("Export all statements to a CSV file");
         btnExportCsv.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 perfLoggerController.onExportCsv();
             }
         });
@@ -478,7 +482,7 @@ public class PerfLoggerPanel extends JPanel {
         btnExportSql.setToolTipText("Export all statements as a sql script");
         btnExportSql.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 perfLoggerController.onExportSql();
             }
         });
@@ -511,7 +515,7 @@ public class PerfLoggerPanel extends JPanel {
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
             @Override
-            public boolean dispatchKeyEvent(KeyEvent e) {
+            public boolean dispatchKeyEvent(final KeyEvent e) {
                 if (e.getKeyCode() == java.awt.event.KeyEvent.VK_BACK_SPACE
                         && e.getModifiers() == java.awt.event.InputEvent.CTRL_MASK && e.getID() == KeyEvent.KEY_PRESSED) {
                     perfLoggerController.onClear();
@@ -523,13 +527,19 @@ public class PerfLoggerPanel extends JPanel {
 
     }
 
-    void setCloseEnable(boolean enabled) {
+    void setCloseEnable(final boolean enabled) {
         btnClose.setEnabled(false);
         btnClose.setToolTipText("Server connection cannot be closed, only GUI-initiated connections can be closed");
     }
 
-    void setData(List<Object[]> rows, List<String> columnNames, List<Class<?>> columnTypes,
-            boolean tableStructureChanged) {
+    void setData(final List<Object[]> rows, final List<String> columnNames, final List<Class<?>> columnTypes,
+            final boolean tableStructureChanged) {
+        final int selectedRow = table.getSelectedRow();
+        int modelRowIndex = -1;
+        if (selectedRow >= 0) {
+            modelRowIndex = table.convertRowIndexToModel(selectedRow);
+        }
+
         dataModel.setNewData(rows, columnNames, columnTypes);
         if (tableStructureChanged) {
             for (int i = 0; i < dataModel.getColumnCount(); i++) {
@@ -538,14 +548,22 @@ public class PerfLoggerPanel extends JPanel {
                     table.getColumnModel().getColumn(i).setPreferredWidth(width.intValue());
                 }
             }
+        } else if (selectedRow >= 0 && selectedRow < rows.size()) {
+            final int newSelectedRowIndex = table.convertRowIndexToView(modelRowIndex);
+            table.setRowSelectionInterval(newSelectedRowIndex, newSelectedRowIndex);
         }
     }
 
-    void setPaused(boolean paused) {
+    void setPaused(final boolean paused) {
         if (paused) {
             btnPause.setIcon(new ImageIcon(PerfLoggerPanel.class.getResource("/icons/32px-Media-record.png")));
         } else {
             btnPause.setIcon(new ImageIcon(PerfLoggerPanel.class.getResource("/icons/32px-Media-playback-pause.png")));
         }
+    }
+
+    void setDeltaTimestampBaseMillis(final long deltaTimestampBaseMillis) {
+        stmtTimestampCellRenderer.setDeltaTimestampBaseMillis(deltaTimestampBaseMillis);
+        dataModel.fireTableRowsUpdated(0, dataModel.getRowCount() - 1);
     }
 }

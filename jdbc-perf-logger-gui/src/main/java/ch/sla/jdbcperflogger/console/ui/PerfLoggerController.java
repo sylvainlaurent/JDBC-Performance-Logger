@@ -21,9 +21,6 @@ import java.io.PrintWriter;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -159,7 +156,7 @@ public class PerfLoggerController {
     void onClear() {
         logRepository.clear();
         refresh();
-
+        statementSelected(null);
     }
 
     void onPause() {
@@ -203,13 +200,15 @@ public class PerfLoggerController {
         refreshDataTask.forceRefresh();
     }
 
-    private void statementSelected(final Long logId) {
+    private void statementSelected(@Nullable final Long logId) {
         String txt1 = "";
         String txt2 = "";
         StatementLog statementLog = null;
         if (logId != null) {
             statementLog = logRepository.getStatementLog(logId);
         }
+        long deltaTimestampBaseMillis = 0;
+
         if (statementLog != null) {
             switch (groupBy) {
             case NONE:
@@ -228,6 +227,7 @@ public class PerfLoggerController {
                 default:
                     break;
                 }
+                deltaTimestampBaseMillis = statementLog.getTimestamp();
                 break;
             case RAW_SQL:
                 switch (statementLog.getStatementType()) {
@@ -273,6 +273,8 @@ public class PerfLoggerController {
         perfLoggerPanel.txtFieldFilledSql.select(0, 0);
         // scrollPaneSqlDetail1.setEnabled(txt1 != null);
         // scrollPaneSqlDetail2.setEnabled(txt2 != null);
+
+        perfLoggerPanel.setDeltaTimestampBaseMillis(deltaTimestampBaseMillis);
     }
 
     private void exportSql() {
@@ -364,21 +366,13 @@ public class PerfLoggerController {
                     try {
                         for (int i = 1; i <= columnCount; i++) {
                             tempColumnNames.add(resultSetMetaData.getColumnLabel(i).toUpperCase());
-                            if (resultSetMetaData.getColumnType(i) == Types.TIMESTAMP) {
-                                tempColumnTypes.add(String.class);
-                            } else {
-                                tempColumnTypes.add(Class.forName(resultSetMetaData.getColumnClassName(i)));
-                            }
+                            tempColumnTypes.add(Class.forName(resultSetMetaData.getColumnClassName(i)));
                         }
 
-                        final SimpleDateFormat tstampFormat = new SimpleDateFormat(/* "yyyy-MM-dd "+ */"HH:mm:ss.SSS");
                         while (resultSet.next()) {
                             final Object[] row = new Object[columnCount];
                             for (int i = 1; i <= columnCount; i++) {
                                 row[i - 1] = resultSet.getObject(i);
-                                if (row[i - 1] instanceof Timestamp) {
-                                    row[i - 1] = tstampFormat.format(row[i - 1]);
-                                }
                             }
                             tempRows.add(row);
                         }
