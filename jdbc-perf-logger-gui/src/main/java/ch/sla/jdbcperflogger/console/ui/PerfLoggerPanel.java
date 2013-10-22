@@ -528,8 +528,12 @@ public class PerfLoggerPanel extends JPanel {
     }
 
     void setCloseEnable(final boolean enabled) {
-        btnClose.setEnabled(false);
-        btnClose.setToolTipText("Server connection cannot be closed, only GUI-initiated connections can be closed");
+        btnClose.setEnabled(enabled);
+        if (enabled) {
+            btnClose.setToolTipText("");
+        } else {
+            btnClose.setToolTipText("Server connection cannot be closed, only GUI-initiated connections can be closed");
+        }
     }
 
     void setData(final List<Object[]> rows, final List<String> columnNames, final List<Class<?>> columnTypes,
