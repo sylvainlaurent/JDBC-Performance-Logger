@@ -20,9 +20,13 @@ import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.logger.PerfLogger;
 
+@ParametersAreNonnullByDefault
 public class LoggingResultSetInvocationHandler implements InvocationHandler {
     private final ResultSet wrappedResultSet;
     private final UUID logId;
@@ -39,9 +43,13 @@ public class LoggingResultSetInvocationHandler implements InvocationHandler {
     }
 
     @Override
-    public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+    @Nullable
+    public Object invoke(@Nullable final Object proxy, @Nullable final Method method, @Nullable final Object[] args)
+            throws Throwable {
+        assert method != null;
+
         final Object result = Utils.invokeUnwrapException(wrappedResultSet, method, args);
-        ;
+
         final String methodName = method.getName();
         if (args == null || args.length == 0) {
             if ("close".equals(methodName)) {

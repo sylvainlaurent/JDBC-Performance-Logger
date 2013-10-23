@@ -16,6 +16,11 @@
 
 package ch.sla.jdbcperflogger;
 
+import java.util.EnumSet;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
 public enum StatementType {
     BASE_NON_PREPARED_STMT(1), //
     BASE_PREPARED_STMT(2), //
@@ -30,14 +35,13 @@ public enum StatementType {
 
     private StatementType(final int id) {
         this.id = id;
-        addToVals(id);
     }
 
-    private void addToVals(final int id) {
-        if (vals == null) {
-            vals = new StatementType[7];
+    static {
+        vals = new StatementType[7];
+        for (final StatementType type : EnumSet.allOf(StatementType.class)) {
+            vals[type.id] = type;
         }
-        vals[id] = this;
     }
 
     public int getId() {
@@ -45,6 +49,6 @@ public enum StatementType {
     }
 
     public static StatementType fromId(final int id) {
-        return id > 0 && id < vals.length ? vals[id] : null;
+        return vals[id];
     }
 }

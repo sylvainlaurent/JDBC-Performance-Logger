@@ -164,7 +164,6 @@ public class PerfLoggerPanel extends JPanel {
                 new FilterType[0])));
         comboBoxFilterType.setSelectedItem(FilterType.FILTER);
         comboBoxFilterType.addActionListener(new ActionListener() {
-            @SuppressWarnings("null")
             @Override
             public void actionPerformed(final ActionEvent e) {
                 perfLoggerController.setFilterType(comboBoxFilterType.getItemAt(comboBoxFilterType.getSelectedIndex()));
@@ -264,7 +263,6 @@ public class PerfLoggerPanel extends JPanel {
                 .setModel(new DefaultComboBoxModel<GroupBy>(EnumSet.allOf(GroupBy.class).toArray(new GroupBy[0])));
         comboBoxGroupBy.setSelectedIndex(0);
         comboBoxGroupBy.addActionListener(new ActionListener() {
-            @SuppressWarnings("null")
             @Override
             public void actionPerformed(final ActionEvent e) {
                 perfLoggerController.setGroupBy(comboBoxGroupBy.getItemAt(comboBoxGroupBy.getSelectedIndex()));

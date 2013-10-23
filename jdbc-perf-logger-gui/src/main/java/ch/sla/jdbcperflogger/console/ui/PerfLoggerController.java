@@ -413,8 +413,6 @@ public class PerfLoggerController {
         }
     }
 
-    @SuppressWarnings("null")
-    @ParametersAreNonnullByDefault
     enum FilterType {
         HIGHLIGHT("Highlight"), FILTER("Filter");
         final private String title;

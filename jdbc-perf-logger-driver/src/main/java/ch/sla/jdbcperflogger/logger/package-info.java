@@ -13,24 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.sla.jdbcperflogger.model;
+@ParametersAreNonnullByDefault
+package ch.sla.jdbcperflogger.logger;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 
-public class SqlTypedValue {
-    public final Object value;
-    public final int sqlType;
-    public final String setter;
-
-    public SqlTypedValue(final Object value, final int sqlType) {
-        this.value = value;
-        this.sqlType = sqlType;
-        setter = null;
-    }
-
-    public SqlTypedValue(final Object value, final String setter) {
-        this.value = value;
-        sqlType = -1;
-        this.setter = setter;
-    }
-
-}

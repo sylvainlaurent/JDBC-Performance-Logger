@@ -24,11 +24,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.logger.PerfLogger;
 import ch.sla.jdbcperflogger.model.PreparedStatementValuesHolder;
 import ch.sla.jdbcperflogger.model.SqlTypedValue;
 
+@ParametersAreNonnullByDefault
 public class LoggingPreparedStatementInvocationHandler extends LoggingStatementInvocationHandler {
     private static final String CLEAR_PARAMETERS = "clearParameters";
 
@@ -43,11 +47,16 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
     }
 
     @Override
-    public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+    @Nullable
+    public Object invoke(@Nullable final Object proxy, @Nullable final Method _method, @Nullable final Object[] args)
+            throws Throwable {
+        assert _method != null;
+        final Method method = _method;
+
         final Object result;
         final String methodName = method.getName();
         if (args == null || args.length == 0) {
-            if (EXECUTE.equals(methodName) || EXECUTE_UPDATE.equals(methodName)) {
+            if ((EXECUTE.equals(methodName) || EXECUTE_UPDATE.equals(methodName)) && args != null) {
                 return internalExecutePrepared(method, args);
             } else if (ADD_BATCH.equals(methodName)) {
                 result = Utils.invokeUnwrapException(wrappedStatement, method, args);
@@ -85,7 +94,8 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
         final long start = System.nanoTime();
         Throwable exc = null;
         try {
-            final ResultSet resultSet = (ResultSet) Utils.invokeUnwrapException(wrappedStatement, method, args);
+            final ResultSet resultSet = (ResultSet) Utils.invokeUnwrapExceptionReturnNonNull(wrappedStatement, method,
+                    args);
             return (ResultSet) Proxy.newProxyInstance(LoggingPreparedStatementInvocationHandler.class.getClassLoader(),
                     Utils.extractAllInterfaces(resultSet.getClass()), new LoggingResultSetInvocationHandler(resultSet,
                             logId, StatementType.PREPARED_QUERY_STMT));
@@ -100,6 +110,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
 
     }
 
+    @Nullable
     protected Object internalExecutePrepared(final Method method, final Object[] args) throws Throwable {
         final long start = System.nanoTime();
         Throwable exc = null;
@@ -116,7 +127,8 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
     }
 
     @Override
-    protected Object internalExecuteBatch(final Method method, final Object[] args) throws Throwable {
+    @Nullable
+    protected Object internalExecuteBatch(final Method method, @Nullable final Object[] args) throws Throwable {
         final long start = System.nanoTime();
         Throwable exc = null;
         try {

@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import ch.sla.jdbcperflogger.console.db.LogRepository;
 
 public class ServerLogReceiver extends AbstractLogReceiver {
-    @SuppressWarnings("null")
     final static Logger LOGGER = LoggerFactory.getLogger(ServerLogReceiver.class);
 
     private ServerSocket serverSocket;
@@ -73,7 +72,6 @@ public class ServerLogReceiver extends AbstractLogReceiver {
             while (!disposed) {
                 try {
                     LOGGER.debug("Waiting for client connections on " + serverSocket);
-                    @SuppressWarnings("null")
                     @Nonnull
                     final Socket socket = serverSocket.accept();
                     LOGGER.debug("Got client connection from " + socket);

@@ -32,6 +32,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -69,7 +71,9 @@ public class PerfLoggerRemoting {
             final NodeList targetClientList = root.getElementsByTagName("target-console");
             for (int i = 0; i < targetClientList.getLength(); i++) {
                 final NamedNodeMap attributes = targetClientList.item(i).getAttributes();
+                @Nonnull
                 final String host = attributes.getNamedItem("host").getTextContent();
+                @Nonnull
                 final String port = attributes.getNamedItem("port").getTextContent();
                 new PerfLoggerClientThread(host, Integer.parseInt(port)).start();
             }
@@ -104,6 +108,7 @@ public class PerfLoggerRemoting {
         return configFileStream;
     }
 
+    @Nullable
     static InputStream openConfigFile(final String location) {
         InputStream configFileStream = WrappingDriver.class.getResourceAsStream("/" + location);
         if (configFileStream == null) {
@@ -130,7 +135,7 @@ public class PerfLoggerRemoting {
     }
 
     static class LogSender implements Runnable {
-        private final Logger LOGGER = LoggerFactory.getLogger(LogSender.class);
+        private final static Logger LOGGER2 = LoggerFactory.getLogger(LogSender.class);
 
         private final BlockingQueue<LogMessage> logsToSend = new LinkedBlockingQueue<LogMessage>(10000);
         private final Socket socket;
@@ -144,7 +149,7 @@ public class PerfLoggerRemoting {
         void postLog(final LogMessage log) {
             final boolean posted = logsToSend.offer(log);
             if (!posted) {
-                LOGGER.warn("queue full, dropping remote log of statement");
+                LOGGER2.warn("queue full, dropping remote log of statement");
             }
         }
 
@@ -178,9 +183,9 @@ public class PerfLoggerRemoting {
                     }
                 }
             } catch (final IOException e) {
-                LOGGER.warn("socket error", e);
+                LOGGER2.warn("socket error", e);
             } finally {
-                LOGGER.info("closing connection with {}:{}", socket.getInetAddress(), socket.getPort());
+                LOGGER2.info("closing connection with {}:{}", socket.getInetAddress(), socket.getPort());
                 senders.remove(this);
                 if (oos != null) {
                     try {
@@ -191,7 +196,7 @@ public class PerfLoggerRemoting {
                 try {
                     socket.close();
                 } catch (final IOException e) {
-                    LOGGER.error("error while closing socket", e);
+                    LOGGER2.error("error while closing socket", e);
                 }
             }
         }

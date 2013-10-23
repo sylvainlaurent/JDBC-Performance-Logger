@@ -15,6 +15,9 @@
  */
 package ch.sla.jdbcperflogger.driver;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
 public enum DatabaseType {
     ORACLE, GENERIC;
 }

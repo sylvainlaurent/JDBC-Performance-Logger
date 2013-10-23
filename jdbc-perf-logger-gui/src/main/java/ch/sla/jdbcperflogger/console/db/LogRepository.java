@@ -61,7 +61,6 @@ public class LogRepository {
     private static final int NB_ROWS_MAX = Integer.parseInt(System.getProperty("maxLoggedStatements", "20000"));
     private static final long CLEAN_UP_PERIOD_MS = TimeUnit.SECONDS.toMillis(30);
 
-    @SuppressWarnings("null")
     private static final Logger LOGGER = LoggerFactory.getLogger(LogRepository.class);
 
     private final Connection connection;
@@ -73,7 +72,6 @@ public class LogRepository {
     private long lastModificationTime = System.currentTimeMillis();
     private final Timer cleanupTimer;
 
-    @SuppressWarnings("null")
     public LogRepository(final String name) {
         repoName = name;
         try {
@@ -117,7 +115,6 @@ public class LogRepository {
         Driver.class.getClass();
         LOGGER.debug("Opening H2 connection for log repository " + path);
         try {
-            @SuppressWarnings("null")
             @Nonnull
             final Connection conn = DriverManager.getConnection("jdbc:h2:file:" + path + ";DB_CLOSE_DELAY=1");
             LOGGER.debug("connection commit mode auto={}", conn.getAutoCommit());
@@ -256,11 +253,9 @@ public class LogRepository {
         sql += "order by tstamp";
 
         try {
-            @SuppressWarnings("null")
             @Nonnull
             final PreparedStatement statement = connection.prepareStatement(sql);
             applyParametersForWhereClause(filter, minDurationNanos, statement);
-            @SuppressWarnings("null")
             @Nonnull
             final ResultSet resultSet = statement.executeQuery();
             try {
@@ -293,11 +288,9 @@ public class LogRepository {
         sql += "order by total_exec_time desc";
 
         try {
-            @SuppressWarnings("null")
             @Nonnull
             final PreparedStatement statement = connection.prepareStatement(sql);
             applyParametersForWhereClause(filter, minDurationNanos, statement);
-            @SuppressWarnings("null")
             @Nonnull
             final ResultSet resultSet = statement.executeQuery();
             try {
@@ -330,11 +323,9 @@ public class LogRepository {
         sql += "order by total_exec_time desc";
 
         try {
-            @SuppressWarnings("null")
             @Nonnull
             final PreparedStatement statement = connection.prepareStatement(sql);
             applyParametersForWhereClause(filter, minDurationNanos, statement);
-            @SuppressWarnings("null")
             @Nonnull
             final ResultSet resultSet = statement.executeQuery();
             try {
@@ -396,12 +387,16 @@ public class LogRepository {
                 StatementLog result = null;
                 if (resultSet.next()) {
                     int i = 1;
+                    @Nonnull
                     final UUID logId = (UUID) resultSet.getObject(i++);
                     final Timestamp tstamp = resultSet.getTimestamp(i++);
                     final StatementType statementType = StatementType.fromId(resultSet.getInt(i++));
+                    @Nonnull
                     final String rawSql = resultSet.getString(i++);
+                    @Nonnull
                     final String filledSql = resultSet.getString(i++);
                     final long durationNanos = resultSet.getLong(i++);
+                    @Nonnull
                     final String threadName = resultSet.getString(i++);
                     final SQLException exception = (SQLException) resultSet.getObject(i++);
                     final int connectionId = resultSet.getInt(i++);
@@ -458,7 +453,6 @@ public class LogRepository {
         sql += getWhereClause(filter, minDurationNanos);
 
         try {
-            @SuppressWarnings("null")
             @Nonnull
             final PreparedStatement statement = connection.prepareStatement(sql);
             applyParametersForWhereClause(filter, minDurationNanos, statement);
@@ -484,7 +478,6 @@ public class LogRepository {
         try {
             final PreparedStatement statement = connection.prepareStatement(sql);
             statement.setObject(1, logId);
-            @SuppressWarnings("null")
             @Nonnull
             final ResultSet resultSet = statement.executeQuery();
             try {

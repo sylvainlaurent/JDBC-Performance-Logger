@@ -33,7 +33,6 @@ import ch.sla.jdbcperflogger.console.net.ServerLogReceiver;
 
 @ParametersAreNonnullByDefault
 public class PerfLoggerGuiMain implements IClientConnectionDelegate {
-    @SuppressWarnings("null")
     private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerGuiMain.class);
 
     private final PerfLoggerGuiMainFrame frmJdbcPerformanceLogger;

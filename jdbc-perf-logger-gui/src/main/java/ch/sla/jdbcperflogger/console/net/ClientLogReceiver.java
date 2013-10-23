@@ -26,12 +26,10 @@ import org.slf4j.LoggerFactory;
 import ch.sla.jdbcperflogger.console.db.LogRepository;
 
 public class ClientLogReceiver extends AbstractLogReceiver {
-    @SuppressWarnings("null")
     private final static Logger LOGGER = LoggerFactory.getLogger(ClientLogReceiver.class);
 
     final InetSocketAddress targetRemoteAddress;
 
-    @SuppressWarnings("null")
     public ClientLogReceiver(final String targetHost, final int targetPort, final LogRepository logRepository) {
         super(logRepository);
         targetRemoteAddress = InetSocketAddress.createUnresolved(targetHost, targetPort);

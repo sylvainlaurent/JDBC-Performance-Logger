@@ -23,9 +23,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@ParametersAreNonnullByDefault
 public final class Utils {
     private final static Logger LOGGER = LoggerFactory.getLogger(Utils.class);
 
@@ -47,9 +51,22 @@ public final class Utils {
         return DatabaseType.GENERIC;
     }
 
-    static Object invokeUnwrapException(final Object target, final Method method, final Object[] args) throws Throwable {
+    @Nullable
+    static Object invokeUnwrapException(final Object target, final Method method, @Nullable final Object[] args)
+            throws Throwable {
         try {
             return method.invoke(target, args);
+        } catch (final InvocationTargetException e) {
+            throw e.getCause();
+        }
+    }
+
+    static Object invokeUnwrapExceptionReturnNonNull(final Object target, final Method method,
+            @Nullable final Object[] args) throws Throwable {
+        try {
+            final Object result = method.invoke(target, args);
+            assert result != null;
+            return result;
         } catch (final InvocationTargetException e) {
             throw e.getCause();
         }

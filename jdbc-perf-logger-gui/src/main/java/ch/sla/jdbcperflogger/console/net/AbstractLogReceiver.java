@@ -31,7 +31,6 @@ import ch.sla.jdbcperflogger.model.ResultSetLog;
 import ch.sla.jdbcperflogger.model.StatementLog;
 
 public abstract class AbstractLogReceiver extends Thread {
-    @SuppressWarnings("null")
     private final static Logger LOGGER = LoggerFactory.getLogger(AbstractLogReceiver.class);
 
     protected final LogRepository logRepository;

@@ -22,6 +22,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
 public class LoggingConnectionInvocationHandler implements InvocationHandler {
     private final int connectionId;
     private final Connection wrappedConnection;
@@ -34,17 +38,23 @@ public class LoggingConnectionInvocationHandler implements InvocationHandler {
     }
 
     @Override
-    public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+    @Nullable
+    public Object invoke(@Nullable final Object proxy, @Nullable final Method method, @Nullable final Object[] args)
+            throws Throwable {
+        assert method != null;
+
         final Object result = Utils.invokeUnwrapException(wrappedConnection, method, args);
         final String methodName = method.getName();
-        if ("createStatement".equals(methodName)) {
-            return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(), Utils
-                    .extractAllInterfaces(result.getClass()), new LoggingStatementInvocationHandler(connectionId,
-                    (Statement) result, databaseType));
-        } else if ("prepareStatement".equals(methodName) || "prepareCall".equals(methodName)) {
-            return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(), Utils
-                    .extractAllInterfaces(result.getClass()), new LoggingPreparedStatementInvocationHandler(
-                    connectionId, (PreparedStatement) result, (String) args[0], databaseType));
+        if (result != null) {
+            if ("createStatement".equals(methodName)) {
+                return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(), Utils
+                        .extractAllInterfaces(result.getClass()), new LoggingStatementInvocationHandler(connectionId,
+                        (Statement) result, databaseType));
+            } else if (("prepareStatement".equals(methodName) || "prepareCall".equals(methodName)) && args != null) {
+                return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(), Utils
+                        .extractAllInterfaces(result.getClass()), new LoggingPreparedStatementInvocationHandler(
+                        connectionId, (PreparedStatement) result, (String) args[0], databaseType));
+            }
         }
 
         return result;

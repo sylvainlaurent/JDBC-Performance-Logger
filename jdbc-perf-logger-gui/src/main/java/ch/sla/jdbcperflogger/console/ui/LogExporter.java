@@ -48,7 +48,6 @@ public class LogExporter {
         return new CsvLogExporter(exportFile);
     }
 
-    @SuppressWarnings("null")
     String getBatchedExecutions(final StatementLog statementLog) {
         final StringBuilder strBuilder = new StringBuilder();
         logRepository.getBatchStatementExecutions(statementLog.getLogId(), new ResultSetAnalyzer() {

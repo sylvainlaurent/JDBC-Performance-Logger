@@ -17,8 +17,12 @@ package ch.sla.jdbcperflogger.model;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import ch.sla.jdbcperflogger.StatementType;
 
+@ParametersAreNonnullByDefault
 public class StatementLog extends AbstractLogMessage {
 
     private static final long serialVersionUID = 1L;
@@ -28,7 +32,8 @@ public class StatementLog extends AbstractLogMessage {
     private final boolean preparedStatement;
 
     public StatementLog(final int connectionId, final UUID logId, final long timestamp, final long executionTimeNanos,
-            final StatementType statementType, final String sql, final String threadName, final Throwable sqlException) {
+            final StatementType statementType, final String sql, final String threadName,
+            @Nullable final Throwable sqlException) {
         super(connectionId, logId, timestamp, executionTimeNanos, statementType, threadName, sqlException);
         rawSql = sql;
         filledSql = sql;
@@ -37,7 +42,7 @@ public class StatementLog extends AbstractLogMessage {
 
     public StatementLog(final int connectionId, final UUID logId, final long timestamp, final long executionTimeNanos,
             final StatementType statementType, final String rawSql, final String filledSql, final String threadName,
-            final Throwable sqlException) {
+            @Nullable final Throwable sqlException) {
         super(connectionId, logId, timestamp, executionTimeNanos, statementType, threadName, sqlException);
         this.rawSql = rawSql;
         this.filledSql = filledSql;

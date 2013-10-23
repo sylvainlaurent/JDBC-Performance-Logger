@@ -27,6 +27,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +70,7 @@ public class PerfLogger {
     }
 
     public static void logStatement(final int connectionId, final UUID logId, final String sql,
-            final long durationNanos, final StatementType statementType, final Throwable sqlException) {
+            final long durationNanos, final StatementType statementType, @Nullable final Throwable sqlException) {
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
             LOGGER_ORIGINAL_SQL.debug(TimeUnit.NANOSECONDS.toMillis(durationNanos)
                     + "ms to execute non-prepared stmt #" + logId + ": " + sql, sqlException);
@@ -84,7 +86,7 @@ public class PerfLogger {
 
     public static void logPreparedStatement(final int connectionId, final UUID logId, final String rawSql,
             final PreparedStatementValuesHolder pstmtValues, final long durationNanos,
-            final StatementType statementType, final DatabaseType databaseType, final Throwable sqlException) {
+            final StatementType statementType, final DatabaseType databaseType, @Nullable final Throwable sqlException) {
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
             LOGGER_ORIGINAL_SQL.debug(TimeUnit.NANOSECONDS.toMillis(durationNanos) + "ms to execute prepared stmt #"
                     + logId + ": " + rawSql, sqlException);
@@ -111,7 +113,7 @@ public class PerfLogger {
     }
 
     public static void logNonPreparedBatchedStatements(final int connectionId, final List<String> batchedExecutions,
-            final long durationNanos, final DatabaseType databaseType, final Throwable sqlException) {
+            final long durationNanos, final DatabaseType databaseType, @Nullable final Throwable sqlException) {
 
         final long now = System.currentTimeMillis();
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
@@ -130,7 +132,7 @@ public class PerfLogger {
 
     public static void logPreparedBatchedStatements(final int connectionId, final String rawSql,
             final List<Object> batchedExecutions, final long durationNanos, final DatabaseType databaseType,
-            final Throwable sqlException) {
+            @Nullable final Throwable sqlException) {
         final long now = System.currentTimeMillis();
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
             LOGGER_ORIGINAL_SQL.debug(TimeUnit.NANOSECONDS.toMillis(durationNanos) + "ms to execute batch of "
