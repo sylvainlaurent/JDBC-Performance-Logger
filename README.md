@@ -22,7 +22,9 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 - java 7 or later for the GUI
 
 ## How to setup the JDBC Driver
-- add the jdbc-logger-driver and slf4j-api jars to the classpath of the JDBC-client application
+- Add one (and only one) of the following set of files the classpath of the JDBC-client application (files can be found in the lib directory of the binary distribution)
+-- jdbc-perf-logger-driver, slf4j-api and jsr305 jar files
+-- jdbc-perf-logger-driver-depsincluded jar file
 - Change the driver class name to `ch.sla.jdbcperflogger.driver.WrappingDriver`
 - Prefix your current JDBC URL with `jdbcperflogger:`, example: `jdbcperflogger:jdbc:h2:mem:` or `jdbcperflogger:jdbc:oracle:thin:@myhost:1521:orcl`
 - (optional) add a `jdbcperflogger.xml` file to the classpath (see the [example file](/jdbc-perf-logger-gui/src/main/config/example-jdbcperflogger.xml/) for indications). If both the driver and console are used on the same machine, there's nothing to do: the driver will try to connect to the console on localhost:4561. 
@@ -31,7 +33,7 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 ## How to use the graphical console
 - launch `bin/jdbc-performance-logger-gui` (unix/MacOS) or `bin\jdbc-performance-logger-gui.bat`
 - by default the console waits for connections from jdbc-logger-drivers on port 4561. All statements will be logged to the same tab
-- The console can also connect to a jdbc-logger-driver instance on a specific host and port. A tab is created for each host/port combination.
+- The console can also connect to a jdbc-perf-logger-driver instance on a specific host and port. A tab is created for each host/port combination.
 - Once a tab is opened, the status of the connection is indicated at the bottom of the panel. If the connection is broken and was initiated by the console, the console will try to reconnect regularly. If the connection was initiated by the driver, the latter will try to reconnect regularly.
 - by default the console only keeps the last 20'000 statements. The number can be changed by adding the System property `maxLoggedStatements` when launching the console.
 
