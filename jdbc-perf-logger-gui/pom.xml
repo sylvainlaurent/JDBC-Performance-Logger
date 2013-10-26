@@ -83,6 +83,9 @@
           <repositoryLayout>flat</repositoryLayout>
           <repositoryName>lib</repositoryName>
           <copyConfigurationDirectory>true</copyConfigurationDirectory>
+
+          <!-- Custom template to add cd $BASEDIR -->
+          <unixScriptTemplate>${project.basedir}/src/main/appassembler/unixBinTemplate</unixScriptTemplate>
         </configuration>
         <executions>
           <execution>
