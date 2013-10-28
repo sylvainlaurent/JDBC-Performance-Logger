@@ -52,8 +52,10 @@ The source code is available on GitHub : https://github.com/sylvainlaurent/JDBC-
 Use Maven and a JDK 7, and run `mvn clean package` in the root directory of the git repository. The binary distribution is then available in `jdbc-perf-logger-gui`.
 ### How to create a release
 `mvn release:prepare release:perform` and answer the questions about version number.
+
 Then push the commits and tags to github.
 
 ## License
 This software is licensed under the Apache Sotware License version 2.0, see [LICENSE.txt](LICENSE.txt).
+
 This software uses and redistributes third-party software, see [3rdparty_license.txt](3rdparty_license.txt).
