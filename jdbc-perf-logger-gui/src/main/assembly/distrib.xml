@@ -26,6 +26,8 @@
       <outputDirectory>/</outputDirectory>
       <includes>
         <include>README.md</include>
+        <include>LICENSE.txt</include>
+        <include>3rdparty_license.txt</include>
       </includes>
     </fileSet>
     <fileSet>
