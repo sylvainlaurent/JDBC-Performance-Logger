@@ -3,6 +3,8 @@
 ## Purpose
 Measuring performance of SQL statements executed through JDBC.
 
+![jdbcperflogger](https://f.cloud.github.com/assets/718370/1424220/067f8c18-401a-11e3-9b39-391bfbc700e7.png)
+
 ## Why yet another project?
 Although other tools already exist around JDBC performance monitoring ([log4jdbc](http://code.google.com/p/log4jdbc/), [P6Spy](http://sourceforge.net/projects/p6spy/), [JDbMonitor](http://www.jdbmonitor.com/)...), I did not find the features I was looking for : a GUI, measurement of statement execution and ResultSet iteration, cumulative measures...
 
