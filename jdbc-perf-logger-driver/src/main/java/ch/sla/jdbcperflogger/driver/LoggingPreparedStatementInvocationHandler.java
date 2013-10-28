@@ -56,7 +56,9 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
         final Object result;
         final String methodName = method.getName();
         if (args == null || args.length == 0) {
-            if ((EXECUTE.equals(methodName) || EXECUTE_UPDATE.equals(methodName)) && args != null) {
+            if (EXECUTE_QUERY.equals(methodName) && args == null) {
+                return internalExecutePreparedQuery(method);
+            } else if ((EXECUTE.equals(methodName) || EXECUTE_UPDATE.equals(methodName))) {
                 return internalExecutePrepared(method, args);
             } else if (ADD_BATCH.equals(methodName)) {
                 result = Utils.invokeUnwrapException(wrappedStatement, method, args);
@@ -88,14 +90,13 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
         return super.invoke(proxy, method, args);
     }
 
-    @Override
-    protected ResultSet internalExecuteQuery(final Method method, final Object[] args) throws Throwable {
+    protected ResultSet internalExecutePreparedQuery(final Method method) throws Throwable {
         final UUID logId = UUID.randomUUID();
         final long start = System.nanoTime();
         Throwable exc = null;
         try {
             final ResultSet resultSet = (ResultSet) Utils.invokeUnwrapExceptionReturnNonNull(wrappedStatement, method,
-                    args);
+                    null);
             return (ResultSet) Proxy.newProxyInstance(LoggingPreparedStatementInvocationHandler.class.getClassLoader(),
                     Utils.extractAllInterfaces(resultSet.getClass()), new LoggingResultSetInvocationHandler(resultSet,
                             logId, StatementType.PREPARED_QUERY_STMT));
@@ -111,7 +112,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
     }
 
     @Nullable
-    protected Object internalExecutePrepared(final Method method, final Object[] args) throws Throwable {
+    protected Object internalExecutePrepared(final Method method, @Nullable final Object[] args) throws Throwable {
         final long start = System.nanoTime();
         Throwable exc = null;
         try {

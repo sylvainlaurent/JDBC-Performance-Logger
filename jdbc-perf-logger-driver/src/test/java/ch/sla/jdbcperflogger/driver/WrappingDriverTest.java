@@ -15,6 +15,10 @@
  */
 package ch.sla.jdbcperflogger.driver;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -22,30 +26,57 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.sql.Types;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+
+import ch.sla.jdbcperflogger.StatementType;
+import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting;
+import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting.LogSender;
+import ch.sla.jdbcperflogger.logger.PerfLoggerRemotingTest;
+import ch.sla.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
+import ch.sla.jdbcperflogger.model.BatchedPreparedStatementsLog;
+import ch.sla.jdbcperflogger.model.LogMessage;
+import ch.sla.jdbcperflogger.model.ResultSetLog;
+import ch.sla.jdbcperflogger.model.StatementLog;
 
 public class WrappingDriverTest {
-    private Connection connection;
+    private final static DateFormat YMD_FORNAT = new SimpleDateFormat("yyyy-MM-dd");
 
-    @BeforeClass
-    public static void setupClass() throws Exception {
-        Class.forName(org.h2.Driver.class.getName());
-        Class.forName(WrappingDriver.class.getName());
-    }
+    private Connection connection;
+    private LogMessage beforeLastLogMessage;
+    private LogMessage lastLogMessage;
+    private LogSender logSenderMock;
 
     @Before
     public void setup() throws Exception {
         connection = DriverManager.getConnection("jdbcperflogger:jdbc:h2:mem:", "sa", "");
+        logSenderMock = Mockito.mock(PerfLoggerRemoting.LogSender.class, new Answer<Void>() {
+            @Override
+            public Void answer(final InvocationOnMock invocation) throws Throwable {
+                beforeLastLogMessage = lastLogMessage;
+                lastLogMessage = (LogMessage) invocation.getArguments()[0];
+                return null;
+            }
+        });
+        PerfLoggerRemotingTest.addSender(logSenderMock);
     }
 
     @After
     public void tearDown() throws Exception {
+        PerfLoggerRemotingTest.removeSender(logSenderMock);
         if (connection != null) {
             connection.close();
             connection = null;
@@ -60,26 +91,34 @@ public class WrappingDriverTest {
     @Test
     public void testSelectNonPrepared() throws Exception {
         final Statement statement = connection.createStatement();
-        statement.execute("create table test (key_id int);");
-        Thread.sleep(5000);
-        statement.executeQuery("select * from test;");
-        statement.executeQuery("select * from test;");
-        statement.executeQuery("select * from test;");
+        executeStatementAndCheckLogged(statement, "create table test (key_id int);");
+        // Thread.sleep(5000);
+        executeQueryAndCheckLogged(statement, "select * from test;");
+        executeQueryAndCheckLogged(statement, "select * from test;");
+        executeQueryAndCheckLogged(statement, "select * from test;");
         statement.close();
     }
 
     @Test
     public void testExecutePrepared() throws Exception {
         {
-            final PreparedStatement statement = connection.prepareStatement("create table test (key_id int);");
+            final String sql = "create table test (key_id int);";
+            final PreparedStatement statement = connection.prepareStatement(sql);
+            assertEquals(null, lastLogMessage);
             statement.execute();
+            assertEquals(sql, ((StatementLog) lastLogMessage).getRawSql());
             statement.close();
         }
         {
-            final PreparedStatement statement = connection.prepareStatement("insert into test (key_id) values (?)");
+            final String sql = "insert into test (key_id) values (?)";
+            final PreparedStatement statement = connection.prepareStatement(sql);
             statement.setInt(1, 123);
             final int nb = statement.executeUpdate();
             Assert.assertEquals(1, nb);
+            assertEquals(sql, ((StatementLog) lastLogMessage).getRawSql());
+            assertEquals(StatementType.BASE_PREPARED_STMT, ((StatementLog) lastLogMessage).getStatementType());
+            assertEquals("insert into test (key_id) values (123 /*setInt*/)",
+                    ((StatementLog) lastLogMessage).getFilledSql());
             statement.close();
         }
     }
@@ -96,41 +135,70 @@ public class WrappingDriverTest {
             final PreparedStatement statement = connection.prepareStatement("select * from test where key_id=?");
             statement.setInt(1, 1);
             statement.executeQuery().close();
+            assertEquals("select * from test where key_id=1 /*setInt*/",
+                    ((StatementLog) beforeLastLogMessage).getFilledSql());
             statement.setInt(1, 2);
             statement.executeQuery().close();
+            assertEquals("select * from test where key_id=2 /*setInt*/",
+                    ((StatementLog) beforeLastLogMessage).getFilledSql());
             statement.setByte(1, (byte) 112);
             statement.executeQuery().close();
+            assertEquals("select * from test where key_id=112 /*setByte*/",
+                    ((StatementLog) beforeLastLogMessage).getFilledSql());
             statement.setLong(1, 123);
             statement.executeQuery().close();
+            assertEquals("select * from test where key_id=123 /*setLong*/",
+                    ((StatementLog) beforeLastLogMessage).getFilledSql());
+
             statement.close();
+            // check that calling close() twice is ok
             statement.close();
         }
         {
             final PreparedStatement statement = connection.prepareStatement("select * from test where myDate=?");
-            statement.setDate(1, new java.sql.Date(System.currentTimeMillis()));
+            statement.setDate(1, sqlDate("2013-02-28"));
             statement.executeQuery().close();
-            statement.setObject(1, new java.sql.Date(System.currentTimeMillis()));
+            assertEquals("select * from test where myDate=date'2013-02-28' /*setDate*/",
+                    ((StatementLog) beforeLastLogMessage).getFilledSql());
+            statement.setObject(1, sqlDate("2013-02-28"));
             statement.executeQuery().close();
-            statement.setObject(1, new java.util.Date());
+            assertEquals("select * from test where myDate=date'2013-02-28' /*setObject*/",
+                    ((StatementLog) beforeLastLogMessage).getFilledSql());
+            statement.setObject(1, utilDate("2013-02-28"));
             statement.executeQuery().close();
-            statement.setObject(1, new java.util.Date(), Types.DATE);
+            assertEquals("select * from test where myDate=? /*setObject*/",
+                    ((StatementLog) beforeLastLogMessage).getFilledSql());
+            statement.setObject(1, utilDate("2013-02-28"), Types.DATE);
             statement.executeQuery().close();
+            assertEquals("select * from test where myDate=date'2013-02-28' /*DATE*/",
+                    ((StatementLog) beforeLastLogMessage).getFilledSql());
             statement.close();
         }
         {
             final PreparedStatement statement = connection.prepareStatement("select * from test where myTimestamp=?");
-            statement.setTimestamp(1, new java.sql.Timestamp(System.currentTimeMillis()));
+            statement.setTimestamp(1, sqlTimestamp("2013-02-28 15:23:43.123"));
             statement.executeQuery().close();
-            statement.setTime(1, new java.sql.Time(System.currentTimeMillis()));
+            assertEquals("select * from test where myTimestamp=timestamp'2013-02-28 15:23:43.123' /*setTimestamp*/",
+                    ((StatementLog) beforeLastLogMessage).getFilledSql());
+
+            statement.setTime(1, sqlTime("15:23:43"));
             statement.executeQuery().close();
+            assertEquals("select * from test where myTimestamp=time'15:23:43' /*setTime*/",
+                    ((StatementLog) beforeLastLogMessage).getFilledSql());
+
             statement.setDate(1, java.sql.Date.valueOf("2011-01-02"));
             statement.executeQuery().close();
+            assertEquals("select * from test where myTimestamp=date'2011-01-02' /*setDate*/",
+                    ((StatementLog) beforeLastLogMessage).getFilledSql());
+
             statement.close();
         }
         {
             final PreparedStatement statement = connection.prepareStatement("select * from test where myBoolean=?");
             statement.setBoolean(1, true);
             statement.executeQuery().close();
+            assertEquals("select * from test where myBoolean=true /*setBoolean*/",
+                    ((StatementLog) beforeLastLogMessage).getFilledSql());
             statement.close();
         }
     }
@@ -163,15 +231,34 @@ public class WrappingDriverTest {
         }
         // TimeUnit.SECONDS.sleep(10);
         final Statement statement = connection.createStatement();
-        for (int i = 0; i < 100; i++) {
-            statement.addBatch("insert into test (key_id) values (" + i + ")");
+        {
+            for (int i = 0; i < 100; i++) {
+                statement.addBatch("insert into test (key_id) values (" + i + ")");
+            }
+            statement.executeBatch();
+            final List<String> sqlList = ((BatchedNonPreparedStatementsLog) lastLogMessage).getSqlList();
+            assertEquals(100, sqlList.size());
+            assertEquals("insert into test (key_id) values (0)", sqlList.get(0));
+            assertEquals("insert into test (key_id) values (99)", sqlList.get(99));
         }
-        statement.executeBatch();
-        statement.executeBatch();
-        for (int i = 0; i < 10; i++) {
-            statement.addBatch("insert into test (key_id) values (" + i + ")");
+        {
+            lastLogMessage = null;
+            // calling executeBatch() again without adding a batch
+            statement.executeBatch();
+            final List<String> sqlList = ((BatchedNonPreparedStatementsLog) lastLogMessage).getSqlList();
+            assertEquals(0, sqlList.size());
         }
-        statement.clearBatch();
+        {
+            // check that clearBatch() does clear the logged batched statement
+            lastLogMessage = null;
+            for (int i = 0; i < 10; i++) {
+                statement.addBatch("insert into test (key_id) values (" + i + ")");
+            }
+            statement.clearBatch();
+            statement.executeBatch();
+            final List<String> sqlList = ((BatchedNonPreparedStatementsLog) lastLogMessage).getSqlList();
+            assertEquals(0, sqlList.size());
+        }
         statement.close();
         // TimeUnit.SECONDS.sleep(10);
     }
@@ -185,23 +272,38 @@ public class WrappingDriverTest {
         }
         // TimeUnit.SECONDS.sleep(10);
         final PreparedStatement statement = connection.prepareStatement("insert into test (key_id) values (?)");
-        for (int i = 0; i < 100; i++) {
-            statement.setInt(1, i);
-            statement.addBatch();
+
+        {
+            for (int i = 0; i < 100; i++) {
+                statement.setInt(1, i);
+                statement.addBatch();
+            }
+            statement.executeBatch();
+            final List<String> sqlList = ((BatchedPreparedStatementsLog) lastLogMessage).getSqlList();
+            assertEquals(100, sqlList.size());
+            assertEquals("insert into test (key_id) values (0 /*setInt*/)", sqlList.get(0));
+            assertEquals("insert into test (key_id) values (99 /*setInt*/)", sqlList.get(99));
         }
-        statement.executeBatch();
-        statement.executeBatch();
-        for (int i = 0; i < 10; i++) {
-            statement.setInt(1, i);
-            statement.addBatch();
+        {
+            statement.executeBatch();
+            final List<String> sqlList = ((BatchedPreparedStatementsLog) lastLogMessage).getSqlList();
+            assertEquals(0, sqlList.size());
         }
-        statement.clearBatch();
+        {
+            for (int i = 0; i < 10; i++) {
+                statement.setInt(1, i);
+                statement.addBatch();
+            }
+            statement.clearBatch();
+            statement.executeBatch();
+            final List<String> sqlList = ((BatchedPreparedStatementsLog) lastLogMessage).getSqlList();
+            assertEquals(0, sqlList.size());
+        }
         statement.close();
         // TimeUnit.SECONDS.sleep(10);
     }
 
     @Test
-    // @Ignore
     public void testManySelect() throws Exception {
         {
             final Statement statement = connection.createStatement();
@@ -225,10 +327,14 @@ public class WrappingDriverTest {
         final Statement statement = connection.createStatement();
         try {
             statement.execute("create table test (key_id int);");
-            // TimeUnit.SECONDS.sleep(10);
+
             statement.execute("create table test (key_id int);");
+        } catch (final SQLException exc) {
+            assertSame(exc, ((StatementLog) lastLogMessage).getSqlException());
+            assertEquals("create table test (key_id int);", ((StatementLog) lastLogMessage).getRawSql());
+            assertEquals("create table test (key_id int);", ((StatementLog) lastLogMessage).getFilledSql());
+            throw exc;
         } finally {
-            // TimeUnit.SECONDS.sleep(5);
             statement.close();
         }
     }
@@ -238,9 +344,14 @@ public class WrappingDriverTest {
         {
             final PreparedStatement statement = connection.prepareCall("call 2*3");
             final ResultSet resultSet = statement.executeQuery();
-            Assert.assertTrue(resultSet.next());
-            Assert.assertEquals(6, resultSet.getInt(1));
+            assertEquals("call 2*3", ((StatementLog) lastLogMessage).getRawSql());
+            assertEquals("call 2*3", ((StatementLog) lastLogMessage).getFilledSql());
+            assertEquals(StatementType.PREPARED_QUERY_STMT, ((StatementLog) lastLogMessage).getStatementType());
+
+            assertTrue(resultSet.next());
+            assertEquals(6, resultSet.getInt(1));
             resultSet.close();
+            assertEquals(1, ((ResultSetLog) lastLogMessage).getNbRowsIterated());
             statement.close();
         }
         {
@@ -249,10 +360,40 @@ public class WrappingDriverTest {
             // H2..
             statement.setInt(1, 7);
             final ResultSet resultSet = statement.executeQuery();
+            assertEquals("{call 2*?}", ((StatementLog) lastLogMessage).getRawSql());
+            assertEquals("{call 2*7 /*setInt*/}", ((StatementLog) lastLogMessage).getFilledSql());
+            assertEquals(StatementType.PREPARED_QUERY_STMT, ((StatementLog) lastLogMessage).getStatementType());
             Assert.assertTrue(resultSet.next());
             Assert.assertEquals(14, resultSet.getInt(1));
             resultSet.close();
             statement.close();
         }
     }
+
+    private void executeStatementAndCheckLogged(final Statement statement, final String sql) throws SQLException {
+        statement.execute(sql);
+        Assert.assertEquals(sql, ((StatementLog) lastLogMessage).getRawSql());
+    }
+
+    private void executeQueryAndCheckLogged(final Statement statement, final String sql) throws SQLException {
+        statement.executeQuery(sql);
+        Assert.assertEquals(sql, ((StatementLog) lastLogMessage).getRawSql());
+    }
+
+    private static java.util.Date utilDate(final String dateString) throws ParseException {
+        return YMD_FORNAT.parse(dateString);
+    }
+
+    private static java.sql.Date sqlDate(final String dateString) throws ParseException {
+        return new java.sql.Date(utilDate(dateString).getTime());
+    }
+
+    private static java.sql.Timestamp sqlTimestamp(final String tstampString) throws ParseException {
+        return Timestamp.valueOf(tstampString);
+    }
+
+    private static java.sql.Time sqlTime(final String timeString) throws ParseException {
+        return Time.valueOf(timeString);
+    }
+
 }

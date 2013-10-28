@@ -134,7 +134,8 @@ public class PerfLoggerRemoting {
         }
     }
 
-    static class LogSender implements Runnable {
+    // public for tests
+    public static class LogSender implements Runnable {
         private final static Logger LOGGER2 = LoggerFactory.getLogger(LogSender.class);
 
         private final BlockingQueue<LogMessage> logsToSend = new LinkedBlockingQueue<LogMessage>(10000);

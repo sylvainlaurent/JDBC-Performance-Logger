@@ -78,7 +78,7 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
         return result;
     }
 
-    protected ResultSet internalExecuteQuery(final Method method, final Object[] args) throws Throwable {
+    protected final ResultSet internalExecuteQuery(final Method method, final Object[] args) throws Throwable {
         final UUID logId = UUID.randomUUID();
         final long start = System.nanoTime();
         Throwable exc = null;
@@ -100,7 +100,7 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
     }
 
     @Nullable
-    protected Object internalExecute(final Method method, final Object[] args) throws Throwable {
+    protected final Object internalExecute(final Method method, final Object[] args) throws Throwable {
         final long start = System.nanoTime();
         Throwable exc = null;
         try {

@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import org.junit.Test;
 
 import ch.sla.jdbcperflogger.driver.WrappingDriver;
+import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting.LogSender;
 
 public class PerfLoggerRemotingTest {
 
@@ -80,5 +81,13 @@ public class PerfLoggerRemotingTest {
 
     private String readFirstLine(final InputStream is) throws IOException {
         return new BufferedReader(new InputStreamReader(is)).readLine();
+    }
+
+    public static void addSender(final LogSender sender) {
+        PerfLoggerRemoting.senders.add(sender);
+    }
+
+    public static void removeSender(final LogSender sender) {
+        PerfLoggerRemoting.senders.remove(sender);
     }
 }

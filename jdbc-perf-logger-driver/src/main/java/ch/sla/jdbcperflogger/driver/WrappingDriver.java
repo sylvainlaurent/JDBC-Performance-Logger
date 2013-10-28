@@ -28,7 +28,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//TODO DataSource, XADataSource
+/**
+ * This is the JDBC Driver implementation of the performance logger.
+ * 
+ * @author slaurent
+ * 
+ */
 public class WrappingDriver implements Driver {
     public final static String URL_PREFIX = "jdbcperflogger:";
     public final static String CONFIG_FILE_DEFAULT_LOCATION = "jdbcperflogger.xml";

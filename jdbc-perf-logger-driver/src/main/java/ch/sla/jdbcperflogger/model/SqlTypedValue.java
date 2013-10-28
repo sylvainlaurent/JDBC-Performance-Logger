@@ -15,6 +15,7 @@
  */
 package ch.sla.jdbcperflogger.model;
 
+import javax.annotation.Nonnull;
 
 public class SqlTypedValue {
     public final Object value;
@@ -27,7 +28,7 @@ public class SqlTypedValue {
         setter = null;
     }
 
-    public SqlTypedValue(final Object value, final String setter) {
+    public SqlTypedValue(final Object value, @Nonnull final String setter) {
         this.value = value;
         sqlType = -1;
         this.setter = setter;
