@@ -39,13 +39,14 @@ import ch.sla.jdbcperflogger.model.BatchedPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.PreparedStatementValuesHolder;
 import ch.sla.jdbcperflogger.model.ResultSetLog;
 import ch.sla.jdbcperflogger.model.SqlTypedValue;
+import ch.sla.jdbcperflogger.model.StatementExecutedLog;
 import ch.sla.jdbcperflogger.model.StatementLog;
 
 public class PerfLogger {
     private final static Logger LOGGER_ORIGINAL_SQL = LoggerFactory.getLogger(PerfLogger.class.getName()
             + ".originalSql");
-    private final static Logger LOGGER_PREPARED_SQL = LoggerFactory.getLogger(PerfLogger.class.getName()
-            + ".preparedSql");
+    private final static Logger LOGGER_FILLED_SQL = LoggerFactory.getLogger(PerfLogger.class.getName() + ".filledSql");
+    private final static Logger LOGGER_EXECUTED = LoggerFactory.getLogger(PerfLogger.class.getName() + ".executed");
     private final static Logger LOGGER_CLOSED_RESULTSET = LoggerFactory.getLogger(PerfLogger.class.getName()
             + ".closedResultSet");
     private final static Logger LOGGER_BATCHED_STATEMENTS_DETAIL = LoggerFactory.getLogger(PerfLogger.class.getName()
@@ -69,56 +70,38 @@ public class PerfLogger {
 
     }
 
-    public static void logStatement(final int connectionId, final UUID logId, final String sql,
-            final long durationNanos, final StatementType statementType, @Nullable final Throwable sqlException) {
+    public static void logBeforeStatement(final int connectionId, final UUID logId, final String sql,
+            final StatementType statementType) {
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
-            LOGGER_ORIGINAL_SQL.debug(TimeUnit.NANOSECONDS.toMillis(durationNanos)
-                    + "ms to execute non-prepared stmt #" + logId + ": " + sql, sqlException);
-        }
-        if (LOGGER_PREPARED_SQL.isDebugEnabled()) {
-            LOGGER_PREPARED_SQL.debug(TimeUnit.NANOSECONDS.toMillis(durationNanos)
-                    + "ms to execute non-prepared stmt #" + logId + ": " + sql, sqlException);
+            LOGGER_ORIGINAL_SQL.debug("Before execution of non-prepared stmt {}: {}", logId, sql);
         }
         final long now = System.currentTimeMillis();
-        PerfLoggerRemoting.postLog(new StatementLog(connectionId, logId, now, durationNanos, statementType, sql, Thread
-                .currentThread().getName(), sqlException));
+        PerfLoggerRemoting.postLog(new StatementLog(connectionId, logId, now, statementType, sql, Thread
+                .currentThread().getName()));
     }
 
-    public static void logPreparedStatement(final int connectionId, final UUID logId, final String rawSql,
-            final PreparedStatementValuesHolder pstmtValues, final long durationNanos,
-            final StatementType statementType, final DatabaseType databaseType, @Nullable final Throwable sqlException) {
+    public static void logBeforePreparedStatement(final int connectionId, final UUID logId, final String rawSql,
+            final PreparedStatementValuesHolder pstmtValues, final StatementType statementType,
+            final DatabaseType databaseType) {
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
-            LOGGER_ORIGINAL_SQL.debug(TimeUnit.NANOSECONDS.toMillis(durationNanos) + "ms to execute prepared stmt #"
-                    + logId + ": " + rawSql, sqlException);
+            LOGGER_ORIGINAL_SQL.debug("Before execution of prepared stmt {}: {}", logId, rawSql);
         }
         final String filledSql = fillParameters(rawSql, pstmtValues, databaseType);
-        if (LOGGER_PREPARED_SQL.isDebugEnabled()) {
-            LOGGER_PREPARED_SQL.debug(TimeUnit.NANOSECONDS.toMillis(durationNanos)
-                    + "ms to execute non-prepared stmt #" + logId + ": " + filledSql, sqlException);
+        if (LOGGER_FILLED_SQL.isDebugEnabled()) {
+            LOGGER_FILLED_SQL.debug("Before execution of prepared stmt {}: {}", logId, filledSql);
         }
         final long now = System.currentTimeMillis();
-        PerfLoggerRemoting.postLog(new StatementLog(connectionId, logId, now, durationNanos, statementType, rawSql,
-                filledSql, Thread.currentThread().getName(), sqlException));
+        PerfLoggerRemoting.postLog(new StatementLog(connectionId, logId, now, statementType, rawSql, filledSql, Thread
+                .currentThread().getName()));
     }
 
-    public static void logClosedResultSet(final UUID logId, final long durationNanos,
-            final StatementType statementType, final int nbRowsIterated) {
-        if (LOGGER_CLOSED_RESULTSET.isDebugEnabled()) {
-            LOGGER_CLOSED_RESULTSET.debug("{}ms to use and close ResultSet, iterating {} rows for statement #{}",
-                    new Object[] { TimeUnit.NANOSECONDS.toMillis(durationNanos), nbRowsIterated, logId });
-        }
-        final long now = System.currentTimeMillis();
-        PerfLoggerRemoting.postLog(new ResultSetLog(logId, now, durationNanos, statementType, Thread.currentThread()
-                .getName(), nbRowsIterated));
-    }
-
-    public static void logNonPreparedBatchedStatements(final int connectionId, final List<String> batchedExecutions,
-            final long durationNanos, final DatabaseType databaseType, @Nullable final Throwable sqlException) {
+    public static void logNonPreparedBatchedStatements(final int connectionId, final UUID logId,
+            final List<String> batchedExecutions, final DatabaseType databaseType) {
 
         final long now = System.currentTimeMillis();
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
-            LOGGER_ORIGINAL_SQL.debug(TimeUnit.NANOSECONDS.toMillis(durationNanos) + "ms to execute batch of "
-                    + batchedExecutions.size() + " non-prepared statements", sqlException);
+            LOGGER_ORIGINAL_SQL.debug("Before execution of {} batched non-prepared statements",
+                    batchedExecutions.size());
         }
         for (int i = 0; i < batchedExecutions.size(); i++) {
             final String sql = batchedExecutions.get(i);
@@ -126,17 +109,16 @@ public class PerfLogger {
                 LOGGER_BATCHED_STATEMENTS_DETAIL.debug("#{}: {}", i, sql);
             }
         }
-        PerfLoggerRemoting.postLog(new BatchedNonPreparedStatementsLog(connectionId, UUID.randomUUID(), now,
-                durationNanos, batchedExecutions, Thread.currentThread().getName(), sqlException));
+        PerfLoggerRemoting.postLog(new BatchedNonPreparedStatementsLog(connectionId, logId, now, batchedExecutions,
+                Thread.currentThread().getName()));
     }
 
     public static void logPreparedBatchedStatements(final int connectionId, final String rawSql,
-            final List<Object> batchedExecutions, final long durationNanos, final DatabaseType databaseType,
-            @Nullable final Throwable sqlException) {
+            final List<Object> batchedExecutions, final DatabaseType databaseType) {
         final long now = System.currentTimeMillis();
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
-            LOGGER_ORIGINAL_SQL.debug(TimeUnit.NANOSECONDS.toMillis(durationNanos) + "ms to execute batch of "
-                    + batchedExecutions.size() + " prepared statements with rawSql:\n" + rawSql, sqlException);
+            LOGGER_ORIGINAL_SQL.debug("Before execution of {} batched prepared statements with raw sql {}",
+                    batchedExecutions.size(), rawSql);
         }
         final List<String> filledSqlList = new ArrayList<String>(batchedExecutions.size());
 
@@ -153,8 +135,26 @@ public class PerfLogger {
                 LOGGER_BATCHED_STATEMENTS_DETAIL.debug("#{}: {}", i, filledSql);
             }
         }
-        PerfLoggerRemoting.postLog(new BatchedPreparedStatementsLog(connectionId, UUID.randomUUID(), now,
-                durationNanos, rawSql, filledSqlList, Thread.currentThread().getName(), sqlException));
+        PerfLoggerRemoting.postLog(new BatchedPreparedStatementsLog(connectionId, UUID.randomUUID(), now, rawSql,
+                filledSqlList, Thread.currentThread().getName()));
+    }
+
+    public static void logStatementExecuted(final UUID logId, final long durationNanos,
+            @Nullable final Throwable sqlException) {
+        if (LOGGER_EXECUTED.isDebugEnabled()) {
+            LOGGER_EXECUTED.debug(TimeUnit.NANOSECONDS.toMillis(durationNanos) + "ms to execute  stmt #" + logId,
+                    sqlException);
+        }
+        PerfLoggerRemoting.postLog(new StatementExecutedLog(logId, durationNanos, sqlException));
+    }
+
+    public static void logClosedResultSet(final UUID logId, final long resultSetIterationTimeNanos,
+            final int nbRowsIterated) {
+        if (LOGGER_CLOSED_RESULTSET.isDebugEnabled()) {
+            LOGGER_CLOSED_RESULTSET.debug("{}ms to use and close ResultSet, iterating {} rows for statement #{}",
+                    new Object[] { TimeUnit.NANOSECONDS.toMillis(resultSetIterationTimeNanos), nbRowsIterated, logId });
+        }
+        PerfLoggerRemoting.postLog(new ResultSetLog(logId, resultSetIterationTimeNanos, nbRowsIterated));
     }
 
     static String fillParameters(final String sql, final PreparedStatementValuesHolder pstmtValues,

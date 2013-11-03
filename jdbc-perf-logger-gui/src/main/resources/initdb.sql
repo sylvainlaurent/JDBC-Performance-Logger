@@ -4,10 +4,10 @@ set log 0;
 --drop all objects;
 
 create table if not exists statement_log 
-    (id identity, connectionId int, logId UUID not null, tstamp timestamp not null, statementType tinyInt not null, 
+    (id identity, connectionId int not null, logId UUID not null, tstamp timestamp not null, statementType tinyInt not null, 
     rawSql varchar not null, filledSql varchar not null, 
-    executionDurationNanos bigInt not null, fetchDurationNanos bigInt, nbRowsIterated int, threadName varchar,
-    exception other);
+    executionDurationNanos bigInt, fetchDurationNanos bigInt, nbRowsIterated int, 
+    threadName varchar, exception other);
 
 create index if not exists idx_logId on statement_log(logId);
 create index if not exists idx_duration on statement_log(executionDurationNanos desc);

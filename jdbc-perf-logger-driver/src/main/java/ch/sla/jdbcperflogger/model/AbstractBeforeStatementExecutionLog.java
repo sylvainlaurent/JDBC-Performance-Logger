@@ -19,32 +19,46 @@ import java.util.UUID;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import ch.sla.jdbcperflogger.StatementType;
+
 @ParametersAreNonnullByDefault
-public class ResultSetLog implements LogMessage {
+public class AbstractBeforeStatementExecutionLog implements LogMessage {
 
     private static final long serialVersionUID = 1L;
 
+    private final int connectionId;
     private final UUID logId;
+    private final long timestamp;
+    private final StatementType statementType;
+    private final String threadName;
 
-    private final long resultSetIterationTimeNanos;
-    private final int nbRowsIterated;
-
-    public ResultSetLog(final UUID logId, final long resultSetIterationTimeNanos, final int nbRowsIterated) {
+    public AbstractBeforeStatementExecutionLog(final int connectionId, final UUID logId, final long timestamp,
+            final StatementType statementType, final String threadName) {
+        this.connectionId = connectionId;
         this.logId = logId;
-        this.resultSetIterationTimeNanos = resultSetIterationTimeNanos;
-        this.nbRowsIterated = nbRowsIterated;
+        this.timestamp = timestamp;
+        this.statementType = statementType;
+        this.threadName = threadName;
+    }
+
+    public int getConnectionId() {
+        return connectionId;
     }
 
     public UUID getLogId() {
         return logId;
     }
 
-    public long getResultSetIterationTimeNanos() {
-        return resultSetIterationTimeNanos;
+    public long getTimestamp() {
+        return timestamp;
     }
 
-    public int getNbRowsIterated() {
-        return nbRowsIterated;
+    public StatementType getStatementType() {
+        return statementType;
+    }
+
+    public String getThreadName() {
+        return threadName;
     }
 
 }

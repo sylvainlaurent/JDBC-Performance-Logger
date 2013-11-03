@@ -34,10 +34,10 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import ch.sla.jdbcperflogger.console.db.DetailedViewStatementLog;
 import ch.sla.jdbcperflogger.console.db.LogRepository;
 import ch.sla.jdbcperflogger.console.db.ResultSetAnalyzer;
 import ch.sla.jdbcperflogger.console.net.AbstractLogReceiver;
-import ch.sla.jdbcperflogger.model.StatementLog;
 
 @ParametersAreNonnullByDefault
 public class PerfLoggerController {
@@ -209,7 +209,7 @@ public class PerfLoggerController {
     private void statementSelected(@Nullable final Long logId) {
         String txt1 = "";
         String txt2 = "";
-        StatementLog statementLog = null;
+        DetailedViewStatementLog statementLog = null;
         if (logId != null) {
             statementLog = logRepository.getStatementLog(logId);
         }

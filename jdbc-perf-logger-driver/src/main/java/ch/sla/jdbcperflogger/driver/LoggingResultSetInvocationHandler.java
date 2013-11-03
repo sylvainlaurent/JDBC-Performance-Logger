@@ -23,22 +23,19 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.logger.PerfLogger;
 
 @ParametersAreNonnullByDefault
 public class LoggingResultSetInvocationHandler implements InvocationHandler {
     private final ResultSet wrappedResultSet;
     private final UUID logId;
-    private final StatementType statementType;
     private final long fetchStartTime;
     private boolean closed;
     private int nbRowsIterated;
 
-    LoggingResultSetInvocationHandler(final ResultSet rset, final UUID logId, final StatementType statementType) {
+    LoggingResultSetInvocationHandler(final ResultSet rset, final UUID logId) {
         wrappedResultSet = rset;
         this.logId = logId;
-        this.statementType = statementType;
         fetchStartTime = System.nanoTime();
     }
 
@@ -55,8 +52,7 @@ public class LoggingResultSetInvocationHandler implements InvocationHandler {
             if ("close".equals(methodName)) {
                 if (!closed) {
                     closed = true;
-                    PerfLogger.logClosedResultSet(logId, System.nanoTime() - fetchStartTime, statementType,
-                            nbRowsIterated);
+                    PerfLogger.logClosedResultSet(logId, System.nanoTime() - fetchStartTime, nbRowsIterated);
                 }
             } else if ("next".equals(methodName)) {
                 if (Boolean.TRUE.equals(result)) {

@@ -28,9 +28,9 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import ch.sla.jdbcperflogger.StatementType;
+import ch.sla.jdbcperflogger.console.db.DetailedViewStatementLog;
 import ch.sla.jdbcperflogger.console.db.LogRepository;
 import ch.sla.jdbcperflogger.console.db.ResultSetAnalyzer;
-import ch.sla.jdbcperflogger.model.StatementLog;
 
 @ParametersAreNonnullByDefault
 public class LogExporter {
@@ -48,9 +48,9 @@ public class LogExporter {
         return new CsvLogExporter(exportFile);
     }
 
-    String getBatchedExecutions(final StatementLog statementLog) {
+    String getBatchedExecutions(final DetailedViewStatementLog statementLog) {
         final StringBuilder strBuilder = new StringBuilder();
-        logRepository.getBatchStatementExecutions(statementLog.getLogId(), new ResultSetAnalyzer() {
+        logRepository.getBatchStatementExecutions(statementLog.getKeyId(), new ResultSetAnalyzer() {
             @Override
             public void analyze(final ResultSet resultSet) throws SQLException {
                 while (resultSet.next()) {
@@ -107,7 +107,8 @@ public class LogExporter {
                     case PREPARED_BATCH_EXECUTION:
                         writer.print(stmtType.name());
                         writer.println("*/");
-                        final StatementLog statementLog = logRepository.getStatementLog(resultSet.getLong("ID"));
+                        final DetailedViewStatementLog statementLog = logRepository.getStatementLog(resultSet
+                                .getLong("ID"));
                         if (statementLog != null) {
                             writer.println(getBatchedExecutions(statementLog));
                         }

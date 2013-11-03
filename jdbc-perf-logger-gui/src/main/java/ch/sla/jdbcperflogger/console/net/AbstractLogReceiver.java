@@ -28,6 +28,7 @@ import ch.sla.jdbcperflogger.console.db.LogRepository;
 import ch.sla.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.BatchedPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.ResultSetLog;
+import ch.sla.jdbcperflogger.model.StatementExecutedLog;
 import ch.sla.jdbcperflogger.model.StatementLog;
 
 public abstract class AbstractLogReceiver extends Thread {
@@ -93,6 +94,8 @@ public abstract class AbstractLogReceiver extends Thread {
                 }
                 if (o instanceof StatementLog) {
                     logRepository.addStatementLog((StatementLog) o);
+                } else if (o instanceof StatementExecutedLog) {
+                    logRepository.updateLogAfterExecution((StatementExecutedLog) o);
                 } else if (o instanceof ResultSetLog) {
                     logRepository.updateLogWithResultSetLog((ResultSetLog) o);
                 } else if (o instanceof BatchedNonPreparedStatementsLog) {

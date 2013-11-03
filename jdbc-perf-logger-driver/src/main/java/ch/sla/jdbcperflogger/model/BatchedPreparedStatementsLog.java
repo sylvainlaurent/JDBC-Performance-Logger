@@ -20,13 +20,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import ch.sla.jdbcperflogger.StatementType;
 
 @ParametersAreNonnullByDefault
-public class BatchedPreparedStatementsLog extends AbstractLogMessage {
+public class BatchedPreparedStatementsLog extends AbstractBeforeStatementExecutionLog {
 
     private static final long serialVersionUID = 1L;
 
@@ -34,10 +33,8 @@ public class BatchedPreparedStatementsLog extends AbstractLogMessage {
     private final List<String> sqlList;
 
     public BatchedPreparedStatementsLog(final int connectionId, final UUID logId, final long timestamp,
-            final long executionTimeNanos, final String rawSql, final List<String> sqlList, final String threadName,
-            @Nullable final Throwable exc) {
-        super(connectionId, logId, timestamp, executionTimeNanos, StatementType.PREPARED_BATCH_EXECUTION, threadName,
-                exc);
+            final String rawSql, final List<String> sqlList, final String threadName) {
+        super(connectionId, logId, timestamp, StatementType.PREPARED_BATCH_EXECUTION, threadName);
         this.rawSql = rawSql;
         this.sqlList = Collections.unmodifiableList(new ArrayList<String>(sqlList));
     }

@@ -92,6 +92,8 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
 
     protected ResultSet internalExecutePreparedQuery(final Method method) throws Throwable {
         final UUID logId = UUID.randomUUID();
+        PerfLogger.logBeforePreparedStatement(connectionId, logId, rawSql, paramValues,
+                StatementType.PREPARED_QUERY_STMT, databaseType);
         final long start = System.nanoTime();
         Throwable exc = null;
         try {
@@ -99,21 +101,23 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
                     null);
             return (ResultSet) Proxy.newProxyInstance(LoggingPreparedStatementInvocationHandler.class.getClassLoader(),
                     Utils.extractAllInterfaces(resultSet.getClass()), new LoggingResultSetInvocationHandler(resultSet,
-                            logId, StatementType.PREPARED_QUERY_STMT));
+                            logId));
         } catch (final Throwable e) {
             exc = e;
             throw exc;
         } finally {
             final long end = System.nanoTime();
-            PerfLogger.logPreparedStatement(connectionId, logId, rawSql, paramValues, end - start,
-                    StatementType.PREPARED_QUERY_STMT, databaseType, exc);
+            PerfLogger.logStatementExecuted(logId, end - start, exc);
         }
 
     }
 
     @Nullable
     protected Object internalExecutePrepared(final Method method, @Nullable final Object[] args) throws Throwable {
+        final UUID logId = UUID.randomUUID();
         final long start = System.nanoTime();
+        PerfLogger.logBeforePreparedStatement(connectionId, logId, rawSql, paramValues,
+                StatementType.BASE_PREPARED_STMT, databaseType);
         Throwable exc = null;
         try {
             return Utils.invokeUnwrapException(wrappedStatement, method, args);
@@ -122,14 +126,16 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
             throw exc;
         } finally {
             final long end = System.nanoTime();
-            PerfLogger.logPreparedStatement(connectionId, UUID.randomUUID(), rawSql, paramValues, end - start,
-                    StatementType.BASE_PREPARED_STMT, databaseType, exc);
+            PerfLogger.logStatementExecuted(logId, end - start, exc);
         }
     }
 
     @Override
     @Nullable
     protected Object internalExecuteBatch(final Method method, @Nullable final Object[] args) throws Throwable {
+        final UUID logId = UUID.randomUUID();
+        PerfLogger.logPreparedBatchedStatements(connectionId, rawSql, batchedPreparedOrNonPreparedStmtExecutions,
+                databaseType);
         final long start = System.nanoTime();
         Throwable exc = null;
         try {
@@ -139,8 +145,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
             throw exc;
         } finally {
             final long end = System.nanoTime();
-            PerfLogger.logPreparedBatchedStatements(connectionId, rawSql, batchedPreparedOrNonPreparedStmtExecutions,
-                    end - start, databaseType, exc);
+            PerfLogger.logStatementExecuted(logId, end - start, exc);
             batchedPreparedOrNonPreparedStmtExecutions.clear();
         }
 

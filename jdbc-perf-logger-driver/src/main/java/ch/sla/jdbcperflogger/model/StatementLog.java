@@ -17,13 +17,12 @@ package ch.sla.jdbcperflogger.model;
 
 import java.util.UUID;
 
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import ch.sla.jdbcperflogger.StatementType;
 
 @ParametersAreNonnullByDefault
-public class StatementLog extends AbstractLogMessage {
+public class StatementLog extends AbstractBeforeStatementExecutionLog {
 
     private static final long serialVersionUID = 1L;
 
@@ -31,19 +30,17 @@ public class StatementLog extends AbstractLogMessage {
     private final String filledSql;
     private final boolean preparedStatement;
 
-    public StatementLog(final int connectionId, final UUID logId, final long timestamp, final long executionTimeNanos,
-            final StatementType statementType, final String sql, final String threadName,
-            @Nullable final Throwable sqlException) {
-        super(connectionId, logId, timestamp, executionTimeNanos, statementType, threadName, sqlException);
+    public StatementLog(final int connectionId, final UUID logId, final long timestamp,
+            final StatementType statementType, final String sql, final String threadName) {
+        super(connectionId, logId, timestamp, statementType, threadName);
         rawSql = sql;
         filledSql = sql;
         preparedStatement = false;
     }
 
-    public StatementLog(final int connectionId, final UUID logId, final long timestamp, final long executionTimeNanos,
-            final StatementType statementType, final String rawSql, final String filledSql, final String threadName,
-            @Nullable final Throwable sqlException) {
-        super(connectionId, logId, timestamp, executionTimeNanos, statementType, threadName, sqlException);
+    public StatementLog(final int connectionId, final UUID logId, final long timestamp,
+            final StatementType statementType, final String rawSql, final String filledSql, final String threadName) {
+        super(connectionId, logId, timestamp, statementType, threadName);
         this.rawSql = rawSql;
         this.filledSql = filledSql;
         preparedStatement = true;
