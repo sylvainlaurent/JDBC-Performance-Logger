@@ -17,9 +17,6 @@ package ch.sla.jdbcperflogger.model;
 
 import java.util.UUID;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
-@ParametersAreNonnullByDefault
 public class ResultSetLog implements LogMessage {
 
     private static final long serialVersionUID = 1L;

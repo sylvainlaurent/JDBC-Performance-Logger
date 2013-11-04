@@ -34,6 +34,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -56,10 +58,15 @@ import ch.sla.jdbcperflogger.model.StatementLog;
 public class WrappingDriverTest {
     private final static DateFormat YMD_FORNAT = new SimpleDateFormat("yyyy-MM-dd");
 
+    @SuppressWarnings("null")
     private Connection connection;
+    @Nullable
     private LogMessage lastLogMessage1;
+    @Nullable
     private LogMessage lastLogMessage2;
+    @Nullable
     private LogMessage lastLogMessage3;
+    @SuppressWarnings("null")
     private LogSender logSenderMock;
 
     @Before
@@ -67,7 +74,9 @@ public class WrappingDriverTest {
         connection = DriverManager.getConnection("jdbcperflogger:jdbc:h2:mem:", "sa", "");
         logSenderMock = Mockito.mock(PerfLoggerRemoting.LogSender.class, new Answer<Void>() {
             @Override
-            public Void answer(final InvocationOnMock invocation) throws Throwable {
+            @Nullable
+            public Void answer(@Nullable final InvocationOnMock invocation) throws Throwable {
+                assert invocation != null;
                 lastLogMessage3 = lastLogMessage2;
                 lastLogMessage2 = lastLogMessage1;
                 lastLogMessage1 = (LogMessage) invocation.getArguments()[0];
@@ -80,10 +89,7 @@ public class WrappingDriverTest {
     @After
     public void tearDown() throws Exception {
         PerfLoggerRemotingTest.removeSender(logSenderMock);
-        if (connection != null) {
-            connection.close();
-            connection = null;
-        }
+        connection.close();
     }
 
     @Test
@@ -102,6 +108,7 @@ public class WrappingDriverTest {
         statement.close();
     }
 
+    @SuppressWarnings("null")
     @Test
     public void testExecutePrepared() throws Exception {
         {
@@ -126,6 +133,7 @@ public class WrappingDriverTest {
         }
     }
 
+    @SuppressWarnings("null")
     @Test
     public void testSelectPrepared() throws Exception {
         {
@@ -225,6 +233,7 @@ public class WrappingDriverTest {
         }
     }
 
+    @SuppressWarnings("null")
     @Test
     public void testBatchedNonPrepared() throws Exception {
         {
@@ -266,6 +275,7 @@ public class WrappingDriverTest {
         // TimeUnit.SECONDS.sleep(10);
     }
 
+    @SuppressWarnings("null")
     @Test
     public void testBatchedPrepared() throws Exception {
         {
@@ -325,6 +335,7 @@ public class WrappingDriverTest {
         }
     }
 
+    @SuppressWarnings("null")
     @Test(expected = SQLException.class)
     public void testException() throws Exception {
         final Statement statement = connection.createStatement();
@@ -342,6 +353,7 @@ public class WrappingDriverTest {
         }
     }
 
+    @SuppressWarnings("null")
     @Test
     public void testCallable() throws Exception {
         {
@@ -373,6 +385,7 @@ public class WrappingDriverTest {
         }
     }
 
+    @SuppressWarnings("null")
     private void executeStatementAndCheckLogged(final Statement statement, final String sql) throws SQLException {
         statement.execute(sql);
         final StatementLog statementLog = (StatementLog) lastLogMessage2;
@@ -381,6 +394,7 @@ public class WrappingDriverTest {
         Assert.assertEquals(statementLog.getLogId(), statementExecutedLog.getLogId());
     }
 
+    @SuppressWarnings("null")
     private void executeQueryAndCheckLogged(final Statement statement, final String sql) throws SQLException {
         statement.executeQuery(sql);
         final StatementLog statementLog = (StatementLog) lastLogMessage2;

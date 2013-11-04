@@ -25,6 +25,8 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,10 +60,12 @@ public class WrappingDriver implements Driver {
     }
 
     @Override
-    public Connection connect(final String url, final Properties info) throws SQLException {
+    @Nullable
+    public Connection connect(@Nullable final String url, @Nullable final Properties info) throws SQLException {
         if (!acceptsURL(url)) {
             return null;
         }
+        assert url != null;
         LOGGER.debug("connect url=[{}]", url);
         Connection connection = DriverManager.getConnection(extractUrlForWrappedDriver(url), info);
 
@@ -72,12 +76,13 @@ public class WrappingDriver implements Driver {
     }
 
     @Override
-    public boolean acceptsURL(final String url) throws SQLException {
-        return url.startsWith(URL_PREFIX);
+    public boolean acceptsURL(@Nullable final String url) throws SQLException {
+        return url != null && url.startsWith(URL_PREFIX);
     }
 
     @Override
-    public DriverPropertyInfo[] getPropertyInfo(final String url, final Properties info) throws SQLException {
+    public DriverPropertyInfo[] getPropertyInfo(@Nullable final String url, @Nullable final Properties info)
+            throws SQLException {
         return new DriverPropertyInfo[0];
     }
 

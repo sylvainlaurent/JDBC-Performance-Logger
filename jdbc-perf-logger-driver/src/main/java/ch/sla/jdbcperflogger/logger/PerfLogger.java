@@ -175,7 +175,9 @@ public class PerfLogger {
     }
 
     static String getValueAsString(final SqlTypedValue sqlTypedValue, final DatabaseType databaseType) {
-        String sqlTypeStr = sqlTypedValue.setter;
+        final Object value = sqlTypedValue.value; // using a local variable for null analysis
+        final String setter = sqlTypedValue.setter;
+        String sqlTypeStr = setter;
         if (sqlTypeStr == null) {
             sqlTypeStr = typesMap.get(sqlTypedValue.sqlType);
             if (sqlTypeStr == null) {
@@ -184,7 +186,7 @@ public class PerfLogger {
         }
         sqlTypeStr = " /*" + sqlTypeStr + "*/";
 
-        if (sqlTypedValue.value == null) {
+        if (value == null) {
             final StringBuilder strBuilder = new StringBuilder(20);
             strBuilder.append("NULL");
             strBuilder.append(sqlTypeStr);
@@ -194,43 +196,41 @@ public class PerfLogger {
                 || sqlTypedValue.sqlType == Types.VARCHAR//
                 || sqlTypedValue.sqlType == -15 // NCHAR, from java 6
                 || sqlTypedValue.sqlType == -9 // NVARCHAR, from java 6
-                || "setString".equals(sqlTypedValue.setter)//
-                || "setNString".equals(sqlTypedValue.setter)) {
-            return "'" + sqlTypedValue.value + "'" + sqlTypeStr;
-        } else if (sqlTypedValue.sqlType == Types.DATE || "setDate".equals(sqlTypedValue.setter)
-                || sqlTypedValue.value instanceof java.sql.Date) {
+                || "setString".equals(setter)//
+                || "setNString".equals(setter)) {
+            return "'" + value + "'" + sqlTypeStr;
+        } else if (sqlTypedValue.sqlType == Types.DATE || "setDate".equals(setter) || value instanceof java.sql.Date) {
             java.sql.Date sqlDate;
-            if (sqlTypedValue.value instanceof java.sql.Date) {
-                sqlDate = (java.sql.Date) sqlTypedValue.value;
+            if (value instanceof java.sql.Date) {
+                sqlDate = (java.sql.Date) value;
             } else {
-                sqlDate = new java.sql.Date(((java.util.Date) sqlTypedValue.value).getTime());
+                sqlDate = new java.sql.Date(((java.util.Date) value).getTime());
             }
             return "date'" + sqlDate.toString() + "'" + sqlTypeStr;
-        } else if (sqlTypedValue.sqlType == Types.TIMESTAMP || "setTimestamp".equals(sqlTypedValue.setter)
-                || sqlTypedValue.value instanceof java.sql.Timestamp) {
+        } else if (sqlTypedValue.sqlType == Types.TIMESTAMP || "setTimestamp".equals(setter)
+                || value instanceof java.sql.Timestamp) {
             Timestamp tstamp;
-            if (sqlTypedValue.value instanceof Timestamp) {
-                tstamp = (Timestamp) sqlTypedValue.value;
+            if (value instanceof Timestamp) {
+                tstamp = (Timestamp) value;
             } else {
-                tstamp = new Timestamp(((java.util.Date) sqlTypedValue.value).getTime());
+                tstamp = new Timestamp(((java.util.Date) value).getTime());
             }
             return "timestamp'" + tstamp.toString() + "'" + sqlTypeStr;
-        } else if (sqlTypedValue.sqlType == Types.TIME || "setTime".equals(sqlTypedValue.setter)
-                || sqlTypedValue.value instanceof java.sql.Time) {
+        } else if (sqlTypedValue.sqlType == Types.TIME || "setTime".equals(setter) || value instanceof java.sql.Time) {
             java.sql.Time sqlTime;
-            if (sqlTypedValue.value instanceof java.sql.Time) {
-                sqlTime = (java.sql.Time) sqlTypedValue.value;
+            if (value instanceof java.sql.Time) {
+                sqlTime = (java.sql.Time) value;
             } else {
-                sqlTime = new java.sql.Time(((java.util.Date) sqlTypedValue.value).getTime());
+                sqlTime = new java.sql.Time(((java.util.Date) value).getTime());
             }
             return "time'" + sqlTime.toString() + "'" + sqlTypeStr;
-        } else if (sqlTypedValue.value instanceof Number) {
-            return String.valueOf(sqlTypedValue.value) + sqlTypeStr;
-        } else if (sqlTypedValue.value instanceof Boolean) {
+        } else if (value instanceof Number) {
+            return String.valueOf(value) + sqlTypeStr;
+        } else if (value instanceof Boolean) {
             if (databaseType == DatabaseType.ORACLE) {
-                return (((Boolean) sqlTypedValue.value).booleanValue() ? 1 : 0) + sqlTypeStr;
+                return (((Boolean) value).booleanValue() ? 1 : 0) + sqlTypeStr;
             }
-            return String.valueOf(sqlTypedValue.value) + sqlTypeStr;
+            return String.valueOf(value) + sqlTypeStr;
         } else {
             final StringBuilder strBuilder = new StringBuilder();
             strBuilder.append("?");

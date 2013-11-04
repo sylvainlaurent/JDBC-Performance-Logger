@@ -21,11 +21,9 @@ import java.sql.ResultSet;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 
 import ch.sla.jdbcperflogger.logger.PerfLogger;
 
-@ParametersAreNonnullByDefault
 public class LoggingResultSetInvocationHandler implements InvocationHandler {
     private final ResultSet wrappedResultSet;
     private final UUID logId;

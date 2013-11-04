@@ -17,11 +17,8 @@ package ch.sla.jdbcperflogger.model;
 
 import java.util.UUID;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
 import ch.sla.jdbcperflogger.StatementType;
 
-@ParametersAreNonnullByDefault
 public class AbstractBeforeStatementExecutionLog implements LogMessage {
 
     private static final long serialVersionUID = 1L;

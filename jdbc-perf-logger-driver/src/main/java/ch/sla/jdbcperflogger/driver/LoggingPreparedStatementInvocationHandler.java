@@ -25,14 +25,12 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.logger.PerfLogger;
 import ch.sla.jdbcperflogger.model.PreparedStatementValuesHolder;
 import ch.sla.jdbcperflogger.model.SqlTypedValue;
 
-@ParametersAreNonnullByDefault
 public class LoggingPreparedStatementInvocationHandler extends LoggingStatementInvocationHandler {
     private static final String CLEAR_PARAMETERS = "clearParameters";
 

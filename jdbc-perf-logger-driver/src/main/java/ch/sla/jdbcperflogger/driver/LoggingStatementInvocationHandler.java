@@ -26,12 +26,10 @@ import java.util.UUID;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.logger.PerfLogger;
 
-@ParametersAreNonnullByDefault
 public class LoggingStatementInvocationHandler implements InvocationHandler {
     protected static final String CLEAR_BATCH = "clearBatch";
     protected static final String ADD_BATCH = "addBatch";

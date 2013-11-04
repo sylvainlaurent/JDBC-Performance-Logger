@@ -23,9 +23,7 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 
-@ParametersAreNonnullByDefault
 public class LoggingConnectionInvocationHandler implements InvocationHandler {
     private final int connectionId;
     private final Connection wrappedConnection;

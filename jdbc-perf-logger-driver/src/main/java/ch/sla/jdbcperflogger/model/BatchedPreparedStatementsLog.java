@@ -20,11 +20,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
 import ch.sla.jdbcperflogger.StatementType;
 
-@ParametersAreNonnullByDefault
 public class BatchedPreparedStatementsLog extends AbstractBeforeStatementExecutionLog {
 
     private static final long serialVersionUID = 1L;

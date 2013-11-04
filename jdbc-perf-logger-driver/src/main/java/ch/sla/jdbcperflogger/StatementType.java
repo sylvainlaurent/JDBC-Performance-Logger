@@ -18,9 +18,6 @@ package ch.sla.jdbcperflogger;
 
 import java.util.EnumSet;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
-@ParametersAreNonnullByDefault
 public enum StatementType {
     BASE_NON_PREPARED_STMT(1), //
     BASE_PREPARED_STMT(2), //
