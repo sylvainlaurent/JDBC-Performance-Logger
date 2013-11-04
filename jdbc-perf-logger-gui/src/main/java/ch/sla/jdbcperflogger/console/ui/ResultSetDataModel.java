@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
 import javax.swing.table.AbstractTableModel;
 
 import ch.sla.jdbcperflogger.StatementType;
@@ -40,7 +41,7 @@ class ResultSetDataModel extends AbstractTableModel {
      * @param columnTypes
      */
     void setNewData(final List<Object[]> rows, final List<String> columnNames, final List<Class<?>> columnTypes) {
-        final boolean columnsChanged = (this.columnNames == null) || (!this.columnNames.equals(columnNames));
+        final boolean columnsChanged = !this.columnNames.equals(columnNames);
         if (columnsChanged) {
             // fireTableStructureChanged twice to force the clearing of the current selection
             ResultSetDataModel.this.fireTableStructureChanged();
@@ -73,6 +74,7 @@ class ResultSetDataModel extends AbstractTableModel {
     }
 
     @Override
+    @Nullable
     public Object getValueAt(final int rowIndex, final int columnIndex) {
         Object o = rows.get(rowIndex)[firstColumnIsID ? columnIndex + 1 : columnIndex];
         final String col = getColumnName(columnIndex);
@@ -100,6 +102,7 @@ class ResultSetDataModel extends AbstractTableModel {
         return (Long) rows.get(rowIndex)[0];
     }
 
+    @Nullable
     public Object getValueAt(final int rowIndex, final String columnName) {
         final int columnIndex = columnNames.indexOf(columnName);
         if (columnIndex < 0) {

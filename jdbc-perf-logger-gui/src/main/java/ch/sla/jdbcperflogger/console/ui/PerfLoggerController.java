@@ -28,7 +28,6 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -39,7 +38,6 @@ import ch.sla.jdbcperflogger.console.db.LogRepository;
 import ch.sla.jdbcperflogger.console.db.ResultSetAnalyzer;
 import ch.sla.jdbcperflogger.console.net.AbstractLogReceiver;
 
-@ParametersAreNonnullByDefault
 public class PerfLoggerController {
     private final AbstractLogReceiver logReceiver;
     private final LogRepository logRepository;
@@ -332,8 +330,15 @@ public class PerfLoggerController {
             final StringBuilder txt = new StringBuilder();
             if (logReceiver.isServerMode()) {
                 txt.append(connectionsCount);
-                txt.append(" connection(s) - ");
+                txt.append(" connection(s)");
+            } else {
+                if (logReceiver.getConnectionsCount() == 0) {
+                    txt.append("Not connected");
+                } else {
+                    txt.append("Connected");
+                }
             }
+            txt.append(" - ");
             txt.append(logRepository.countStatements());
             txt.append(" statements logged - ");
             txt.append(TimeUnit.NANOSECONDS.toMillis(logRepository.getTotalExecAndFetchTimeNanos()));

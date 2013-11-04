@@ -22,6 +22,7 @@ import java.awt.Component;
 import java.awt.event.MouseEvent;
 import java.math.BigDecimal;
 
+import javax.annotation.Nullable;
 import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
@@ -33,7 +34,9 @@ public class CustomTable extends JTable {
     private static final Color DEFAULT_BG_COLOR = Color.WHITE;
     private static final Color HIGHLIGHT_COLOR = Color.ORANGE;
     private static final long serialVersionUID = 1L;
+    @Nullable
     private String txtToHighlightUpper;
+    @Nullable
     private Long minDurationNanoToHighlight;
 
     CustomTable(final ResultSetDataModel tm) {
@@ -47,7 +50,8 @@ public class CustomTable extends JTable {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public String getToolTipText(final MouseEvent e) {
+            public String getToolTipText(@Nullable final MouseEvent e) {
+                assert e != null;
                 final java.awt.Point p = e.getPoint();
                 final int index = columnModel.getColumnIndexAtX(p.x);
                 if (index >= 0) {
@@ -60,7 +64,8 @@ public class CustomTable extends JTable {
     }
 
     @Override
-    public Component prepareRenderer(final TableCellRenderer renderer, final int row, final int column) {
+    public Component prepareRenderer(@Nullable final TableCellRenderer renderer, final int row, final int column) {
+        assert renderer != null;
         final Component component = super.prepareRenderer(renderer, row, column);
 
         if (this.getSelectedRow() != row) {
@@ -76,18 +81,21 @@ public class CustomTable extends JTable {
                 if (sql != null && sql.toUpperCase().contains(txtToHighlightUpper)) {
                     bgColor = HIGHLIGHT_COLOR;
                 }
-            } else if (minDurationNanoToHighlight != null) {
-                Long duration = (Long) model.getValueAt(modelIndex, LogRepository.EXEC_PLUS_FETCH_TIME_COLUMN);
-                if (duration == null) {
-                    // in case we are in group by mode
-                    final BigDecimal val = (BigDecimal) model.getValueAt(modelIndex,
-                            LogRepository.TOTAL_EXEC_TIME_COLUMN);
-                    if (val != null) {
-                        duration = val.longValue();
+            } else {
+                final Long minDurationNanoToHighlight2 = minDurationNanoToHighlight;
+                if (minDurationNanoToHighlight2 != null) {
+                    Long duration = (Long) model.getValueAt(modelIndex, LogRepository.EXEC_PLUS_FETCH_TIME_COLUMN);
+                    if (duration == null) {
+                        // in case we are in group by mode
+                        final BigDecimal val = (BigDecimal) model.getValueAt(modelIndex,
+                                LogRepository.TOTAL_EXEC_TIME_COLUMN);
+                        if (val != null) {
+                            duration = val.longValue();
+                        }
                     }
-                }
-                if (duration != null && duration.longValue() >= minDurationNanoToHighlight.longValue()) {
-                    bgColor = HIGHLIGHT_COLOR;
+                    if (duration != null && duration.longValue() >= minDurationNanoToHighlight2.longValue()) {
+                        bgColor = HIGHLIGHT_COLOR;
+                    }
                 }
             }
             component.setBackground(bgColor);
@@ -95,7 +103,7 @@ public class CustomTable extends JTable {
         return component;
     }
 
-    public void setTxtToHighlight(final String txtToHighlight) {
+    public void setTxtToHighlight(@Nullable final String txtToHighlight) {
         if (txtToHighlight != null) {
             txtToHighlightUpper = txtToHighlight.toUpperCase();
         } else {
@@ -103,7 +111,7 @@ public class CustomTable extends JTable {
         }
     }
 
-    public void setMinDurationNanoToHighlight(final Long minDurationNanoToHighlight) {
+    public void setMinDurationNanoToHighlight(@Nullable final Long minDurationNanoToHighlight) {
         this.minDurationNanoToHighlight = minDurationNanoToHighlight;
     }
 }

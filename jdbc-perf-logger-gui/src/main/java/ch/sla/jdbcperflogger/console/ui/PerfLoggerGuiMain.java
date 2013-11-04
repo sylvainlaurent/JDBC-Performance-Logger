@@ -19,7 +19,6 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Frame;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import javax.swing.JPanel;
 import javax.swing.ToolTipManager;
 
@@ -31,7 +30,6 @@ import ch.sla.jdbcperflogger.console.net.AbstractLogReceiver;
 import ch.sla.jdbcperflogger.console.net.ClientLogReceiver;
 import ch.sla.jdbcperflogger.console.net.ServerLogReceiver;
 
-@ParametersAreNonnullByDefault
 public class PerfLoggerGuiMain implements IClientConnectionDelegate {
     private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerGuiMain.class);
 

@@ -18,19 +18,21 @@ package ch.sla.jdbcperflogger.console.ui;
 import java.awt.Color;
 import java.awt.Component;
 
+import javax.annotation.Nullable;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.console.db.LogRepository;
 
+@SuppressWarnings("serial")
 public class CustomTableCellRenderer extends DefaultTableCellRenderer {
 
-    private static final long serialVersionUID = 1L;
-
     @Override
-    public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected,
-            final boolean hasFocus, final int row, final int column) {
+    public Component getTableCellRendererComponent(@Nullable final JTable table, @Nullable final Object value,
+            final boolean isSelected, final boolean hasFocus, final int row, final int column) {
+        assert table != null;
+
         final CustomTableCellRenderer component = (CustomTableCellRenderer) super.getTableCellRendererComponent(table,
                 value, isSelected, hasFocus, row, column);
 

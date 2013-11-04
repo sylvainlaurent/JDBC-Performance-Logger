@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@ParametersAreNonnullByDefault
 package ch.sla.jdbcperflogger.console.ui;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 
-public interface IClientConnectionDelegate {
-    void createClientConnection(String host, int port);
-
-    void close(PerfLoggerPanel perLoggerPanel);
-}

@@ -19,6 +19,7 @@ import java.awt.Component;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 
+import javax.annotation.Nullable;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
@@ -31,8 +32,10 @@ public class StatementTimestampTableCellRenderer extends DefaultTableCellRendere
     private long deltaTimestampBaseMillis;
 
     @Override
-    public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected,
-            final boolean hasFocus, final int row, final int column) {
+    public Component getTableCellRendererComponent(@Nullable final JTable table, @Nullable final Object value,
+            final boolean isSelected, final boolean hasFocus, final int row, final int column) {
+        assert table != null;
+
         final StatementTimestampTableCellRenderer component = (StatementTimestampTableCellRenderer) super
                 .getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 

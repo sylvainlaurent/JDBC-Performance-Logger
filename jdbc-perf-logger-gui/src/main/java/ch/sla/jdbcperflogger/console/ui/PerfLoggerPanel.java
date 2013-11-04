@@ -46,6 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -95,7 +96,6 @@ public class PerfLoggerPanel extends JPanel {
         COLUMNS_WIDTH.put(ERROR_COLUMN, 0);
     }
 
-    private final PerfLoggerController perfLoggerController;
     private JTextField txtFldSqlFilter;
     private JTextField txtFldMinDuration;
     CustomTable table;
@@ -111,15 +111,6 @@ public class PerfLoggerPanel extends JPanel {
     private StatementTimestampTableCellRenderer stmtTimestampCellRenderer;
 
     public PerfLoggerPanel(final PerfLoggerController perfLoggerController) {
-        this.perfLoggerController = perfLoggerController;
-        initialize();
-    }
-
-    /**
-     * Initialize the contents of the frame.
-     */
-    private void initialize() {
-        // logListPanel.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
         dataModel = new ResultSetDataModel();
         final GridBagLayout gridBagLayout = new GridBagLayout();
@@ -165,7 +156,7 @@ public class PerfLoggerPanel extends JPanel {
         comboBoxFilterType.setSelectedItem(FilterType.FILTER);
         comboBoxFilterType.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(final ActionEvent e) {
+            public void actionPerformed(@Nullable final ActionEvent e) {
                 perfLoggerController.setFilterType(comboBoxFilterType.getItemAt(comboBoxFilterType.getSelectedIndex()));
             }
         });
@@ -197,7 +188,7 @@ public class PerfLoggerPanel extends JPanel {
 
             txtFldSqlFilter.getDocument().addUndoableEditListener(new UndoableEditListener() {
                 @Override
-                public void undoableEditHappened(final UndoableEditEvent e) {
+                public void undoableEditHappened(@Nullable final UndoableEditEvent e) {
                     perfLoggerController.setTextFilter(txtFldSqlFilter.getText());
                 }
             });
@@ -222,7 +213,8 @@ public class PerfLoggerPanel extends JPanel {
             filterPanel.add(txtFldMinDuration, gbc_txtFldMinDuration);
             txtFldMinDuration.getDocument().addUndoableEditListener(new UndoableEditListener() {
                 @Override
-                public void undoableEditHappened(final UndoableEditEvent e) {
+                public void undoableEditHappened(@Nullable final UndoableEditEvent e) {
+                    assert e != null;
                     Long minDurationMs = null;
                     if (txtFldMinDuration.getText().length() > 0) {
                         try {
@@ -264,7 +256,7 @@ public class PerfLoggerPanel extends JPanel {
         comboBoxGroupBy.setSelectedIndex(0);
         comboBoxGroupBy.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(final ActionEvent e) {
+            public void actionPerformed(@Nullable final ActionEvent e) {
                 perfLoggerController.setGroupBy(comboBoxGroupBy.getItemAt(comboBoxGroupBy.getSelectedIndex()));
             }
         });
@@ -280,7 +272,7 @@ public class PerfLoggerPanel extends JPanel {
         btnPause.addActionListener(new ActionListener() {
 
             @Override
-            public void actionPerformed(final ActionEvent e) {
+            public void actionPerformed(@Nullable final ActionEvent e) {
                 perfLoggerController.onPause();
             }
         });
@@ -294,7 +286,7 @@ public class PerfLoggerPanel extends JPanel {
         btnClear.setIcon(new ImageIcon(PerfLoggerPanel.class.getResource("/icons/32px-Edit-clear.png")));
         btnClear.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(final ActionEvent e) {
+            public void actionPerformed(@Nullable final ActionEvent e) {
                 perfLoggerController.onClear();
             }
         });
@@ -323,7 +315,8 @@ public class PerfLoggerPanel extends JPanel {
 
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
-            public void valueChanged(final ListSelectionEvent e) {
+            public void valueChanged(@Nullable final ListSelectionEvent e) {
+                assert e != null;
                 if (!e.getValueIsAdjusting()) {
                     final ListSelectionModel lsm = (ListSelectionModel) e.getSource();
                     Long logId = null;
@@ -378,7 +371,7 @@ public class PerfLoggerPanel extends JPanel {
         btnCopy1.setToolTipText("Copy the SQL statement unmodified (potentiall with '?' for bind variables");
         btnCopy1.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(final ActionEvent e) {
+            public void actionPerformed(@Nullable final ActionEvent e) {
                 final StringSelection stringSelection = new StringSelection(txtFieldRawSql.getText());
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, stringSelection);
             }
@@ -432,7 +425,7 @@ public class PerfLoggerPanel extends JPanel {
         txtFieldFilledSql.setLineWrap(true);
         btnCopy2.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(final ActionEvent e) {
+            public void actionPerformed(@Nullable final ActionEvent e) {
                 final StringSelection stringSelection = new StringSelection(txtFieldFilledSql.getText());
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, stringSelection);
             }
@@ -462,7 +455,7 @@ public class PerfLoggerPanel extends JPanel {
         btnClose = new JButton("Close");
         btnClose.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(final ActionEvent e) {
+            public void actionPerformed(@Nullable final ActionEvent e) {
                 perfLoggerController.onClose();
             }
         });
@@ -471,7 +464,7 @@ public class PerfLoggerPanel extends JPanel {
         btnExportCsv.setToolTipText("Export all statements to a CSV file");
         btnExportCsv.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(final ActionEvent e) {
+            public void actionPerformed(@Nullable final ActionEvent e) {
                 perfLoggerController.onExportCsv();
             }
         });
@@ -480,7 +473,7 @@ public class PerfLoggerPanel extends JPanel {
         btnExportSql.setToolTipText("Export all statements as a sql script");
         btnExportSql.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(final ActionEvent e) {
+            public void actionPerformed(@Nullable final ActionEvent e) {
                 perfLoggerController.onExportSql();
             }
         });
@@ -513,7 +506,8 @@ public class PerfLoggerPanel extends JPanel {
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
             @Override
-            public boolean dispatchKeyEvent(final KeyEvent e) {
+            public boolean dispatchKeyEvent(@Nullable final KeyEvent e) {
+                assert e != null;
                 if (e.getKeyCode() == java.awt.event.KeyEvent.VK_BACK_SPACE
                         && e.getModifiers() == java.awt.event.InputEvent.CTRL_MASK && e.getID() == KeyEvent.KEY_PRESSED) {
                     perfLoggerController.onClear();

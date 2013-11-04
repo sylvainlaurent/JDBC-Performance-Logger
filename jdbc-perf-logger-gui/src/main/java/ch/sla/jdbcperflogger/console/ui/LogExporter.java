@@ -25,14 +25,12 @@ import java.text.SimpleDateFormat;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.console.db.DetailedViewStatementLog;
 import ch.sla.jdbcperflogger.console.db.LogRepository;
 import ch.sla.jdbcperflogger.console.db.ResultSetAnalyzer;
 
-@ParametersAreNonnullByDefault
 public class LogExporter {
     private final LogRepository logRepository;
 

@@ -1,5 +1,7 @@
 package ch.sla.jdbcperflogger.console.db;
 
+import javax.annotation.Nullable;
+
 import ch.sla.jdbcperflogger.StatementType;
 
 public class DetailedViewStatementLog {
@@ -11,6 +13,7 @@ public class DetailedViewStatementLog {
     private final int connectionId;
     private final String threadName;
     private final long durationNanos;
+    @Nullable
     private final Throwable sqlException;
 
     public DetailedViewStatementLog(final long keyId, final int connectionId, final long timestamp,
@@ -24,7 +27,7 @@ public class DetailedViewStatementLog {
         this.filledSql = filledSql;
         this.threadName = threadName;
         this.durationNanos = durationNanos;
-        this.sqlException = exception;
+        sqlException = exception;
     }
 
     public long getKeyId() {
@@ -59,6 +62,7 @@ public class DetailedViewStatementLog {
         return durationNanos;
     }
 
+    @Nullable
     public Throwable getSqlException() {
         return sqlException;
     }
