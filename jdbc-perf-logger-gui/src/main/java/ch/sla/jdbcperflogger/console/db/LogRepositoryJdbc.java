@@ -25,26 +25,27 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.h2.Driver;
-import org.h2.constant.ErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.sla.jdbcperflogger.StatementType;
+import ch.sla.jdbcperflogger.logger.ConnectionInfo;
 import ch.sla.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.BatchedPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.ResultSetLog;
 import ch.sla.jdbcperflogger.model.StatementExecutedLog;
 import ch.sla.jdbcperflogger.model.StatementLog;
 
-public class LogRepository {
+public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate {
     // TODO ajouter colonne clientId (processId)
-    public static final int SCHEMA_VERSION = 1;
+    public static final int SCHEMA_VERSION = 4;
 
     public static final String TSTAMP_COLUMN = "TSTAMP";
     public static final String STMT_TYPE_COLUMN = "STATEMENTTYPE";
@@ -63,34 +64,29 @@ public class LogRepository {
     private static final int NB_ROWS_MAX = Integer.parseInt(System.getProperty("maxLoggedStatements", "20000"));
     private static final long CLEAN_UP_PERIOD_MS = TimeUnit.SECONDS.toMillis(30);
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LogRepository.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LogRepositoryJdbc.class);
 
     private final Connection connection;
     private final String repoName;
-    private boolean dbInitialized;
-    private PreparedStatement addStatementLog;
-    private PreparedStatement updateStatementLogWithResultSet;
-    private PreparedStatement updateStatementLogAfterExecution;
-    private PreparedStatement addBatchedStatementLog;
+    private final PreparedStatement addStatementLog;
+    private final PreparedStatement updateStatementLogWithResultSet;
+    private final PreparedStatement updateStatementLogAfterExecution;
+    private final PreparedStatement addBatchedStatementLog;
     private long lastModificationTime = System.currentTimeMillis();
     private final Timer cleanupTimer;
 
-    public LogRepository(final String name) {
+    public LogRepositoryJdbc(final String name) {
         repoName = name;
         try {
             connection = createDbConnection("logdb/logrepository_" + name);
-            synchronized (LogRepository.class) {
-                if (!dbInitialized) {
-                    final Statement stmt = connection.createStatement();
-                    try {
-                        stmt.execute("runscript from 'classpath:initdb.sql' charset 'UTF-8'");
-                    } finally {
-                        stmt.close();
-                    }
-
-                    dbInitialized = true;
-                }
+            final Statement stmt = connection.createStatement();
+            try {
+                stmt.execute("runscript from 'classpath:initdb.sql' charset 'UTF-8'");
+            } finally {
+                stmt.close();
             }
+
+            cleanOldConnectionInfo(connection);
 
             addStatementLog = connection
                     .prepareStatement("insert into statement_log (logId, tstamp, statementType, rawSql, filledSql, " //
@@ -123,20 +119,18 @@ public class LogRepository {
             @Nonnull
             final Connection conn = DriverManager.getConnection("jdbc:h2:file:" + path + ";DB_CLOSE_DELAY=1");
             LOGGER.debug("connection commit mode auto={}", conn.getAutoCommit());
+            conn.setAutoCommit(true);
             checkSchemaVersion(conn);
 
             return conn;
         } catch (final SQLException exc) {
-            if (exc.getErrorCode() == ErrorCode.FILE_CORRUPTED_1) {
-                if (inRecursion) {
-                    throw exc;
-                }
-                LOGGER.warn("Unexpected error while opening DB connection, will delete DB files and try agaoin", exc);
-
-                deleteDbFiles(path);
-                return createDbConnection(path, true);
+            if (inRecursion) {
+                throw exc;
             }
-            throw exc;
+            LOGGER.warn("Unexpected error while opening DB connection, will delete DB files and try agaoin", exc);
+
+            deleteDbFiles(path);
+            return createDbConnection(path, true);
         }
     }
 
@@ -161,6 +155,15 @@ public class LogRepository {
         }
     }
 
+    private void cleanOldConnectionInfo(final Connection conn) throws SQLException {
+        final Statement statement = conn.createStatement();
+        final int nbRowsDeleted = statement.executeUpdate("delete from connection_info where not exists "
+                + "(select 1 from statement_log where statement_log.connectionId=connection_info.connectionId)");
+        LOGGER.debug("Deleted {} rows in connection_info", nbRowsDeleted);
+        statement.close();
+    }
+
+    @Override
     public synchronized void addStatementLog(final StatementLog log) {
         try {
             int i = 1;
@@ -170,7 +173,7 @@ public class LogRepository {
             addStatementLog.setString(i++, log.getRawSql());
             addStatementLog.setString(i++, log.getFilledSql());
             addStatementLog.setString(i++, log.getThreadName());
-            addStatementLog.setInt(i++, log.getConnectionId());
+            addStatementLog.setObject(i++, log.getConnectionUuid());
             addStatementLog.execute();
         } catch (final SQLException e) {
             throw new RuntimeException(e);
@@ -178,6 +181,7 @@ public class LogRepository {
         lastModificationTime = System.currentTimeMillis();
     }
 
+    @Override
     public synchronized void updateLogAfterExecution(final StatementExecutedLog log) {
         try {
             updateStatementLogAfterExecution.setLong(1, log.getExecutionTimeNanos());
@@ -190,6 +194,7 @@ public class LogRepository {
         lastModificationTime = System.currentTimeMillis();
     }
 
+    @Override
     public synchronized void updateLogWithResultSetLog(final ResultSetLog log) {
         try {
             updateStatementLogWithResultSet.setLong(1, log.getResultSetIterationTimeNanos());
@@ -202,6 +207,7 @@ public class LogRepository {
         lastModificationTime = System.currentTimeMillis();
     }
 
+    @Override
     public synchronized void addBatchedPreparedStatementsLog(final BatchedPreparedStatementsLog log) {
         try {
             int i = 1;
@@ -226,6 +232,7 @@ public class LogRepository {
         lastModificationTime = System.currentTimeMillis();
     }
 
+    @Override
     public synchronized void addBatchedNonPreparedStatementsLog(final BatchedNonPreparedStatementsLog log) {
         try {
             int i = 1;
@@ -251,6 +258,24 @@ public class LogRepository {
         lastModificationTime = System.currentTimeMillis();
     }
 
+    @Override
+    public synchronized void addConnection(final ConnectionInfo connectionInfo) {
+        try {
+            final PreparedStatement stmt = connection
+                    .prepareStatement("merge into connection_info (connectionId, connectionNumber, url, creationDate) key(connectionId) values (?,?,?,?)");
+            stmt.setObject(1, connectionInfo.getUuid());
+            stmt.setInt(2, connectionInfo.getConnectionNumber());
+            stmt.setString(3, connectionInfo.getUrl());
+            stmt.setTimestamp(4, new Timestamp(connectionInfo.getCreationDate().getTime()));
+
+            stmt.execute();
+            stmt.close();
+        } catch (final SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public void clear() {
         try {
             connection.prepareStatement("truncate table batched_statement_log").execute();
@@ -260,10 +285,12 @@ public class LogRepository {
         }
     }
 
-    public void getStatements(@Nullable final String filter, @Nullable final Long minDurationNanos,
+    @Override
+    public void getStatements(final @Nullable String filter, final @Nullable Long minDurationNanos,
             final ResultSetAnalyzer analyzer, final boolean withFilledSql) {
         String sql = "select id, tstamp, statementType, rawSql, " //
-                + "exec_plus_fetch_time, execution_time, fetch_time, nbRowsIterated, threadName, connectionId, error ";
+                + "exec_plus_fetch_time, execution_time, fetch_time, "//
+                + "nbRowsIterated, threadName, connectionNumber, error ";
         if (withFilledSql) {
             sql += ", " + FILLED_SQL_COLUMN;
         }
@@ -289,7 +316,8 @@ public class LogRepository {
 
     }
 
-    public void getStatementsGroupByRawSQL(@Nullable final String filter, @Nullable final Long minDurationNanos,
+    @Override
+    public void getStatementsGroupByRawSQL(final @Nullable String filter, final @Nullable Long minDurationNanos,
             final ResultSetAnalyzer analyzer) {
         String sql = "select min(id) as ID, statementType, rawSql, count(1) as exec_count, " //
                 + "sum(executionDurationNanos) as total_exec_time, "//
@@ -324,7 +352,8 @@ public class LogRepository {
 
     }
 
-    public void getStatementsGroupByFilledSQL(@Nullable final String filter, @Nullable final Long minDurationNanos,
+    @Override
+    public void getStatementsGroupByFilledSQL(final @Nullable String filter, final @Nullable Long minDurationNanos,
             final ResultSetAnalyzer analyzer) {
         String sql = "select min(id) as ID, statementType, rawSql, filledSql, count(1) as exec_count, " //
                 + "sum(executionDurationNanos) as total_exec_time, "//
@@ -390,16 +419,23 @@ public class LogRepository {
 
     }
 
+    @Override
     public synchronized long getLastModificationTime() {
         return lastModificationTime;
     }
 
     @Nullable
+    @Override
     public DetailedViewStatementLog getStatementLog(final long id) {
         try {
             final PreparedStatement statement = connection
-                    .prepareStatement("select id, tstamp, statementType, rawSql, filledSql, " //
-                            + "executionDurationNanos, threadName, exception, connectionId from statement_log where id=?");
+                    .prepareStatement("select statement_log.id, statement_log.tstamp, statement_log.statementType, "//
+                            + "statement_log.rawSql, statement_log.filledSql, " //
+                            + "statement_log.executionDurationNanos, statement_log.threadName, statement_log.exception, "//
+                            + "statement_log.connectionId,"//
+                            + "connection_info.connectionNumber, connection_info.url, connection_info.creationDate "//
+                            + "from statement_log join connection_info on (statement_log.connectionId=connection_info.connectionId) "//
+                            + "where statement_log.id=?");
             statement.setLong(1, id);
             try {
                 final ResultSet resultSet = statement.executeQuery();
@@ -417,9 +453,16 @@ public class LogRepository {
                     @Nonnull
                     final String threadName = resultSet.getString(i++);
                     final SQLException exception = (SQLException) resultSet.getObject(i++);
-                    final int connectionId = resultSet.getInt(i++);
-                    result = new DetailedViewStatementLog(keyId, connectionId, tstamp.getTime(), statementType, rawSql,
-                            filledSql, threadName, durationNanos, exception);
+                    final UUID connectionId = (UUID) resultSet.getObject(i++);
+                    final int connectionNumber = resultSet.getInt(i++);
+                    final String connectionUrl = resultSet.getString(i++);
+                    final Timestamp creationDate = resultSet.getTimestamp(i++);
+
+                    final ConnectionInfo connectionInfo = new ConnectionInfo(connectionId, connectionNumber,
+                            connectionUrl, creationDate);
+
+                    result = new DetailedViewStatementLog(keyId, connectionInfo, tstamp.getTime(), statementType,
+                            rawSql, filledSql, threadName, durationNanos, exception);
                 }
                 resultSet.close();
                 return result;
@@ -431,6 +474,7 @@ public class LogRepository {
         }
     }
 
+    @Override
     public int countStatements() {
         try {
             final PreparedStatement statement = connection.prepareStatement("select count(1) from statement_log");
@@ -448,6 +492,7 @@ public class LogRepository {
         }
     }
 
+    @Override
     public long getTotalExecAndFetchTimeNanos() {
         try {
             final PreparedStatement statement = connection
@@ -466,7 +511,8 @@ public class LogRepository {
         }
     }
 
-    public long getTotalExecAndFetchTimeNanos(@Nullable final String filter, @Nullable final Long minDurationNanos) {
+    @Override
+    public long getTotalExecAndFetchTimeNanos(final @Nullable String filter, final @Nullable Long minDurationNanos) {
         String sql = "select sum(exec_plus_fetch_time) from v_statement_log ";
         sql += getWhereClause(filter, minDurationNanos);
 
@@ -489,6 +535,7 @@ public class LogRepository {
 
     }
 
+    @Override
     public void getBatchStatementExecutions(final long keyId, final ResultSetAnalyzer analyzer) {
         String sql = "select batched_stmt_order, filledSql from batched_statement_log where id=? ";
         sql += "order by batched_stmt_order";

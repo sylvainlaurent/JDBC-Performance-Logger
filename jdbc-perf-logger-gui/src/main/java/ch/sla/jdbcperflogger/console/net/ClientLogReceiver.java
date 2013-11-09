@@ -23,14 +23,14 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ch.sla.jdbcperflogger.console.db.LogRepository;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryUpdate;
 
 public class ClientLogReceiver extends AbstractLogReceiver {
     private final static Logger LOGGER = LoggerFactory.getLogger(ClientLogReceiver.class);
 
     final InetSocketAddress targetRemoteAddress;
 
-    public ClientLogReceiver(final String targetHost, final int targetPort, final LogRepository logRepository) {
+    public ClientLogReceiver(final String targetHost, final int targetPort, final LogRepositoryUpdate logRepository) {
         super(logRepository);
         targetRemoteAddress = InetSocketAddress.createUnresolved(targetHost, targetPort);
     }

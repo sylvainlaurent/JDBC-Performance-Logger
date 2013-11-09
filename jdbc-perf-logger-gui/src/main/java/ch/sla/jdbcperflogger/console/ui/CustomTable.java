@@ -15,7 +15,7 @@
  */
 package ch.sla.jdbcperflogger.console.ui;
 
-import static ch.sla.jdbcperflogger.console.db.LogRepository.ERROR_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.ERROR_COLUMN;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -27,7 +27,7 @@ import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 
-import ch.sla.jdbcperflogger.console.db.LogRepository;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc;
 
 public class CustomTable extends JTable {
     private static final Color ERROR_COLOR = Color.RED;
@@ -77,18 +77,18 @@ public class CustomTable extends JTable {
             if (error != null && error.intValue() != 0) {
                 bgColor = ERROR_COLOR;
             } else if (txtToHighlightUpper != null) {
-                final String sql = (String) model.getValueAt(modelIndex, LogRepository.RAW_SQL_COLUMN);
+                final String sql = (String) model.getValueAt(modelIndex, LogRepositoryJdbc.RAW_SQL_COLUMN);
                 if (sql != null && sql.toUpperCase().contains(txtToHighlightUpper)) {
                     bgColor = HIGHLIGHT_COLOR;
                 }
             } else {
                 final Long minDurationNanoToHighlight2 = minDurationNanoToHighlight;
                 if (minDurationNanoToHighlight2 != null) {
-                    Long duration = (Long) model.getValueAt(modelIndex, LogRepository.EXEC_PLUS_FETCH_TIME_COLUMN);
+                    Long duration = (Long) model.getValueAt(modelIndex, LogRepositoryJdbc.EXEC_PLUS_FETCH_TIME_COLUMN);
                     if (duration == null) {
                         // in case we are in group by mode
                         final BigDecimal val = (BigDecimal) model.getValueAt(modelIndex,
-                                LogRepository.TOTAL_EXEC_TIME_COLUMN);
+                                LogRepositoryJdbc.TOTAL_EXEC_TIME_COLUMN);
                         if (val != null) {
                             duration = val.longValue();
                         }

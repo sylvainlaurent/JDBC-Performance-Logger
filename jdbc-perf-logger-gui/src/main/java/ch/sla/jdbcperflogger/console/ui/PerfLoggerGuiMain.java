@@ -18,6 +18,10 @@ package ch.sla.jdbcperflogger.console.ui;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Frame;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.swing.JPanel;
 import javax.swing.ToolTipManager;
@@ -25,7 +29,7 @@ import javax.swing.ToolTipManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ch.sla.jdbcperflogger.console.db.LogRepository;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc;
 import ch.sla.jdbcperflogger.console.net.AbstractLogReceiver;
 import ch.sla.jdbcperflogger.console.net.ClientLogReceiver;
 import ch.sla.jdbcperflogger.console.net.ServerLogReceiver;
@@ -34,6 +38,8 @@ public class PerfLoggerGuiMain implements IClientConnectionDelegate {
     private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerGuiMain.class);
 
     private final PerfLoggerGuiMainFrame frmJdbcPerformanceLogger;
+
+    private final Map<String, PerfLoggerController> connectionsToLogController = new HashMap<>();
 
     /**
      * Launch the application.
@@ -81,20 +87,33 @@ public class PerfLoggerGuiMain implements IClientConnectionDelegate {
     }
 
     @Override
-    public void close(final PerfLoggerPanel perfLoggerPanel) {
-        frmJdbcPerformanceLogger.removeTab(perfLoggerPanel);
+    public void close(final PerfLoggerController perfLoggerController) {
+        frmJdbcPerformanceLogger.removeTab(perfLoggerController.getPanel());
+        final Iterator<Entry<String, PerfLoggerController>> iterator = connectionsToLogController.entrySet().iterator();
+        while (iterator.hasNext()) {
+            final Entry<String, PerfLoggerController> entry = iterator.next();
+            if (entry.getValue() == perfLoggerController) {
+                iterator.remove();
+            }
+        }
     }
 
     private PerfLoggerController connectToClient(final String targetHost, final int targetPort) {
-        final LogRepository logRepository = new LogRepository(targetHost + "_" + targetPort);
-        final AbstractLogReceiver logReceiver = new ClientLogReceiver(targetHost, targetPort, logRepository);
-        logReceiver.start();
+        final String hostAndPort = targetHost + "_" + targetPort;
+        PerfLoggerController perfLoggerController = connectionsToLogController.get(hostAndPort);
+        if (perfLoggerController == null) {
+            final LogRepositoryJdbc logRepository = new LogRepositoryJdbc(hostAndPort);
+            final AbstractLogReceiver logReceiver = new ClientLogReceiver(targetHost, targetPort, logRepository);
+            logReceiver.start();
 
-        return new PerfLoggerController(this, logReceiver, logRepository);
+            perfLoggerController = new PerfLoggerController(this, logReceiver, logRepository);
+            connectionsToLogController.put(hostAndPort, perfLoggerController);
+        }
+        return perfLoggerController;
     }
 
     private PerfLoggerController createServer(final int listeningPort) {
-        final LogRepository logRepository = new LogRepository("server_" + listeningPort);
+        final LogRepositoryJdbc logRepository = new LogRepositoryJdbc("server_" + listeningPort);
 
         final AbstractLogReceiver logReceiver = new ServerLogReceiver(listeningPort, logRepository);
         logReceiver.start();

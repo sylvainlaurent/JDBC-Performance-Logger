@@ -38,7 +38,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
     private final PreparedStatementValuesHolder paramValues = new PreparedStatementValuesHolder();
     private final List<Object> batchedPreparedOrNonPreparedStmtExecutions = new ArrayList<Object>();
 
-    LoggingPreparedStatementInvocationHandler(final int connectionId, final PreparedStatement statement,
+    LoggingPreparedStatementInvocationHandler(final UUID connectionId, final PreparedStatement statement,
             final String rawSql, final DatabaseType databaseType) {
         super(connectionId, statement, databaseType);
         this.rawSql = rawSql;

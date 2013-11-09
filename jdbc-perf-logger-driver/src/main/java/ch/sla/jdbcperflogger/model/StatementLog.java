@@ -27,7 +27,7 @@ public class StatementLog extends AbstractBeforeStatementExecutionLog {
     private final String filledSql;
     private final boolean preparedStatement;
 
-    public StatementLog(final int connectionId, final UUID logId, final long timestamp,
+    public StatementLog(final UUID connectionId, final UUID logId, final long timestamp,
             final StatementType statementType, final String sql, final String threadName) {
         super(connectionId, logId, timestamp, statementType, threadName);
         rawSql = sql;
@@ -35,7 +35,7 @@ public class StatementLog extends AbstractBeforeStatementExecutionLog {
         preparedStatement = false;
     }
 
-    public StatementLog(final int connectionId, final UUID logId, final long timestamp,
+    public StatementLog(final UUID connectionId, final UUID logId, final long timestamp,
             final StatementType statementType, final String rawSql, final String filledSql, final String threadName) {
         super(connectionId, logId, timestamp, statementType, threadName);
         this.rawSql = rawSql;

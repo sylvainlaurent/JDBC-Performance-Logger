@@ -23,23 +23,23 @@ public class AbstractBeforeStatementExecutionLog implements LogMessage {
 
     private static final long serialVersionUID = 1L;
 
-    private final int connectionId;
+    private final UUID connectionUuid;
     private final UUID logId;
     private final long timestamp;
     private final StatementType statementType;
     private final String threadName;
 
-    public AbstractBeforeStatementExecutionLog(final int connectionId, final UUID logId, final long timestamp,
+    public AbstractBeforeStatementExecutionLog(final UUID connectionId, final UUID logId, final long timestamp,
             final StatementType statementType, final String threadName) {
-        this.connectionId = connectionId;
+        connectionUuid = connectionId;
         this.logId = logId;
         this.timestamp = timestamp;
         this.statementType = statementType;
         this.threadName = threadName;
     }
 
-    public int getConnectionId() {
-        return connectionId;
+    public UUID getConnectionUuid() {
+        return connectionUuid;
     }
 
     public UUID getLogId() {

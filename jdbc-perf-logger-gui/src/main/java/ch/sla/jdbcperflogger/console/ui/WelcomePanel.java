@@ -22,6 +22,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.TreeSet;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
@@ -104,12 +106,7 @@ public class WelcomePanel extends JPanel {
         btnConnect.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(@Nullable final ActionEvent e) {
-                final String targetHost = txtTargetHost.getText();
-                if (targetHost != null) {
-                    final int port = Integer.parseInt(txtTargetPort.getText());
-                    addConnection(targetHost, port);
-                    clientConnectionCreator.createClientConnection(targetHost, port);
-                }
+                connect(clientConnectionCreator);
             }
         });
 
@@ -206,6 +203,16 @@ public class WelcomePanel extends JPanel {
             }
 
         });
+        recentConnectionsList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(@Nullable final MouseEvent e) {
+                assert e != null;
+                if (e.getClickCount() == 2) {
+                    connect(clientConnectionCreator);
+                }
+            }
+
+        });
         recentConnectionsScrollPane.setViewportView(recentConnectionsList);
 
         readPrefsForRecentConnections();
@@ -219,6 +226,15 @@ public class WelcomePanel extends JPanel {
         }
         final HostPort hostPort = recentConnectionsList.getModel().getElementAt(idx);
         return hostPort;
+    }
+
+    private void connect(final IClientConnectionDelegate clientConnectionCreator) {
+        final String targetHost = txtTargetHost.getText();
+        if (targetHost != null) {
+            final int port = Integer.parseInt(txtTargetPort.getText());
+            addConnection(targetHost, port);
+            clientConnectionCreator.createClientConnection(targetHost, port);
+        }
     }
 
     private void addConnection(final String host, final int port) {

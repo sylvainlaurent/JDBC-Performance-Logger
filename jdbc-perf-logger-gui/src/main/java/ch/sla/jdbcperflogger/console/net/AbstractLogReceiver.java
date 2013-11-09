@@ -24,7 +24,8 @@ import java.net.SocketTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ch.sla.jdbcperflogger.console.db.LogRepository;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryUpdate;
+import ch.sla.jdbcperflogger.logger.ConnectionInfo;
 import ch.sla.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.BatchedPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.ResultSetLog;
@@ -34,12 +35,12 @@ import ch.sla.jdbcperflogger.model.StatementLog;
 public abstract class AbstractLogReceiver extends Thread {
     private final static Logger LOGGER = LoggerFactory.getLogger(AbstractLogReceiver.class);
 
-    protected final LogRepository logRepository;
+    protected final LogRepositoryUpdate logRepository;
     protected volatile boolean connected;
     protected volatile boolean paused = false;
     protected volatile boolean disposed = false;
 
-    public AbstractLogReceiver(final LogRepository logRepository) {
+    public AbstractLogReceiver(final LogRepositoryUpdate logRepository) {
         this.logRepository = logRepository;
         this.setDaemon(true);
     }
@@ -92,7 +93,9 @@ public abstract class AbstractLogReceiver extends Thread {
                 if (o == null || paused || disposed) {
                     continue;
                 }
-                if (o instanceof StatementLog) {
+                if (o instanceof ConnectionInfo) {
+                    logRepository.addConnection((ConnectionInfo) o);
+                } else if (o instanceof StatementLog) {
                     logRepository.addStatementLog((StatementLog) o);
                 } else if (o instanceof StatementExecutedLog) {
                     logRepository.updateLogAfterExecution((StatementExecutedLog) o);

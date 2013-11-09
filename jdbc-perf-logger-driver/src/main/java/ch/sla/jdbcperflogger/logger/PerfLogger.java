@@ -70,7 +70,7 @@ public class PerfLogger {
 
     }
 
-    public static void logBeforeStatement(final int connectionId, final UUID logId, final String sql,
+    public static void logBeforeStatement(final UUID connectionId, final UUID logId, final String sql,
             final StatementType statementType) {
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
             LOGGER_ORIGINAL_SQL.debug("Before execution of non-prepared stmt {}: {}", logId, sql);
@@ -80,7 +80,7 @@ public class PerfLogger {
                 .currentThread().getName()));
     }
 
-    public static void logBeforePreparedStatement(final int connectionId, final UUID logId, final String rawSql,
+    public static void logBeforePreparedStatement(final UUID connectionId, final UUID logId, final String rawSql,
             final PreparedStatementValuesHolder pstmtValues, final StatementType statementType,
             final DatabaseType databaseType) {
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
@@ -95,7 +95,7 @@ public class PerfLogger {
                 .currentThread().getName()));
     }
 
-    public static void logNonPreparedBatchedStatements(final int connectionId, final UUID logId,
+    public static void logNonPreparedBatchedStatements(final UUID connectionId, final UUID logId,
             final List<String> batchedExecutions, final DatabaseType databaseType) {
 
         final long now = System.currentTimeMillis();
@@ -113,7 +113,7 @@ public class PerfLogger {
                 Thread.currentThread().getName()));
     }
 
-    public static void logPreparedBatchedStatements(final int connectionId, final String rawSql,
+    public static void logPreparedBatchedStatements(final UUID connectionId, final String rawSql,
             final List<Object> batchedExecutions, final DatabaseType databaseType) {
         final long now = System.currentTimeMillis();
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {

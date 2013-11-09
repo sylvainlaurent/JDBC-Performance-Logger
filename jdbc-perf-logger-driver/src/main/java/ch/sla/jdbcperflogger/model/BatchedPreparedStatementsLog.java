@@ -29,7 +29,7 @@ public class BatchedPreparedStatementsLog extends AbstractBeforeStatementExecuti
     private final String rawSql;
     private final List<String> sqlList;
 
-    public BatchedPreparedStatementsLog(final int connectionId, final UUID logId, final long timestamp,
+    public BatchedPreparedStatementsLog(final UUID connectionId, final UUID logId, final long timestamp,
             final String rawSql, final List<String> sqlList, final String threadName) {
         super(connectionId, logId, timestamp, StatementType.PREPARED_BATCH_EXECUTION, threadName);
         this.rawSql = rawSql;

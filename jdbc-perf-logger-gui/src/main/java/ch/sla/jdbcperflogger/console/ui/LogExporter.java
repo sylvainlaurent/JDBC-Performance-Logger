@@ -28,13 +28,14 @@ import javax.annotation.Nullable;
 
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.console.db.DetailedViewStatementLog;
-import ch.sla.jdbcperflogger.console.db.LogRepository;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryRead;
 import ch.sla.jdbcperflogger.console.db.ResultSetAnalyzer;
 
 public class LogExporter {
-    private final LogRepository logRepository;
+    private final LogRepositoryRead logRepository;
 
-    LogExporter(final LogRepository logRepository) {
+    LogExporter(final LogRepositoryRead logRepository) {
         this.logRepository = logRepository;
     }
 
@@ -83,23 +84,23 @@ public class LogExporter {
             try {
 
                 while (resultSet.next()) {
-                    final Timestamp timestamp = resultSet.getTimestamp(LogRepository.TSTAMP_COLUMN);
+                    final Timestamp timestamp = resultSet.getTimestamp(LogRepositoryJdbc.TSTAMP_COLUMN);
                     writer.print("/*");
                     writer.print(tstampFormat.format(timestamp));
                     writer.print(" exec=");
-                    writer.print(TimeUnit.NANOSECONDS.toMillis(resultSet.getLong(LogRepository.EXEC_TIME_COLUMN)));
+                    writer.print(TimeUnit.NANOSECONDS.toMillis(resultSet.getLong(LogRepositoryJdbc.EXEC_TIME_COLUMN)));
                     writer.print("ms ");
 
-                    final int nbRows = resultSet.getInt(LogRepository.NB_ROWS_COLUMN);
+                    final int nbRows = resultSet.getInt(LogRepositoryJdbc.NB_ROWS_COLUMN);
                     if (!resultSet.wasNull()) {
                         writer.print(nbRows);
                         writer.print(", row(s) fetched in ");
-                        writer.print(TimeUnit.NANOSECONDS.toMillis(resultSet.getLong(LogRepository.FETCH_TIME_COLUMN)));
+                        writer.print(TimeUnit.NANOSECONDS.toMillis(resultSet.getLong(LogRepositoryJdbc.FETCH_TIME_COLUMN)));
                         writer.print("ms ");
                     }
 
                     final StatementType stmtType = StatementType.fromId(resultSet
-                            .getByte(LogRepository.STMT_TYPE_COLUMN));
+                            .getByte(LogRepositoryJdbc.STMT_TYPE_COLUMN));
                     switch (stmtType) {
                     case NON_PREPARED_BATCH_EXECUTION:
                     case PREPARED_BATCH_EXECUTION:
@@ -113,7 +114,7 @@ public class LogExporter {
                         break;
                     default:
                         writer.print("*/ ");
-                        final String filledSql = resultSet.getString(LogRepository.FILLED_SQL_COLUMN);
+                        final String filledSql = resultSet.getString(LogRepositoryJdbc.FILLED_SQL_COLUMN);
                         writer.print(filledSql);
                         if (!filledSql.endsWith(";")) {
                             writer.print(";");
@@ -149,51 +150,51 @@ public class LogExporter {
             try {
                 writer.println("TIMESTAMP\tEXEC_TIME_S\tFETCH_TIME_S\tEXEC_PLUS_FETCH_TIME_S\tFETCHED_ROWS\tSTMT_TYPE\tRAW_STATEMENT\tFILLED_STATEMENT\tTHREAD_NAME\tCONNECTION_ID\tERROR");
                 while (resultSet.next()) {
-                    final Timestamp timestamp = resultSet.getTimestamp(LogRepository.TSTAMP_COLUMN);
+                    final Timestamp timestamp = resultSet.getTimestamp(LogRepositoryJdbc.TSTAMP_COLUMN);
                     writer.print(tstampFormat.format(timestamp));
                     writer.print('\t');
-                    writer.print(resultSet.getLong(LogRepository.EXEC_TIME_COLUMN));
+                    writer.print(resultSet.getLong(LogRepositoryJdbc.EXEC_TIME_COLUMN));
                     writer.print("e-9");
 
-                    final int nbRows = resultSet.getInt(LogRepository.NB_ROWS_COLUMN);
+                    final int nbRows = resultSet.getInt(LogRepositoryJdbc.NB_ROWS_COLUMN);
                     if (!resultSet.wasNull()) {
                         writer.print('\t');
-                        writer.print(resultSet.getLong(LogRepository.FETCH_TIME_COLUMN));
+                        writer.print(resultSet.getLong(LogRepositoryJdbc.FETCH_TIME_COLUMN));
                         writer.print("e-9");
                         writer.print('\t');
-                        writer.print(resultSet.getLong(LogRepository.EXEC_PLUS_FETCH_TIME_COLUMN));
+                        writer.print(resultSet.getLong(LogRepositoryJdbc.EXEC_PLUS_FETCH_TIME_COLUMN));
                         writer.print("e-9");
                         writer.print('\t');
                         writer.print(nbRows);
                     } else {
                         writer.print("\t\t");
                         // fetch==0
-                        writer.print(resultSet.getLong(LogRepository.EXEC_TIME_COLUMN));
+                        writer.print(resultSet.getLong(LogRepositoryJdbc.EXEC_TIME_COLUMN));
                         writer.print("e-9");
                         writer.print('\t');
                     }
 
                     final StatementType stmtType = StatementType.fromId(resultSet
-                            .getByte(LogRepository.STMT_TYPE_COLUMN));
+                            .getByte(LogRepositoryJdbc.STMT_TYPE_COLUMN));
                     writer.print('\t');
                     writer.print(stmtType.name());
                     writer.print('\t');
-                    writer.print(escapeStrings(resultSet.getString(LogRepository.RAW_SQL_COLUMN)));
+                    writer.print(escapeStrings(resultSet.getString(LogRepositoryJdbc.RAW_SQL_COLUMN)));
                     writer.print('\t');
                     switch (stmtType) {
                     case NON_PREPARED_BATCH_EXECUTION:
                     case PREPARED_BATCH_EXECUTION:
                         break;
                     default:
-                        writer.print(escapeStrings(resultSet.getString(LogRepository.FILLED_SQL_COLUMN)));
+                        writer.print(escapeStrings(resultSet.getString(LogRepositoryJdbc.FILLED_SQL_COLUMN)));
                     }
 
                     writer.print('\t');
-                    writer.print(resultSet.getString(LogRepository.THREAD_NAME_COLUMN));
+                    writer.print(resultSet.getString(LogRepositoryJdbc.THREAD_NAME_COLUMN));
                     writer.print('\t');
-                    writer.print(resultSet.getString(LogRepository.CONNECTION_ID_COLUMN));
+                    writer.print(resultSet.getString(LogRepositoryJdbc.CONNECTION_ID_COLUMN));
                     writer.print('\t');
-                    writer.print(resultSet.getString(LogRepository.ERROR_COLUMN));
+                    writer.print(resultSet.getString(LogRepositoryJdbc.ERROR_COLUMN));
 
                     writer.println();
                 }

@@ -3,6 +3,7 @@ package ch.sla.jdbcperflogger.console.db;
 import javax.annotation.Nullable;
 
 import ch.sla.jdbcperflogger.StatementType;
+import ch.sla.jdbcperflogger.logger.ConnectionInfo;
 
 public class DetailedViewStatementLog {
     private final long keyId;
@@ -10,17 +11,17 @@ public class DetailedViewStatementLog {
     private final StatementType statementType;
     private final String rawSql;
     private final String filledSql;
-    private final int connectionId;
     private final String threadName;
     private final long durationNanos;
     @Nullable
     private final Throwable sqlException;
+    private final ConnectionInfo connectionInfo;
 
-    public DetailedViewStatementLog(final long keyId, final int connectionId, final long timestamp,
+    public DetailedViewStatementLog(final long keyId, final ConnectionInfo connectionInfo, final long timestamp,
             final StatementType statementType, final String rawSql, final String filledSql, final String threadName,
             final long durationNanos, final Throwable exception) {
         this.keyId = keyId;
-        this.connectionId = connectionId;
+        this.connectionInfo = connectionInfo;
         this.timestamp = timestamp;
         this.statementType = statementType;
         this.rawSql = rawSql;
@@ -32,6 +33,10 @@ public class DetailedViewStatementLog {
 
     public long getKeyId() {
         return keyId;
+    }
+
+    public ConnectionInfo getConnectionInfo() {
+        return connectionInfo;
     }
 
     public long getTimestamp() {
@@ -48,10 +53,6 @@ public class DetailedViewStatementLog {
 
     public String getFilledSql() {
         return filledSql;
-    }
-
-    public int getConnectionId() {
-        return connectionId;
     }
 
     public String getThreadName() {

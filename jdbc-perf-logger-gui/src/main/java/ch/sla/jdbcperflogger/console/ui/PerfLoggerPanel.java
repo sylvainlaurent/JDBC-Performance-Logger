@@ -16,17 +16,17 @@
 
 package ch.sla.jdbcperflogger.console.ui;
 
-import static ch.sla.jdbcperflogger.console.db.LogRepository.ERROR_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepository.EXEC_COUNT_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepository.EXEC_PLUS_FETCH_TIME_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepository.EXEC_TIME_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepository.FETCH_TIME_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepository.FILLED_SQL_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepository.RAW_SQL_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepository.STMT_TYPE_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepository.THREAD_NAME_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepository.TOTAL_EXEC_TIME_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepository.TSTAMP_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.ERROR_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.EXEC_COUNT_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.EXEC_PLUS_FETCH_TIME_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.EXEC_TIME_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.FETCH_TIME_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.FILLED_SQL_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.RAW_SQL_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.STMT_TYPE_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.THREAD_NAME_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.TOTAL_EXEC_TIME_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.TSTAMP_COLUMN;
 
 import java.awt.Color;
 import java.awt.GridBagConstraints;
@@ -109,6 +109,8 @@ public class PerfLoggerPanel extends JPanel {
     RSyntaxTextArea txtFieldFilledSql;
     JLabel lblStatus;
     private StatementTimestampTableCellRenderer stmtTimestampCellRenderer;
+    JTextField connectionUrlField;
+    JTextField connectionCreationDateField;
 
     public PerfLoggerPanel(final PerfLoggerController perfLoggerController) {
 
@@ -356,16 +358,64 @@ public class PerfLoggerPanel extends JPanel {
         splitPaneSqlDetails.setLeftComponent(panelRawSql);
         final GridBagLayout gbl_panelRawSql = new GridBagLayout();
         gbl_panelRawSql.columnWidths = new int[] { 0, 0, 0 };
-        gbl_panelRawSql.rowHeights = new int[] { 0, 0 };
+        gbl_panelRawSql.rowHeights = new int[] { 0, 0, 0 };
         gbl_panelRawSql.columnWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
-        gbl_panelRawSql.rowWeights = new double[] { 1.0, Double.MIN_VALUE };
+        gbl_panelRawSql.rowWeights = new double[] { 1.0, 1.0, Double.MIN_VALUE };
         panelRawSql.setLayout(gbl_panelRawSql);
+
+        final JPanel connectinInfoPanel = new JPanel();
+        final GridBagConstraints gbc_connectinInfoPanel = new GridBagConstraints();
+        gbc_connectinInfoPanel.gridwidth = 2;
+        gbc_connectinInfoPanel.insets = new Insets(0, 0, 5, 5);
+        gbc_connectinInfoPanel.fill = GridBagConstraints.BOTH;
+        gbc_connectinInfoPanel.gridx = 0;
+        gbc_connectinInfoPanel.gridy = 0;
+        panelRawSql.add(connectinInfoPanel, gbc_connectinInfoPanel);
+        final GridBagLayout gbl_connectinInfoPanel = new GridBagLayout();
+        gbl_connectinInfoPanel.columnWidths = new int[] { 0, 0, 0, 0, 0 };
+        gbl_connectinInfoPanel.rowHeights = new int[] { 0, 0 };
+        gbl_connectinInfoPanel.columnWeights = new double[] { 0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE };
+        gbl_connectinInfoPanel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
+        connectinInfoPanel.setLayout(gbl_connectinInfoPanel);
+
+        final JLabel lblConnectionUrl = new JLabel("Connection URL:");
+        final GridBagConstraints gbc_lblConnectionUrl = new GridBagConstraints();
+        gbc_lblConnectionUrl.insets = new Insets(0, 0, 0, 5);
+        gbc_lblConnectionUrl.anchor = GridBagConstraints.EAST;
+        gbc_lblConnectionUrl.gridx = 0;
+        gbc_lblConnectionUrl.gridy = 0;
+        connectinInfoPanel.add(lblConnectionUrl, gbc_lblConnectionUrl);
+
+        connectionUrlField = new JTextField();
+        final GridBagConstraints gbc_connectionUrlField = new GridBagConstraints();
+        gbc_connectionUrlField.insets = new Insets(0, 0, 0, 5);
+        gbc_connectionUrlField.fill = GridBagConstraints.HORIZONTAL;
+        gbc_connectionUrlField.gridx = 1;
+        gbc_connectionUrlField.gridy = 0;
+        connectinInfoPanel.add(connectionUrlField, gbc_connectionUrlField);
+        connectionUrlField.setColumns(20);
+
+        final JLabel lblCreated = new JLabel("Created:");
+        final GridBagConstraints gbc_lblCreated = new GridBagConstraints();
+        gbc_lblCreated.anchor = GridBagConstraints.EAST;
+        gbc_lblCreated.insets = new Insets(0, 0, 0, 5);
+        gbc_lblCreated.gridx = 2;
+        gbc_lblCreated.gridy = 0;
+        connectinInfoPanel.add(lblCreated, gbc_lblCreated);
+
+        connectionCreationDateField = new JTextField();
+        final GridBagConstraints gbc_connectionCreationDateField = new GridBagConstraints();
+        gbc_connectionCreationDateField.fill = GridBagConstraints.HORIZONTAL;
+        gbc_connectionCreationDateField.gridx = 3;
+        gbc_connectionCreationDateField.gridy = 0;
+        connectinInfoPanel.add(connectionCreationDateField, gbc_connectionCreationDateField);
+        connectionCreationDateField.setColumns(15);
 
         final JButton btnCopy1 = new JButton();
         final GridBagConstraints gbc_btnCopy1 = new GridBagConstraints();
         gbc_btnCopy1.insets = new Insets(0, 0, 0, 5);
         gbc_btnCopy1.gridx = 0;
-        gbc_btnCopy1.gridy = 0;
+        gbc_btnCopy1.gridy = 1;
         panelRawSql.add(btnCopy1, gbc_btnCopy1);
         btnCopy1.setIcon(new ImageIcon(PerfLoggerPanel.class.getResource("/icons/32px-Edit-copy_purple.png")));
         btnCopy1.setToolTipText("Copy the SQL statement unmodified (potentiall with '?' for bind variables");
@@ -381,7 +431,7 @@ public class PerfLoggerPanel extends JPanel {
         final GridBagConstraints gbc_scrollPaneRawSql = new GridBagConstraints();
         gbc_scrollPaneRawSql.fill = GridBagConstraints.BOTH;
         gbc_scrollPaneRawSql.gridx = 1;
-        gbc_scrollPaneRawSql.gridy = 0;
+        gbc_scrollPaneRawSql.gridy = 1;
         panelRawSql.add(scrollPaneRawSql, gbc_scrollPaneRawSql);
 
         txtFieldRawSql = new RSyntaxTextArea();

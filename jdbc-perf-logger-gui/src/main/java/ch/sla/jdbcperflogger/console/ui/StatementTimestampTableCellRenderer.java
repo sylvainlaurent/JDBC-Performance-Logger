@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
-import ch.sla.jdbcperflogger.console.db.LogRepository;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc;
 
 public class StatementTimestampTableCellRenderer extends DefaultTableCellRenderer {
 
@@ -40,7 +40,7 @@ public class StatementTimestampTableCellRenderer extends DefaultTableCellRendere
                 .getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
         final ResultSetDataModel dataModel = (ResultSetDataModel) table.getModel();
-        if (value != null && LogRepository.TSTAMP_COLUMN.equals(dataModel.getColumnName(column))) {
+        if (value != null && LogRepositoryJdbc.TSTAMP_COLUMN.equals(dataModel.getColumnName(column))) {
             final Timestamp tstamp = (Timestamp) value;
             String str = tstampFormat.format(tstamp);
             if (deltaTimestampBaseMillis != 0) {

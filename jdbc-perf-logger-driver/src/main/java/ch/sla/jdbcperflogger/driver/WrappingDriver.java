@@ -30,6 +30,8 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting;
+
 /**
  * This is the JDBC Driver implementation of the performance logger.
  * 
@@ -67,11 +69,16 @@ public class WrappingDriver implements Driver {
         }
         assert url != null;
         LOGGER.debug("connect url=[{}]", url);
-        Connection connection = DriverManager.getConnection(extractUrlForWrappedDriver(url), info);
+        final String unWrappedUrl = extractUrlForWrappedDriver(url);
+        Connection connection = DriverManager.getConnection(unWrappedUrl, info);
 
-        connection = (Connection) Proxy.newProxyInstance(WrappingDriver.class.getClassLoader(), Utils
-                .extractAllInterfaces(connection.getClass()),
-                new LoggingConnectionInvocationHandler(connectionCounter.incrementAndGet(), connection));
+        final LoggingConnectionInvocationHandler connectionInvocationHandler = new LoggingConnectionInvocationHandler(
+                connectionCounter.incrementAndGet(), connection, unWrappedUrl);
+        connection = (Connection) Proxy.newProxyInstance(WrappingDriver.class.getClassLoader(),
+                Utils.extractAllInterfaces(connection.getClass()), connectionInvocationHandler);
+
+        PerfLoggerRemoting.connectionCreated(connectionInvocationHandler);
+
         return connection;
     }
 

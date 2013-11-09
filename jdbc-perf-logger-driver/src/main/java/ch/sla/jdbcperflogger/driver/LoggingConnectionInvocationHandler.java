@@ -21,18 +21,23 @@ import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 public class LoggingConnectionInvocationHandler implements InvocationHandler {
+    private final UUID connectionUuid;
     private final int connectionId;
     private final Connection wrappedConnection;
     private final DatabaseType databaseType;
+    private final String url;
 
-    LoggingConnectionInvocationHandler(final int connectionId, final Connection wrappedConnection) {
+    LoggingConnectionInvocationHandler(final int connectionId, final Connection wrappedConnection, final String url) {
+        connectionUuid = UUID.randomUUID();
         this.connectionId = connectionId;
         this.wrappedConnection = wrappedConnection;
         databaseType = Utils.getDatabaseType(wrappedConnection);
+        this.url = url;
     }
 
     @Override
@@ -46,16 +51,28 @@ public class LoggingConnectionInvocationHandler implements InvocationHandler {
         if (result != null) {
             if ("createStatement".equals(methodName)) {
                 return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(), Utils
-                        .extractAllInterfaces(result.getClass()), new LoggingStatementInvocationHandler(connectionId,
+                        .extractAllInterfaces(result.getClass()), new LoggingStatementInvocationHandler(connectionUuid,
                         (Statement) result, databaseType));
             } else if (("prepareStatement".equals(methodName) || "prepareCall".equals(methodName)) && args != null) {
                 return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(), Utils
                         .extractAllInterfaces(result.getClass()), new LoggingPreparedStatementInvocationHandler(
-                        connectionId, (PreparedStatement) result, (String) args[0], databaseType));
+                        connectionUuid, (PreparedStatement) result, (String) args[0], databaseType));
             }
         }
 
         return result;
+    }
+
+    public UUID getConnectionUuid() {
+        return connectionUuid;
+    }
+
+    public int getConnectionId() {
+        return connectionId;
+    }
+
+    public String getUrl() {
+        return url;
     }
 
 }

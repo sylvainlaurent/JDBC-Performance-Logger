@@ -21,6 +21,7 @@ import java.io.PrintWriter;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -29,18 +30,17 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 import javax.swing.JFileChooser;
-import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import ch.sla.jdbcperflogger.console.db.DetailedViewStatementLog;
-import ch.sla.jdbcperflogger.console.db.LogRepository;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc;
 import ch.sla.jdbcperflogger.console.db.ResultSetAnalyzer;
 import ch.sla.jdbcperflogger.console.net.AbstractLogReceiver;
 
 public class PerfLoggerController {
     private final AbstractLogReceiver logReceiver;
-    private final LogRepository logRepository;
+    private final LogRepositoryJdbc logRepository;
     private final IClientConnectionDelegate clientConnectionDelegate;
     private final LogExporter logExporter;
     private final PerfLoggerPanel perfLoggerPanel;
@@ -94,7 +94,7 @@ public class PerfLoggerController {
     private FilterType filterType = FilterType.FILTER;
 
     PerfLoggerController(final IClientConnectionDelegate clientConnectionDelegate,
-            final AbstractLogReceiver logReceiver, final LogRepository logRepository) {
+            final AbstractLogReceiver logReceiver, final LogRepositoryJdbc logRepository) {
         this.clientConnectionDelegate = clientConnectionDelegate;
         this.logReceiver = logReceiver;
         this.logRepository = logRepository;
@@ -109,7 +109,7 @@ public class PerfLoggerController {
         timer.schedule(refreshDataTask, 1000, 1000);
     }
 
-    JPanel getPanel() {
+    PerfLoggerPanel getPanel() {
         return perfLoggerPanel;
     }
 
@@ -178,7 +178,7 @@ public class PerfLoggerController {
         refreshDataTask.cancel();
         logReceiver.dispose();
         logRepository.dispose();
-        clientConnectionDelegate.close(perfLoggerPanel);
+        clientConnectionDelegate.close(this);
     }
 
     void onExportCsv() {
@@ -207,6 +207,8 @@ public class PerfLoggerController {
     private void statementSelected(@Nullable final Long logId) {
         String txt1 = "";
         String txt2 = "";
+        String connectionUrl = null;
+        String connectionCreationDate = null;
         DetailedViewStatementLog statementLog = null;
         if (logId != null) {
             statementLog = logRepository.getStatementLog(logId);
@@ -232,6 +234,10 @@ public class PerfLoggerController {
                     break;
                 }
                 deltaTimestampBaseMillis = statementLog.getTimestamp();
+
+                connectionUrl = statementLog.getConnectionInfo().getUrl();
+                final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                connectionCreationDate = format.format(statementLog.getConnectionInfo().getCreationDate());
                 break;
             case RAW_SQL:
                 switch (statementLog.getStatementType()) {
@@ -275,8 +281,8 @@ public class PerfLoggerController {
         perfLoggerPanel.txtFieldRawSql.select(0, 0);
         perfLoggerPanel.txtFieldFilledSql.setText(txt2);
         perfLoggerPanel.txtFieldFilledSql.select(0, 0);
-        // scrollPaneSqlDetail1.setEnabled(txt1 != null);
-        // scrollPaneSqlDetail2.setEnabled(txt2 != null);
+        perfLoggerPanel.connectionUrlField.setText(connectionUrl);
+        perfLoggerPanel.connectionCreationDateField.setText(connectionCreationDate);
 
         perfLoggerPanel.setDeltaTimestampBaseMillis(deltaTimestampBaseMillis);
     }
@@ -306,7 +312,7 @@ public class PerfLoggerController {
     }
 
     /**
-     * A {@link TimerTask} that regularly polls the associated {@link LogRepository} to check for new statements to
+     * A {@link TimerTask} that regularly polls the associated {@link LogRepositoryJdbc} to check for new statements to
      * display. If the UI must be refreshed it is later done in the EDT.
      * 
      * @author slaurent

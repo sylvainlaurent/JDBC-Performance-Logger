@@ -38,12 +38,13 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
     protected static final String EXECUTE = "execute";
     protected static final String EXECUTE_QUERY = "executeQuery";
 
-    protected int connectionId;
+    protected UUID connectionId;
     protected final DatabaseType databaseType;
     protected final Statement wrappedStatement;
     private final List<String> batchedNonPreparedStmtExecutions = new ArrayList<String>();
 
-    LoggingStatementInvocationHandler(final int connectionId, final Statement statement, final DatabaseType databaseType) {
+    LoggingStatementInvocationHandler(final UUID connectionId, final Statement statement,
+            final DatabaseType databaseType) {
         this.connectionId = connectionId;
         wrappedStatement = statement;
         this.databaseType = databaseType;

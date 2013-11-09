@@ -26,18 +26,18 @@ import org.junit.Test;
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.model.StatementLog;
 
-public class LogRepositoryTest {
+public class LogRepositoryJdbcTest {
     @Nullable
-    private LogRepository repository;
+    private LogRepositoryJdbc repository;
 
     @Before
     public void setup() {
-        repository = new LogRepository("test");
+        repository = new LogRepositoryJdbc("test");
     }
 
     @After
     public void tearDown() {
-        final LogRepository repository2 = repository;
+        final LogRepositoryJdbc repository2 = repository;
         if (repository2 != null) {
             repository2.dispose();
         }
@@ -50,9 +50,9 @@ public class LogRepositoryTest {
 
     @Test
     public void testInsertAndRead() {
-        final StatementLog log = new StatementLog(123, UUID.randomUUID(), System.currentTimeMillis(),
+        final StatementLog log = new StatementLog(UUID.randomUUID(), UUID.randomUUID(), System.currentTimeMillis(),
                 StatementType.BASE_NON_PREPARED_STMT, "myrawsql", Thread.currentThread().getName());
-        final LogRepository repository2 = repository;
+        final LogRepositoryJdbc repository2 = repository;
         if (repository2 != null) {
             repository2.addStatementLog(log);
             repository2.addStatementLog(log);

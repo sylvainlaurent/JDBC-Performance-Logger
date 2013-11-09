@@ -26,7 +26,10 @@ import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Date;
+import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -46,6 +49,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import ch.sla.jdbcperflogger.driver.LoggingConnectionInvocationHandler;
 import ch.sla.jdbcperflogger.driver.WrappingDriver;
 import ch.sla.jdbcperflogger.model.LogMessage;
 
@@ -53,6 +57,7 @@ public class PerfLoggerRemoting {
     private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerRemoting.class);
 
     final static Set<LogSender> senders = new CopyOnWriteArraySet<PerfLoggerRemoting.LogSender>();
+    final static Map<LoggingConnectionInvocationHandler, ConnectionInfo> connectionToInfo = new WeakHashMap<LoggingConnectionInvocationHandler, ConnectionInfo>();
 
     static {
 
@@ -128,6 +133,15 @@ public class PerfLoggerRemoting {
     private PerfLoggerRemoting() {
     }
 
+    public static void connectionCreated(final LoggingConnectionInvocationHandler connectionHandler) {
+        final ConnectionInfo info = new ConnectionInfo(connectionHandler.getConnectionUuid(),
+                connectionHandler.getConnectionId(), connectionHandler.getUrl(), new Date());
+        synchronized (connectionToInfo) {
+            connectionToInfo.put(connectionHandler, info);
+            postLog(info);
+        }
+    }
+
     static void postLog(final LogMessage log) {
         for (final LogSender sender : senders) {
             sender.postLog(log);
@@ -156,6 +170,13 @@ public class PerfLoggerRemoting {
 
         @Override
         public void run() {
+            // first send all current connections information to the socket
+            synchronized (connectionToInfo) {
+                for (final ConnectionInfo connectionInfo : connectionToInfo.values()) {
+                    logsToSend.offer(connectionInfo);
+                }
+            }
+
             ObjectOutputStream oos = null;
             try {
                 oos = new ObjectOutputStream(socket.getOutputStream());

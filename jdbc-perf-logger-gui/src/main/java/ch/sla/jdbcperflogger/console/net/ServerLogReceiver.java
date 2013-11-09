@@ -21,13 +21,14 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ch.sla.jdbcperflogger.console.db.LogRepository;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryUpdate;
 
 public class ServerLogReceiver extends AbstractLogReceiver {
     final static Logger LOGGER = LoggerFactory.getLogger(ServerLogReceiver.class);
@@ -35,11 +36,11 @@ public class ServerLogReceiver extends AbstractLogReceiver {
     private ServerSocket serverSocket;
     private final Set<AbstractLogReceiver> childReceivers = new CopyOnWriteArraySet<AbstractLogReceiver>();
 
-    public ServerLogReceiver(final int listenPort, final LogRepository logRepository) {
+    public ServerLogReceiver(final int listenPort, final LogRepositoryUpdate logRepository) {
         super(logRepository);
         try {
             serverSocket = new ServerSocket(listenPort);
-            serverSocket.setSoTimeout(60 * 1000);
+            serverSocket.setSoTimeout((int) TimeUnit.MINUTES.toMillis(5));
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
