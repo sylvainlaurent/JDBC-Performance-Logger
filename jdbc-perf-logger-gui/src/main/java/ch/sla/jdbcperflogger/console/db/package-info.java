@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@ParametersAreNonnullByDefault
+@NonNullByDefault
 package ch.sla.jdbcperflogger.console.db;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import ch.sla.jdbcperflogger.annotations.NonNullByDefault;
 
