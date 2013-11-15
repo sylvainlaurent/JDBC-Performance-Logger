@@ -38,6 +38,7 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -311,7 +312,7 @@ public class PerfLoggerPanel extends JPanel {
         table.setDefaultRenderer(Timestamp.class, stmtTimestampCellRenderer);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.setFillsViewportHeight(true);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         table.setAutoCreateRowSorter(true);
         logListPanel.setViewportView(table);
 
@@ -321,15 +322,31 @@ public class PerfLoggerPanel extends JPanel {
                 assert e != null;
                 if (!e.getValueIsAdjusting()) {
                     final ListSelectionModel lsm = (ListSelectionModel) e.getSource();
-                    Long logId = null;
                     if (lsm.getMinSelectionIndex() >= 0) {
-                        logId = dataModel.getIdAtRow(table.convertRowIndexToModel(lsm.getMinSelectionIndex()));
-                    }
-                    if (logId != null) {
+                        final long logId = dataModel.getIdAtRow(table.convertRowIndexToModel(lsm.getMinSelectionIndex()));
                         perfLoggerController.onSelectStatement(logId);
+                    } else {
+                        perfLoggerController.onSelectStatement(null);
                     }
                 }
             }
+        });
+        table.addKeyListener(new KeyAdapter() {
+
+            @Override
+            public void keyReleased(final KeyEvent e) {
+                assert e != null;
+                if (e.getKeyCode() == java.awt.event.KeyEvent.VK_BACK_SPACE) {
+                    final int[] selectedRowsTableIndexes = table.getSelectedRows();
+                    final long[] logIds = new long[selectedRowsTableIndexes.length];
+                    for (int i = 0; i < selectedRowsTableIndexes.length; i++) {
+                        logIds[i] = dataModel.getIdAtRow(table.convertRowIndexToModel(selectedRowsTableIndexes[i]));
+                    }
+                    perfLoggerController.onDeleteSelectedStatements(logIds);
+                }
+
+            }
+
         });
         splitPane.setTopComponent(logListPanel);
 
@@ -610,6 +627,8 @@ public class PerfLoggerPanel extends JPanel {
 
     void setDeltaTimestampBaseMillis(final long deltaTimestampBaseMillis) {
         stmtTimestampCellRenderer.setDeltaTimestampBaseMillis(deltaTimestampBaseMillis);
-        dataModel.fireTableRowsUpdated(0, dataModel.getRowCount() - 1);
+        if (dataModel.getRowCount() > 0) {
+            dataModel.fireTableRowsUpdated(0, dataModel.getRowCount() - 1);
+        }
     }
 }

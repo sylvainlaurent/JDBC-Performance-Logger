@@ -68,7 +68,7 @@ public class CustomTable extends JTable {
         assert renderer != null;
         final Component component = super.prepareRenderer(renderer, row, column);
 
-        if (this.getSelectedRow() != row) {
+        if (!this.getSelectionModel().isSelectedIndex(row)) {
             final ResultSetDataModel model = (ResultSetDataModel) getModel();
             final int modelIndex = convertRowIndexToModel(row);
 

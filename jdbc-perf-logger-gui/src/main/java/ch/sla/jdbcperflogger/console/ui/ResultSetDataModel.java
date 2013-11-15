@@ -101,7 +101,7 @@ class ResultSetDataModel extends AbstractTableModel {
         return columnTypes.get(firstColumnIsID ? columnIndex + 1 : columnIndex);
     }
 
-    public Long getIdAtRow(final int rowIndex) {
+    public long getIdAtRow(final int rowIndex) {
         return (Long) rows.get(rowIndex)[0];
     }
 

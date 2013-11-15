@@ -24,8 +24,9 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
@@ -88,10 +89,11 @@ public class PerfLoggerController {
     @Nullable
     private volatile Long minDurationNanos;
     private SelectLogRunner currentSelectLogRunner = selectAllLogStatements;
-    private final RefreshDataTask refreshDataTask;
     private boolean tableStructureChanged = true;
     private GroupBy groupBy = GroupBy.NONE;
     private FilterType filterType = FilterType.FILTER;
+    private final RefreshDataTask refreshDataTask;
+    private final ScheduledExecutorService refreshDataScheduledExecutorService;
 
     PerfLoggerController(final IClientConnectionDelegate clientConnectionDelegate,
             final AbstractLogReceiver logReceiver, final LogRepositoryJdbc logRepository) {
@@ -104,9 +106,9 @@ public class PerfLoggerController {
         perfLoggerPanel = new PerfLoggerPanel(this);
         perfLoggerPanel.setCloseEnable(!logReceiver.isServerMode());
 
-        final Timer timer = new Timer(true);
         refreshDataTask = new RefreshDataTask();
-        timer.schedule(refreshDataTask, 1000, 1000);
+        refreshDataScheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        refreshDataScheduledExecutorService.scheduleWithFixedDelay(refreshDataTask, 1, 2, TimeUnit.SECONDS);
     }
 
     PerfLoggerPanel getPanel() {
@@ -157,6 +159,11 @@ public class PerfLoggerController {
         statementSelected(logId);
     }
 
+    public void onDeleteSelectedStatements(final long... logIds) {
+        logRepository.deleteStatementLog(logIds);
+        refresh();
+    }
+
     void onClear() {
         logRepository.clear();
         refresh();
@@ -175,7 +182,12 @@ public class PerfLoggerController {
     }
 
     void onClose() {
-        refreshDataTask.cancel();
+        refreshDataScheduledExecutorService.shutdownNow();
+        try {
+            refreshDataScheduledExecutorService.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (final InterruptedException e) {
+            e.printStackTrace();
+        }
         logReceiver.dispose();
         logRepository.dispose();
         clientConnectionDelegate.close(this);
@@ -202,6 +214,7 @@ public class PerfLoggerController {
         }
 
         refreshDataTask.forceRefresh();
+        refreshDataScheduledExecutorService.submit(refreshDataTask);
     }
 
     private void statementSelected(@Nullable final Long logId) {
@@ -324,7 +337,7 @@ public class PerfLoggerController {
      * @author slaurent
      * 
      */
-    private class RefreshDataTask extends TimerTask {
+    private class RefreshDataTask implements Runnable {
         private volatile long lastRefreshTime;
         private int connectionsCount;
 
@@ -443,4 +456,5 @@ public class PerfLoggerController {
             return title;
         }
     }
+
 }

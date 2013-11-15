@@ -308,11 +308,35 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
     @Override
     public void clear() {
         try {
-            connection.prepareStatement("truncate table batched_statement_log").execute();
-            connection.prepareStatement("truncate table statement_log").execute();
+            final Statement statement = connection.createStatement();
+            statement.execute("truncate table batched_statement_log");
+            statement.execute("truncate table statement_log");
+            statement.close();
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }
+        lastModificationTime = System.currentTimeMillis();
+    }
+
+    public void deleteStatementLog(final long... logIds) {
+        try {
+            final PreparedStatement statement = connection
+                    .prepareStatement("delete from statement_log where statement_log.id=?");
+
+            for (int i = 0; i < logIds.length; i++) {
+                final long logId = logIds[i];
+                statement.setLong(1, logId);
+                statement.addBatch();
+                if (i % 100 == 0) {
+                    statement.executeBatch();
+                }
+            }
+            statement.executeBatch();
+            statement.close();
+        } catch (final SQLException e) {
+            throw new RuntimeException(e);
+        }
+        lastModificationTime = System.currentTimeMillis();
     }
 
     @Override
@@ -657,4 +681,5 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
         }
 
     }
+
 }
