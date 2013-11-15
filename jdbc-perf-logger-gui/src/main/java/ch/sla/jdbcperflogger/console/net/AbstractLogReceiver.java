@@ -31,6 +31,7 @@ import ch.sla.jdbcperflogger.model.BatchedPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.ResultSetLog;
 import ch.sla.jdbcperflogger.model.StatementExecutedLog;
 import ch.sla.jdbcperflogger.model.StatementLog;
+import ch.sla.jdbcperflogger.model.TxCompleteLog;
 
 public abstract class AbstractLogReceiver extends Thread {
     private final static Logger LOGGER = LoggerFactory.getLogger(AbstractLogReceiver.class);
@@ -105,6 +106,8 @@ public abstract class AbstractLogReceiver extends Thread {
                     logRepository.addBatchedNonPreparedStatementsLog((BatchedNonPreparedStatementsLog) o);
                 } else if (o instanceof BatchedPreparedStatementsLog) {
                     logRepository.addBatchedPreparedStatementsLog((BatchedPreparedStatementsLog) o);
+                } else if (o instanceof TxCompleteLog) {
+                    logRepository.addTxCompletionLog((TxCompleteLog) o);
                 } else {
                     throw new IllegalArgumentException("unexpected log, class=" + o.getClass());
                 }

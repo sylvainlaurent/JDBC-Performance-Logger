@@ -15,10 +15,6 @@
  */
 package ch.sla.jdbcperflogger.logger;
 
-import static ch.sla.jdbcperflogger.driver.WrappingDriver.CONFIG_FILE_DEFAULT_LOCATION;
-import static ch.sla.jdbcperflogger.driver.WrappingDriver.CONFIG_FILE_FALLBACK_LOCATION;
-import static ch.sla.jdbcperflogger.driver.WrappingDriver.CONFIG_FILE_LOCATION_PROP_KEY;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -49,8 +45,8 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import ch.sla.jdbcperflogger.PerfLoggerConstants;
 import ch.sla.jdbcperflogger.driver.LoggingConnectionInvocationHandler;
-import ch.sla.jdbcperflogger.driver.WrappingDriver;
 import ch.sla.jdbcperflogger.model.LogMessage;
 
 public class PerfLoggerRemoting {
@@ -87,25 +83,26 @@ public class PerfLoggerRemoting {
         } catch (final IOException e) {
             throw new RuntimeException(e);
         } catch (final SAXException e) {
-            LOGGER.warn("Error parsing " + WrappingDriver.CONFIG_FILE_DEFAULT_LOCATION, e);
+            LOGGER.warn("Error parsing " + PerfLoggerConstants.CONFIG_FILE_DEFAULT_LOCATION, e);
         }
 
     }
 
     static InputStream openConfigFile() {
-        String location = System.getProperty(CONFIG_FILE_LOCATION_PROP_KEY);
+        String location = System.getProperty(PerfLoggerConstants.CONFIG_FILE_LOCATION_PROP_KEY);
         if (location == null) {
-            LOGGER.debug("No System property " + CONFIG_FILE_LOCATION_PROP_KEY + " defined, looking for config at "
-                    + CONFIG_FILE_DEFAULT_LOCATION);
-            location = CONFIG_FILE_DEFAULT_LOCATION;
+            LOGGER.debug("No System property " + PerfLoggerConstants.CONFIG_FILE_LOCATION_PROP_KEY
+                    + " defined, looking for config at " + PerfLoggerConstants.CONFIG_FILE_DEFAULT_LOCATION);
+            location = PerfLoggerConstants.CONFIG_FILE_DEFAULT_LOCATION;
         }
 
         InputStream configFileStream = openConfigFile(location);
         if (configFileStream == null) {
-            location = CONFIG_FILE_FALLBACK_LOCATION;
+            location = PerfLoggerConstants.CONFIG_FILE_FALLBACK_LOCATION;
             configFileStream = openConfigFile(location);
             if (configFileStream == null) {
-                throw new RuntimeException("Unexpected: cannot find " + CONFIG_FILE_FALLBACK_LOCATION);
+                throw new RuntimeException("Unexpected: cannot find "
+                        + PerfLoggerConstants.CONFIG_FILE_FALLBACK_LOCATION);
             }
         }
         LOGGER.info("Using config file " + location);
@@ -115,7 +112,7 @@ public class PerfLoggerRemoting {
 
     @Nullable
     static InputStream openConfigFile(final String location) {
-        InputStream configFileStream = WrappingDriver.class.getResourceAsStream("/" + location);
+        InputStream configFileStream = PerfLoggerConstants.class.getResourceAsStream("/" + location);
         if (configFileStream == null) {
             LOGGER.debug("Cannot find config file " + location + " in the classpath, trying on filesystem");
 

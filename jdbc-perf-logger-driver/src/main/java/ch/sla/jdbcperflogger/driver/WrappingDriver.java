@@ -40,10 +40,6 @@ import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting;
  */
 public class WrappingDriver implements Driver {
     public final static String URL_PREFIX = "jdbcperflogger:";
-    public final static String CONFIG_FILE_DEFAULT_LOCATION = "jdbcperflogger.xml";
-    public final static String CONFIG_FILE_FALLBACK_LOCATION = "jdbcperflogger-fallback.xml";
-    public final static String CONFIG_FILE_LOCATION_PROP_KEY = "jdbcperflogger.config.location";
-
     private final static Logger LOGGER = LoggerFactory.getLogger(WrappingDriver.class);
 
     private final static WrappingDriver INSTANCE = new WrappingDriver();

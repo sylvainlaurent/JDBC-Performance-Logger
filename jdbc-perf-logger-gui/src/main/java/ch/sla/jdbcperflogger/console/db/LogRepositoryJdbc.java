@@ -42,10 +42,11 @@ import ch.sla.jdbcperflogger.model.BatchedPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.ResultSetLog;
 import ch.sla.jdbcperflogger.model.StatementExecutedLog;
 import ch.sla.jdbcperflogger.model.StatementLog;
+import ch.sla.jdbcperflogger.model.TxCompleteLog;
 
 public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate {
     // TODO ajouter colonne clientId (processId)
-    public static final int SCHEMA_VERSION = 4;
+    public static final int SCHEMA_VERSION = 6;
 
     public static final String TSTAMP_COLUMN = "TSTAMP";
     public static final String STMT_TYPE_COLUMN = "STATEMENTTYPE";
@@ -56,7 +57,7 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
     public static final String NB_ROWS_COLUMN = "nbRowsIterated";
     public static final String EXEC_PLUS_FETCH_TIME_COLUMN = "EXEC_PLUS_FETCH_TIME";
     public static final String THREAD_NAME_COLUMN = "threadName";
-    public static final String CONNECTION_ID_COLUMN = "connectionId";
+    public static final String CONNECTION_NUMBER_COLUMN = "connectionNumber";
     public static final String ERROR_COLUMN = "ERROR";
     public static final String EXEC_COUNT_COLUMN = "EXEC_COUNT";
     public static final String TOTAL_EXEC_TIME_COLUMN = "TOTAL_EXEC_TIME";
@@ -72,6 +73,7 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
     private final PreparedStatement updateStatementLogWithResultSet;
     private final PreparedStatement updateStatementLogAfterExecution;
     private final PreparedStatement addBatchedStatementLog;
+    private final PreparedStatement addTxCompletionLog;
     private long lastModificationTime = System.currentTimeMillis();
     private final Timer cleanupTimer;
 
@@ -100,6 +102,11 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
             addBatchedStatementLog = connection
                     .prepareStatement("insert into batched_statement_log (logId, batched_stmt_order, filledSql)"
                             + " values(?, ?, ?)");
+
+            addTxCompletionLog = connection
+                    .prepareStatement("insert into statement_log (logId, tstamp, statementType, rawSql, filledSql, executionDurationNanos, "//
+                            + "threadName, connectionId) "//
+                            + "values (?,?,?,?,?,?,?,?)");
 
             cleanupTimer = new Timer(true);
             cleanupTimer.schedule(new CleanupTask(), CLEAN_UP_PERIOD_MS, CLEAN_UP_PERIOD_MS);
@@ -273,6 +280,29 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public synchronized void addTxCompletionLog(final TxCompleteLog log) {
+        try {
+            int i = 1;
+            addTxCompletionLog.setObject(i++, UUID.randomUUID());
+            addTxCompletionLog.setTimestamp(i++, new Timestamp(log.getTimestamp()));
+            addTxCompletionLog.setInt(i++, StatementType.TRANSACTION.getId());
+            String rawSql = log.getCompletionType().name();
+            if (log.getSavePointDescription() != null) {
+                rawSql += " " + log.getSavePointDescription();
+            }
+            addTxCompletionLog.setString(i++, rawSql);
+            addTxCompletionLog.setString(i++, "/*" + rawSql + "*/");
+            addTxCompletionLog.setLong(i++, log.getExecutionTimeNanos());
+            addTxCompletionLog.setString(i++, log.getThreadName());
+            addTxCompletionLog.setObject(i++, log.getConnectionUuid());
+            addTxCompletionLog.execute();
+        } catch (final SQLException e) {
+            throw new RuntimeException(e);
+        }
+        lastModificationTime = System.currentTimeMillis();
     }
 
     @Override

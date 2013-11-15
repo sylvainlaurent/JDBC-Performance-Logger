@@ -25,6 +25,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -316,25 +317,6 @@ public class WrappingDriverTest {
         // TimeUnit.SECONDS.sleep(10);
     }
 
-    @Test
-    public void testManySelect() throws Exception {
-        {
-            final Statement statement = connection.createStatement();
-            statement.execute("create table test (key_id int)");
-            statement.execute("insert into test (key_id) values(300)");
-            statement.close();
-        }
-        final PreparedStatement statement = connection.prepareStatement("select * from test where key_id=?");
-        for (int i = 0; i < 10000; i++) {
-            statement.setInt(1, i);
-            final ResultSet resultSet = statement.executeQuery();
-            resultSet.next();
-            // Thread.sleep(5);
-            resultSet.close();
-            // Thread.sleep(10);
-        }
-    }
-
     @SuppressWarnings("null")
     @Test(expected = SQLException.class)
     public void testException() throws Exception {
@@ -382,6 +364,50 @@ public class WrappingDriverTest {
             Assert.assertEquals(14, resultSet.getInt(1));
             resultSet.close();
             statement.close();
+        }
+    }
+
+    @Test
+    public void testCommit() throws Exception {
+        connection.setAutoCommit(false);
+        connection.commit();
+    }
+
+    @Test
+    public void testRollback() throws Exception {
+        connection.setAutoCommit(false);
+        connection.rollback();
+    }
+
+    @Test
+    public void testSetSavepoint() throws Exception {
+        connection.setAutoCommit(false);
+        connection.setSavepoint();
+    }
+
+    @Test
+    public void testRollbackToSavepoint() throws Exception {
+        connection.setAutoCommit(false);
+        final Savepoint savepoint = connection.setSavepoint();
+        connection.rollback(savepoint);
+    }
+
+    @Test
+    public void testManySelect() throws Exception {
+        {
+            final Statement statement = connection.createStatement();
+            statement.execute("create table test (key_id int)");
+            statement.execute("insert into test (key_id) values(300)");
+            statement.close();
+        }
+        final PreparedStatement statement = connection.prepareStatement("select * from test where key_id=?");
+        for (int i = 0; i < 10000; i++) {
+            statement.setInt(1, i);
+            final ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            // Thread.sleep(5);
+            resultSet.close();
+            // Thread.sleep(10);
         }
     }
 

@@ -6,6 +6,7 @@ import ch.sla.jdbcperflogger.model.BatchedPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.ResultSetLog;
 import ch.sla.jdbcperflogger.model.StatementExecutedLog;
 import ch.sla.jdbcperflogger.model.StatementLog;
+import ch.sla.jdbcperflogger.model.TxCompleteLog;
 
 public interface LogRepositoryUpdate {
 
@@ -20,6 +21,8 @@ public interface LogRepositoryUpdate {
     void addBatchedPreparedStatementsLog(BatchedPreparedStatementsLog log);
 
     void addBatchedNonPreparedStatementsLog(BatchedNonPreparedStatementsLog log);
+
+    void addTxCompletionLog(final TxCompleteLog log);
 
     void clear();
 

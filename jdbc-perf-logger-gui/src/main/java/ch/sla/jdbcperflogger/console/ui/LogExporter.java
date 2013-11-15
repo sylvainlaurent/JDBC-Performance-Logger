@@ -95,7 +95,8 @@ public class LogExporter {
                     if (!resultSet.wasNull()) {
                         writer.print(nbRows);
                         writer.print(", row(s) fetched in ");
-                        writer.print(TimeUnit.NANOSECONDS.toMillis(resultSet.getLong(LogRepositoryJdbc.FETCH_TIME_COLUMN)));
+                        writer.print(TimeUnit.NANOSECONDS.toMillis(resultSet
+                                .getLong(LogRepositoryJdbc.FETCH_TIME_COLUMN)));
                         writer.print("ms ");
                     }
 
@@ -177,7 +178,9 @@ public class LogExporter {
                     final StatementType stmtType = StatementType.fromId(resultSet
                             .getByte(LogRepositoryJdbc.STMT_TYPE_COLUMN));
                     writer.print('\t');
-                    writer.print(stmtType.name());
+                    if (stmtType != null) {
+                        writer.print(stmtType.name());
+                    }
                     writer.print('\t');
                     writer.print(escapeStrings(resultSet.getString(LogRepositoryJdbc.RAW_SQL_COLUMN)));
                     writer.print('\t');
@@ -192,7 +195,7 @@ public class LogExporter {
                     writer.print('\t');
                     writer.print(resultSet.getString(LogRepositoryJdbc.THREAD_NAME_COLUMN));
                     writer.print('\t');
-                    writer.print(resultSet.getString(LogRepositoryJdbc.CONNECTION_ID_COLUMN));
+                    writer.print(resultSet.getString(LogRepositoryJdbc.CONNECTION_NUMBER_COLUMN));
                     writer.print('\t');
                     writer.print(resultSet.getString(LogRepositoryJdbc.ERROR_COLUMN));
 

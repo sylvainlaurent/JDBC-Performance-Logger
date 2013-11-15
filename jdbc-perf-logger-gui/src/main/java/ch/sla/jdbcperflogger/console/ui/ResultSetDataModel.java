@@ -77,10 +77,13 @@ class ResultSetDataModel extends AbstractTableModel {
     @Nullable
     public Object getValueAt(final int rowIndex, final int columnIndex) {
         Object o = rows.get(rowIndex)[firstColumnIsID ? columnIndex + 1 : columnIndex];
+        if (o == null) {
+            return null;
+        }
         final String col = getColumnName(columnIndex);
         if (LogRepositoryJdbc.STMT_TYPE_COLUMN.equals(col)) {
             o = StatementType.fromId(((Byte) o).byteValue());
-        } else if (o != null && col.endsWith("TIME")) {
+        } else if (col.endsWith("TIME")) {
             // all time retrieved from the DB is in ns, we just convert it for display to have the best perf
             o = TimeUnit.NANOSECONDS.toMillis(((Number) o).longValue());
         }

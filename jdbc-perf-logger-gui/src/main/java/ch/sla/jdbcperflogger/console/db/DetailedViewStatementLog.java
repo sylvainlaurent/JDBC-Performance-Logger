@@ -8,6 +8,7 @@ import ch.sla.jdbcperflogger.logger.ConnectionInfo;
 public class DetailedViewStatementLog {
     private final long keyId;
     private final long timestamp;
+    @Nullable
     private final StatementType statementType;
     private final String rawSql;
     private final String filledSql;
@@ -43,6 +44,7 @@ public class DetailedViewStatementLog {
         return timestamp;
     }
 
+    @Nullable
     public StatementType getStatementType() {
         return statementType;
     }

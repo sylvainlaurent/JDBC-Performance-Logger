@@ -32,8 +32,9 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.sla.jdbcperflogger.DatabaseType;
 import ch.sla.jdbcperflogger.StatementType;
-import ch.sla.jdbcperflogger.driver.DatabaseType;
+import ch.sla.jdbcperflogger.TxCompletionType;
 import ch.sla.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.BatchedPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.PreparedStatementValuesHolder;
@@ -41,6 +42,7 @@ import ch.sla.jdbcperflogger.model.ResultSetLog;
 import ch.sla.jdbcperflogger.model.SqlTypedValue;
 import ch.sla.jdbcperflogger.model.StatementExecutedLog;
 import ch.sla.jdbcperflogger.model.StatementLog;
+import ch.sla.jdbcperflogger.model.TxCompleteLog;
 
 public class PerfLogger {
     private final static Logger LOGGER_ORIGINAL_SQL = LoggerFactory.getLogger(PerfLogger.class.getName()
@@ -155,6 +157,14 @@ public class PerfLogger {
                     new Object[] { TimeUnit.NANOSECONDS.toMillis(resultSetIterationTimeNanos), nbRowsIterated, logId });
         }
         PerfLoggerRemoting.postLog(new ResultSetLog(logId, resultSetIterationTimeNanos, nbRowsIterated));
+    }
+
+    public static void logTransactionComplete(final UUID connectionUuid, final long startTimeStamp,
+            final TxCompletionType txCompletionType, final long durationNanos,
+            @Nullable final String savePointDescription) {
+        final TxCompleteLog log = new TxCompleteLog(connectionUuid, startTimeStamp, txCompletionType, durationNanos,
+                Thread.currentThread().getName(), savePointDescription);
+        PerfLoggerRemoting.postLog(log);
     }
 
     static String fillParameters(final String sql, final PreparedStatementValuesHolder pstmtValues,

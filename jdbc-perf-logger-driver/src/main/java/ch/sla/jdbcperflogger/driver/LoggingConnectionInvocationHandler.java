@@ -20,10 +20,15 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+
+import ch.sla.jdbcperflogger.DatabaseType;
+import ch.sla.jdbcperflogger.TxCompletionType;
+import ch.sla.jdbcperflogger.logger.PerfLogger;
 
 public class LoggingConnectionInvocationHandler implements InvocationHandler {
     private final UUID connectionUuid;
@@ -46,8 +51,30 @@ public class LoggingConnectionInvocationHandler implements InvocationHandler {
             throws Throwable {
         assert method != null;
 
-        final Object result = Utils.invokeUnwrapException(wrappedConnection, method, args);
         final String methodName = method.getName();
+
+        TxCompletionType txCompletionType = null;
+        String savePointDescription = null;
+        if ("commit".equals(methodName)) {
+            txCompletionType = TxCompletionType.COMMIT;
+        } else if ("rollback".equals(methodName)) {
+            if (args == null) {
+                txCompletionType = TxCompletionType.ROLLBACK;
+            } else {
+                txCompletionType = TxCompletionType.ROLLBACK_TO_SAVEPOINT;
+                final Savepoint savepoint = (Savepoint) args[0];
+                savePointDescription = savepoint.toString();
+            }
+        } else if ("setSavepoint".equals(methodName)) {
+            txCompletionType = TxCompletionType.SET_SAVE_POINT;
+        }
+        final long startTimeStamp = System.currentTimeMillis();
+        long startNanos = -1;
+        if (txCompletionType != null) {
+            startNanos = System.nanoTime();
+        }
+
+        final Object result = Utils.invokeUnwrapException(wrappedConnection, method, args);
         if (result != null) {
             if ("createStatement".equals(methodName)) {
                 return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(), Utils
@@ -58,6 +85,16 @@ public class LoggingConnectionInvocationHandler implements InvocationHandler {
                         .extractAllInterfaces(result.getClass()), new LoggingPreparedStatementInvocationHandler(
                         connectionUuid, (PreparedStatement) result, (String) args[0], databaseType));
             }
+
+        }
+
+        if (txCompletionType != null) {
+            if (txCompletionType == TxCompletionType.SET_SAVE_POINT && result != null) {
+                final Savepoint savepoint = (Savepoint) result;
+                savePointDescription = savepoint.toString();
+            }
+            PerfLogger.logTransactionComplete(connectionUuid, startTimeStamp, txCompletionType, System.nanoTime()
+                    - startNanos, savePointDescription);
         }
 
         return result;

@@ -219,19 +219,21 @@ public class PerfLoggerController {
             switch (groupBy) {
             case NONE:
                 txt1 = statementLog.getRawSql();
-                switch (statementLog.getStatementType()) {
-                case NON_PREPARED_BATCH_EXECUTION:
-                    txt1 = logExporter.getBatchedExecutions(statementLog);
-                    break;
-                case PREPARED_BATCH_EXECUTION:
-                    txt2 = logExporter.getBatchedExecutions(statementLog);
-                    break;
-                case BASE_PREPARED_STMT:
-                case PREPARED_QUERY_STMT:
-                    txt2 = statementLog.getFilledSql();
-                    break;
-                default:
-                    break;
+                if (statementLog.getStatementType() != null) {
+                    switch (statementLog.getStatementType()) {
+                    case NON_PREPARED_BATCH_EXECUTION:
+                        txt1 = logExporter.getBatchedExecutions(statementLog);
+                        break;
+                    case PREPARED_BATCH_EXECUTION:
+                        txt2 = logExporter.getBatchedExecutions(statementLog);
+                        break;
+                    case BASE_PREPARED_STMT:
+                    case PREPARED_QUERY_STMT:
+                        txt2 = statementLog.getFilledSql();
+                        break;
+                    default:
+                        break;
+                    }
                 }
                 deltaTimestampBaseMillis = statementLog.getTimestamp();
 
@@ -246,10 +248,12 @@ public class PerfLoggerController {
                 case PREPARED_BATCH_EXECUTION:
                 case PREPARED_QUERY_STMT:
                 case NON_PREPARED_QUERY_STMT:
+                case TRANSACTION:
                     txt1 = statementLog.getRawSql();
                     break;
                 case NON_PREPARED_BATCH_EXECUTION:
                     txt1 = "Cannot display details in \"Group by\" modes";
+                    break;
                 }
                 break;
             case FILLED_SQL:
@@ -261,11 +265,13 @@ public class PerfLoggerController {
                     break;
                 case BASE_PREPARED_STMT:
                 case PREPARED_QUERY_STMT:
+                case TRANSACTION:
                     txt1 = statementLog.getRawSql();
                     txt2 = statementLog.getFilledSql();
                     break;
                 case NON_PREPARED_BATCH_EXECUTION:
                     txt1 = "Cannot display details in \"Group by\" modes";
+                    break;
                 }
                 break;
             }

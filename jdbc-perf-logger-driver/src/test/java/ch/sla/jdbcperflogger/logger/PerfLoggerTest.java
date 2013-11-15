@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat;
 import org.junit.Assert;
 import org.junit.Test;
 
-import ch.sla.jdbcperflogger.driver.DatabaseType;
+import ch.sla.jdbcperflogger.DatabaseType;
 import ch.sla.jdbcperflogger.model.PreparedStatementValuesHolder;
 import ch.sla.jdbcperflogger.model.SqlTypedValue;
 

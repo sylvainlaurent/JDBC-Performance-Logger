@@ -26,7 +26,7 @@ import java.io.InputStreamReader;
 
 import org.junit.Test;
 
-import ch.sla.jdbcperflogger.driver.WrappingDriver;
+import ch.sla.jdbcperflogger.PerfLoggerConstants;
 import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting.LogSender;
 
 public class PerfLoggerRemotingTest {
@@ -35,7 +35,7 @@ public class PerfLoggerRemotingTest {
 
     @Test
     public void testOpenFallbackConfigFile() throws Exception {
-        final InputStream is = PerfLoggerRemoting.openConfigFile(WrappingDriver.CONFIG_FILE_FALLBACK_LOCATION);
+        final InputStream is = PerfLoggerRemoting.openConfigFile(PerfLoggerConstants.CONFIG_FILE_FALLBACK_LOCATION);
         assertNotNull(is);
         is.close();
     }
@@ -59,7 +59,7 @@ public class PerfLoggerRemotingTest {
 
     @Test
     public void testOpenSystemSpecifiedInexistentConfigFile() throws Exception {
-        System.setProperty(WrappingDriver.CONFIG_FILE_LOCATION_PROP_KEY, "dummy");
+        System.setProperty(PerfLoggerConstants.CONFIG_FILE_LOCATION_PROP_KEY, "dummy");
         final InputStream is = PerfLoggerRemoting.openConfigFile();
         assertNotNull(is);
 
@@ -70,7 +70,7 @@ public class PerfLoggerRemotingTest {
 
     @Test
     public void testOpenSystemSpecifiedConfigFileMalformed() throws Exception {
-        System.setProperty(WrappingDriver.CONFIG_FILE_LOCATION_PROP_KEY, TEST_TXT);
+        System.setProperty(PerfLoggerConstants.CONFIG_FILE_LOCATION_PROP_KEY, TEST_TXT);
         final InputStream is = PerfLoggerRemoting.openConfigFile();
         assertNotNull(is);
 

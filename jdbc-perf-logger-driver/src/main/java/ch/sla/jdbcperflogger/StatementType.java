@@ -24,7 +24,8 @@ public enum StatementType {
     NON_PREPARED_QUERY_STMT(3), //
     PREPARED_QUERY_STMT(4), //
     PREPARED_BATCH_EXECUTION(5), //
-    NON_PREPARED_BATCH_EXECUTION(6);
+    NON_PREPARED_BATCH_EXECUTION(6), //
+    TRANSACTION(7);
 
     private static StatementType[] vals;
 
@@ -35,7 +36,7 @@ public enum StatementType {
     }
 
     static {
-        vals = new StatementType[7];
+        vals = new StatementType[8];
         for (final StatementType type : EnumSet.allOf(StatementType.class)) {
             vals[type.id] = type;
         }
@@ -46,6 +47,10 @@ public enum StatementType {
     }
 
     public static StatementType fromId(final int id) {
-        return vals[id];
+        final StatementType statementType = vals[id];
+        if (statementType == null) {
+            throw new IllegalArgumentException("unhandled ID for StatementType: " + id);
+        }
+        return statementType;
     }
 }

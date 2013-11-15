@@ -27,6 +27,7 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import ch.sla.jdbcperflogger.DatabaseType;
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.logger.PerfLogger;
 
