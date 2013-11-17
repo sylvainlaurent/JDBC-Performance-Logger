@@ -15,6 +15,7 @@
  */
 package ch.sla.jdbcperflogger.console.net;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -87,6 +88,9 @@ public abstract class AbstractLogReceiver extends Thread {
                             "unknown class, maybe the client is not compatible with the GUI? the msg will be skipped",
                             e);
                     continue;
+                } catch (final EOFException e) {
+                    LOGGER.debug("The remote closed its connection");
+                    break;
                 } catch (final SocketTimeoutException e) {
                     LOGGER.trace("timeout while reading socket");
                     continue;

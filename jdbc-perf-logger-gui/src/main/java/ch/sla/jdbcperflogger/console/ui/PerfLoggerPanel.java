@@ -334,7 +334,7 @@ public class PerfLoggerPanel extends JPanel {
         table.addKeyListener(new KeyAdapter() {
 
             @Override
-            public void keyReleased(final KeyEvent e) {
+            public void keyReleased(@Nullable final KeyEvent e) {
                 assert e != null;
                 if (e.getKeyCode() == java.awt.event.KeyEvent.VK_BACK_SPACE) {
                     final int[] selectedRowsTableIndexes = table.getSelectedRows();

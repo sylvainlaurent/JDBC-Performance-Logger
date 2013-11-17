@@ -8,4 +8,4 @@ target
 /logdb
 /pom.xml.*
 /release.properties
-/PerfLoggerGuiMain.launch
+/PerfLoggerGuiMain*.launch

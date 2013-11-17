@@ -24,7 +24,6 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -155,7 +154,7 @@ public class PerfLoggerController {
         refresh();
     }
 
-    void onSelectStatement(final Long logId) {
+    void onSelectStatement(final @Nullable Long logId) {
         statementSelected(logId);
     }
 
@@ -331,8 +330,8 @@ public class PerfLoggerController {
     }
 
     /**
-     * A {@link TimerTask} that regularly polls the associated {@link LogRepositoryJdbc} to check for new statements to
-     * display. If the UI must be refreshed it is later done in the EDT.
+     * A task that regularly polls the associated {@link LogRepositoryJdbc} to check for new statements to display. If
+     * the UI must be refreshed it is later done in the EDT.
      * 
      * @author slaurent
      * 

@@ -1,4 +1,6 @@
 set log 0;
+SET LOCK_MODE 0;
+SET UNDO_LOG 0;
 
 -- drop everything to be sure it works even if the schema changed...
 --drop all objects;

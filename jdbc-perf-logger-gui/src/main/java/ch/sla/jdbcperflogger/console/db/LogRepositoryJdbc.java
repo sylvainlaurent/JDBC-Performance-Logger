@@ -67,7 +67,8 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogRepositoryJdbc.class);
 
-    private final Connection connection;
+    private final Connection connectionUpdate;
+    private final Connection connectionRead;
     private final String repoName;
     private final PreparedStatement addStatementLog;
     private final PreparedStatement updateStatementLogWithResultSet;
@@ -76,40 +77,44 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
     private final PreparedStatement addTxCompletionLog;
     private long lastModificationTime = System.currentTimeMillis();
     private final Timer cleanupTimer;
+    private final String dbName;
 
     public LogRepositoryJdbc(final String name) {
         repoName = name;
         try {
-            connection = createDbConnection("logdb/logrepository_" + name);
-            final Statement stmt = connection.createStatement();
+            dbName = "logdb/logrepository_" + name;
+            connectionUpdate = createDbConnection(dbName);
+            final Statement stmt = connectionUpdate.createStatement();
             try {
                 stmt.execute("runscript from 'classpath:initdb.sql' charset 'UTF-8'");
             } finally {
                 stmt.close();
             }
 
-            cleanOldConnectionInfo(connection);
+            cleanOldConnectionInfo(connectionUpdate);
 
-            addStatementLog = connection
+            addStatementLog = connectionUpdate
                     .prepareStatement("insert into statement_log (logId, tstamp, statementType, rawSql, filledSql, " //
                             + "threadName, connectionId)"//
                             + " values(?, ?, ?, ?, ?, ?, ?)");
-            updateStatementLogWithResultSet = connection
+            updateStatementLogWithResultSet = connectionUpdate
                     .prepareStatement("update statement_log set fetchDurationNanos=?, nbRowsIterated=? where logId=?");
-            updateStatementLogAfterExecution = connection
+            updateStatementLogAfterExecution = connectionUpdate
                     .prepareStatement("update statement_log set executionDurationNanos=?, exception=? where logId=?");
 
-            addBatchedStatementLog = connection
+            addBatchedStatementLog = connectionUpdate
                     .prepareStatement("insert into batched_statement_log (logId, batched_stmt_order, filledSql)"
                             + " values(?, ?, ?)");
 
-            addTxCompletionLog = connection
+            addTxCompletionLog = connectionUpdate
                     .prepareStatement("insert into statement_log (logId, tstamp, statementType, rawSql, filledSql, executionDurationNanos, "//
                             + "threadName, connectionId) "//
                             + "values (?,?,?,?,?,?,?,?)");
 
             cleanupTimer = new Timer(true);
             cleanupTimer.schedule(new CleanupTask(), CLEAN_UP_PERIOD_MS, CLEAN_UP_PERIOD_MS);
+
+            connectionRead = createDbConnection(dbName);
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }
@@ -124,7 +129,7 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
         LOGGER.debug("Opening H2 connection for log repository " + path);
         try {
             @Nonnull
-            final Connection conn = DriverManager.getConnection("jdbc:h2:file:" + path + ";DB_CLOSE_DELAY=1");
+            final Connection conn = DriverManager.getConnection("jdbc:h2:mem:" + path + ";DB_CLOSE_DELAY=1");
             LOGGER.debug("connection commit mode auto={}", conn.getAutoCommit());
             conn.setAutoCommit(true);
             checkSchemaVersion(conn);
@@ -155,7 +160,8 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
             addStatementLog.close();
             updateStatementLogWithResultSet.close();
             addBatchedStatementLog.close();
-            connection.close();
+            connectionRead.close();
+            connectionUpdate.close();
         } catch (final SQLException e) {
             LOGGER.error("error while closing the connection", e);
             // swallow, nothing we can do
@@ -268,7 +274,7 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
     @Override
     public synchronized void addConnection(final ConnectionInfo connectionInfo) {
         try {
-            final PreparedStatement stmt = connection
+            final PreparedStatement stmt = connectionUpdate
                     .prepareStatement("merge into connection_info (connectionId, connectionNumber, url, creationDate) key(connectionId) values (?,?,?,?)");
             stmt.setObject(1, connectionInfo.getUuid());
             stmt.setInt(2, connectionInfo.getConnectionNumber());
@@ -308,7 +314,7 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
     @Override
     public void clear() {
         try {
-            final Statement statement = connection.createStatement();
+            final Statement statement = connectionUpdate.createStatement();
             statement.execute("truncate table batched_statement_log");
             statement.execute("truncate table statement_log");
             statement.close();
@@ -320,7 +326,7 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
 
     public void deleteStatementLog(final long... logIds) {
         try {
-            final PreparedStatement statement = connection
+            final PreparedStatement statement = connectionUpdate
                     .prepareStatement("delete from statement_log where statement_log.id=?");
 
             for (int i = 0; i < logIds.length; i++) {
@@ -354,7 +360,7 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
 
         try {
             @Nonnull
-            final PreparedStatement statement = connection.prepareStatement(sql);
+            final PreparedStatement statement = connectionRead.prepareStatement(sql);
             applyParametersForWhereClause(filter, minDurationNanos, statement);
             @Nonnull
             final ResultSet resultSet = statement.executeQuery();
@@ -390,7 +396,7 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
 
         try {
             @Nonnull
-            final PreparedStatement statement = connection.prepareStatement(sql);
+            final PreparedStatement statement = connectionRead.prepareStatement(sql);
             applyParametersForWhereClause(filter, minDurationNanos, statement);
             @Nonnull
             final ResultSet resultSet = statement.executeQuery();
@@ -426,7 +432,7 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
 
         try {
             @Nonnull
-            final PreparedStatement statement = connection.prepareStatement(sql);
+            final PreparedStatement statement = connectionRead.prepareStatement(sql);
             applyParametersForWhereClause(filter, minDurationNanos, statement);
             @Nonnull
             final ResultSet resultSet = statement.executeQuery();
@@ -482,7 +488,7 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
     @Override
     public DetailedViewStatementLog getStatementLog(final long id) {
         try {
-            final PreparedStatement statement = connection
+            final PreparedStatement statement = connectionRead
                     .prepareStatement("select statement_log.id, statement_log.tstamp, statement_log.statementType, "//
                             + "statement_log.rawSql, statement_log.filledSql, " //
                             + "statement_log.executionDurationNanos, statement_log.threadName, statement_log.exception, "//
@@ -531,7 +537,7 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
     @Override
     public int countStatements() {
         try {
-            final PreparedStatement statement = connection.prepareStatement("select count(1) from statement_log");
+            final PreparedStatement statement = connectionRead.prepareStatement("select count(1) from statement_log");
             try {
                 final ResultSet resultSet = statement.executeQuery();
                 resultSet.next();
@@ -549,7 +555,7 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
     @Override
     public long getTotalExecAndFetchTimeNanos() {
         try {
-            final PreparedStatement statement = connection
+            final PreparedStatement statement = connectionRead
                     .prepareStatement("select sum(exec_plus_fetch_time) from v_statement_log");
             try {
                 final ResultSet resultSet = statement.executeQuery();
@@ -572,7 +578,7 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
 
         try {
             @Nonnull
-            final PreparedStatement statement = connection.prepareStatement(sql);
+            final PreparedStatement statement = connectionRead.prepareStatement(sql);
             applyParametersForWhereClause(filter, minDurationNanos, statement);
             try {
                 final ResultSet resultSet = statement.executeQuery();
@@ -595,7 +601,7 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
         sql += "order by batched_stmt_order";
 
         try {
-            final PreparedStatement statement = connection.prepareStatement(sql);
+            final PreparedStatement statement = connectionRead.prepareStatement(sql);
             statement.setLong(1, keyId);
             @Nonnull
             final ResultSet resultSet = statement.executeQuery();
@@ -615,7 +621,11 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
         try {
             // first select the oldest timestamp to keep, then use it in the delete clause
             // using 2 queries is actually much faster with H2 than a single delete with a subquery
+            final long startTime = System.currentTimeMillis();
             LOGGER.debug("searching for most recent timestamp of log statements to delete");
+
+            final Connection connection = createDbConnection(dbName);
+
             final PreparedStatement selectTstampStmt = connection
                     .prepareStatement("select tstamp from statement_log order by tstamp desc limit 1 offset "
                             + NB_ROWS_MAX);
@@ -648,6 +658,8 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
             }
             tstampResultSet.close();
             selectTstampStmt.close();
+            connection.close();
+            LOGGER.debug("Peformed deleteOldRowsIfTooMany in {}ms", System.currentTimeMillis() - startTime);
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }

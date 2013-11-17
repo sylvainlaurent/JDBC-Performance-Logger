@@ -178,9 +178,7 @@ public class LogExporter {
                     final StatementType stmtType = StatementType.fromId(resultSet
                             .getByte(LogRepositoryJdbc.STMT_TYPE_COLUMN));
                     writer.print('\t');
-                    if (stmtType != null) {
-                        writer.print(stmtType.name());
-                    }
+                    writer.print(stmtType.name());
                     writer.print('\t');
                     writer.print(escapeStrings(resultSet.getString(LogRepositoryJdbc.RAW_SQL_COLUMN)));
                     writer.print('\t');
