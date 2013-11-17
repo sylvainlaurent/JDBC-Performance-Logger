@@ -1,12 +1,14 @@
 package ch.sla.jdbcperflogger.console.db;
 
+import java.util.UUID;
+
 import javax.annotation.Nullable;
 
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.logger.ConnectionInfo;
 
 public class DetailedViewStatementLog {
-    private final long keyId;
+    private final UUID logId;
     private final long timestamp;
     @Nullable
     private final StatementType statementType;
@@ -18,10 +20,10 @@ public class DetailedViewStatementLog {
     private final Throwable sqlException;
     private final ConnectionInfo connectionInfo;
 
-    public DetailedViewStatementLog(final long keyId, final ConnectionInfo connectionInfo, final long timestamp,
+    public DetailedViewStatementLog(final UUID logId, final ConnectionInfo connectionInfo, final long timestamp,
             final StatementType statementType, final String rawSql, final String filledSql, final String threadName,
             final long durationNanos, final Throwable exception) {
-        this.keyId = keyId;
+        this.logId = logId;
         this.connectionInfo = connectionInfo;
         this.timestamp = timestamp;
         this.statementType = statementType;
@@ -32,8 +34,8 @@ public class DetailedViewStatementLog {
         sqlException = exception;
     }
 
-    public long getKeyId() {
-        return keyId;
+    public UUID getLogId() {
+        return logId;
     }
 
     public ConnectionInfo getConnectionInfo() {

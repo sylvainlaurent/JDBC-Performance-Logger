@@ -49,7 +49,7 @@ public class LogExporter {
 
     String getBatchedExecutions(final DetailedViewStatementLog statementLog) {
         final StringBuilder strBuilder = new StringBuilder();
-        logRepository.getBatchStatementExecutions(statementLog.getKeyId(), new ResultSetAnalyzer() {
+        logRepository.getBatchStatementExecutions(statementLog.getLogId(), new ResultSetAnalyzer() {
             @Override
             public void analyze(final ResultSet resultSet) throws SQLException {
                 while (resultSet.next()) {

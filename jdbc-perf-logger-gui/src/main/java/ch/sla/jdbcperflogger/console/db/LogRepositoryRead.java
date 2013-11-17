@@ -1,5 +1,7 @@
 package ch.sla.jdbcperflogger.console.db;
 
+import java.util.UUID;
+
 import javax.annotation.Nullable;
 
 public interface LogRepositoryRead {
@@ -12,7 +14,7 @@ public interface LogRepositoryRead {
     void getStatementsGroupByFilledSQL(@Nullable String filter, @Nullable Long minDurationNanos,
             ResultSetAnalyzer analyzer);
 
-    void getBatchStatementExecutions(long keyId, ResultSetAnalyzer analyzer);
+    void getBatchStatementExecutions(UUID logId, ResultSetAnalyzer analyzer);
 
     long getLastModificationTime();
 

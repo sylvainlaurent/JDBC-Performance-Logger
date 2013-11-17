@@ -489,7 +489,7 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
     public DetailedViewStatementLog getStatementLog(final long id) {
         try {
             final PreparedStatement statement = connectionRead
-                    .prepareStatement("select statement_log.id, statement_log.tstamp, statement_log.statementType, "//
+                    .prepareStatement("select statement_log.logId, statement_log.tstamp, statement_log.statementType, "//
                             + "statement_log.rawSql, statement_log.filledSql, " //
                             + "statement_log.executionDurationNanos, statement_log.threadName, statement_log.exception, "//
                             + "statement_log.connectionId,"//
@@ -502,7 +502,7 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
                 DetailedViewStatementLog result = null;
                 if (resultSet.next()) {
                     int i = 1;
-                    final long keyId = resultSet.getLong(i++);
+                    final UUID logId = (UUID) resultSet.getObject(i++);
                     final Timestamp tstamp = resultSet.getTimestamp(i++);
                     final StatementType statementType = StatementType.fromId(resultSet.getInt(i++));
                     @Nonnull
@@ -521,7 +521,7 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
                     final ConnectionInfo connectionInfo = new ConnectionInfo(connectionId, connectionNumber,
                             connectionUrl, creationDate);
 
-                    result = new DetailedViewStatementLog(keyId, connectionInfo, tstamp.getTime(), statementType,
+                    result = new DetailedViewStatementLog(logId, connectionInfo, tstamp.getTime(), statementType,
                             rawSql, filledSql, threadName, durationNanos, exception);
                 }
                 resultSet.close();
@@ -596,13 +596,13 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
     }
 
     @Override
-    public void getBatchStatementExecutions(final long keyId, final ResultSetAnalyzer analyzer) {
-        String sql = "select batched_stmt_order, filledSql from batched_statement_log where id=? ";
+    public void getBatchStatementExecutions(final UUID logId, final ResultSetAnalyzer analyzer) {
+        String sql = "select batched_stmt_order, filledSql from batched_statement_log where logId=? ";
         sql += "order by batched_stmt_order";
 
         try {
             final PreparedStatement statement = connectionRead.prepareStatement(sql);
-            statement.setLong(1, keyId);
+            statement.setObject(1, logId);
             @Nonnull
             final ResultSet resultSet = statement.executeQuery();
             try {
