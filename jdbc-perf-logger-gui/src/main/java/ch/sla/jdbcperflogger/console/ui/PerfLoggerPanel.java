@@ -34,6 +34,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
+import java.awt.SystemColor;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
@@ -265,6 +266,8 @@ public class PerfLoggerPanel extends JPanel {
         });
 
         btnPause = new JButton();
+        btnPause.setBorder(null);
+        btnPause.setContentAreaFilled(false);
         final GridBagConstraints gbc_btnPause = new GridBagConstraints();
         gbc_btnPause.insets = new Insets(0, 0, 0, 5);
         gbc_btnPause.gridx = 2;
@@ -281,11 +284,13 @@ public class PerfLoggerPanel extends JPanel {
         });
 
         final JButton btnClear = new JButton();
+        btnClear.setBorder(null);
+        btnClear.setBorderPainted(false);
+        btnClear.setContentAreaFilled(false);
         final GridBagConstraints gbc_btnClear = new GridBagConstraints();
         gbc_btnClear.gridx = 3;
         gbc_btnClear.gridy = 0;
         topPanel.add(btnClear, gbc_btnClear);
-        btnClear.setBorderPainted(false);
         btnClear.setIcon(new ImageIcon(PerfLoggerPanel.class.getResource("/icons/32px-Edit-clear.png")));
         btnClear.addActionListener(new ActionListener() {
             @Override
@@ -304,8 +309,8 @@ public class PerfLoggerPanel extends JPanel {
         final JScrollPane logListPanel = new JScrollPane();
         logListPanel.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         table = new CustomTable(dataModel);
-        table.setSelectionForeground(Color.blue);
-        table.setSelectionBackground(Color.yellow);
+        table.setSelectionForeground(SystemColor.textHighlightText);
+        table.setSelectionBackground(SystemColor.textHighlight);
         table.setDefaultRenderer(Byte.class, new CustomTableCellRenderer());
         table.setDefaultRenderer(String.class, new CustomTableCellRenderer());
         stmtTimestampCellRenderer = new StatementTimestampTableCellRenderer();
@@ -429,6 +434,9 @@ public class PerfLoggerPanel extends JPanel {
         connectionCreationDateField.setColumns(15);
 
         final JButton btnCopy1 = new JButton();
+        btnCopy1.setBorderPainted(false);
+        btnCopy1.setBorder(null);
+        btnCopy1.setContentAreaFilled(false);
         final GridBagConstraints gbc_btnCopy1 = new GridBagConstraints();
         gbc_btnCopy1.insets = new Insets(0, 0, 0, 5);
         gbc_btnCopy1.gridx = 0;
@@ -468,6 +476,9 @@ public class PerfLoggerPanel extends JPanel {
         gbl_panelFilledSql.rowWeights = new double[] { 1.0, Double.MIN_VALUE };
         panelFilledSql.setLayout(gbl_panelFilledSql);
         final JButton btnCopy2 = new JButton();
+        btnCopy2.setBorder(null);
+        btnCopy2.setBorderPainted(false);
+        btnCopy2.setContentAreaFilled(false);
         final GridBagConstraints gbc_btnCopy2 = new GridBagConstraints();
         gbc_btnCopy2.insets = new Insets(0, 0, 0, 5);
         gbc_btnCopy2.gridx = 0;
