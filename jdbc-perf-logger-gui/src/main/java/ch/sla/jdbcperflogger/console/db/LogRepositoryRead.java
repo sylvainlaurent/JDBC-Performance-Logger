@@ -6,17 +6,13 @@ import javax.annotation.Nullable;
 
 public interface LogRepositoryRead {
 
-    void getStatements(@Nullable String filter, @Nullable Long minDurationNanos, ResultSetAnalyzer analyzer,
-            boolean withFilledSql);
+    void getStatements(LogSearchCriteria searchCriteria, ResultSetAnalyzer analyzer, boolean withFilledSql);
 
-    void getStatementsGroupByRawSQL(@Nullable String filter, @Nullable Long minDurationNanos, ResultSetAnalyzer analyzer);
+    void getStatementsGroupByRawSQL(LogSearchCriteria searchCriteria, ResultSetAnalyzer analyzer);
 
-    void getStatementsGroupByFilledSQL(@Nullable String filter, @Nullable Long minDurationNanos,
-            ResultSetAnalyzer analyzer);
+    void getStatementsGroupByFilledSQL(LogSearchCriteria searchCriteria, ResultSetAnalyzer analyzer);
 
     void getBatchStatementExecutions(UUID logId, ResultSetAnalyzer analyzer);
-
-    long getLastModificationTime();
 
     @Nullable
     DetailedViewStatementLog getStatementLog(long id);
@@ -25,6 +21,7 @@ public interface LogRepositoryRead {
 
     long getTotalExecAndFetchTimeNanos();
 
-    long getTotalExecAndFetchTimeNanos(@Nullable String filter, @Nullable Long minDurationNanos);
+    long getTotalExecAndFetchTimeNanos(LogSearchCriteria searchCriteria);
 
+    void dispose();
 }

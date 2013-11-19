@@ -16,18 +16,6 @@
 
 package ch.sla.jdbcperflogger.console.ui;
 
-import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.ERROR_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.EXEC_COUNT_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.EXEC_PLUS_FETCH_TIME_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.EXEC_TIME_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.FETCH_TIME_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.FILLED_SQL_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.RAW_SQL_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.STMT_TYPE_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.THREAD_NAME_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.TOTAL_EXEC_TIME_COLUMN;
-import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.TSTAMP_COLUMN;
-
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -39,6 +27,8 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.math.BigDecimal;
@@ -52,6 +42,7 @@ import javax.annotation.Nullable;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -71,6 +62,7 @@ import javax.swing.event.UndoableEditListener;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 
+import ch.sla.jdbcperflogger.console.db.LogRepositoryConstants;
 import ch.sla.jdbcperflogger.console.ui.PerfLoggerController.FilterType;
 import ch.sla.jdbcperflogger.console.ui.PerfLoggerController.GroupBy;
 
@@ -85,17 +77,17 @@ public class PerfLoggerPanel extends JPanel {
 
     static {
         COLUMNS_WIDTH = new HashMap<String, Integer>();
-        COLUMNS_WIDTH.put(TSTAMP_COLUMN, 150);
-        COLUMNS_WIDTH.put(FETCH_TIME_COLUMN, 50);
-        COLUMNS_WIDTH.put(EXEC_TIME_COLUMN, 50);
-        COLUMNS_WIDTH.put(EXEC_PLUS_FETCH_TIME_COLUMN, 50);
-        COLUMNS_WIDTH.put(STMT_TYPE_COLUMN, 40);
-        COLUMNS_WIDTH.put(RAW_SQL_COLUMN, 350);
-        COLUMNS_WIDTH.put(FILLED_SQL_COLUMN, 200);
-        COLUMNS_WIDTH.put(THREAD_NAME_COLUMN, 200);
-        COLUMNS_WIDTH.put(EXEC_COUNT_COLUMN, 100);
-        COLUMNS_WIDTH.put(TOTAL_EXEC_TIME_COLUMN, 100);
-        COLUMNS_WIDTH.put(ERROR_COLUMN, 0);
+        COLUMNS_WIDTH.put(LogRepositoryConstants.TSTAMP_COLUMN, 150);
+        COLUMNS_WIDTH.put(LogRepositoryConstants.FETCH_TIME_COLUMN, 50);
+        COLUMNS_WIDTH.put(LogRepositoryConstants.EXEC_TIME_COLUMN, 50);
+        COLUMNS_WIDTH.put(LogRepositoryConstants.EXEC_PLUS_FETCH_TIME_COLUMN, 50);
+        COLUMNS_WIDTH.put(LogRepositoryConstants.STMT_TYPE_COLUMN, 40);
+        COLUMNS_WIDTH.put(LogRepositoryConstants.RAW_SQL_COLUMN, 350);
+        COLUMNS_WIDTH.put(LogRepositoryConstants.FILLED_SQL_COLUMN, 200);
+        COLUMNS_WIDTH.put(LogRepositoryConstants.THREAD_NAME_COLUMN, 200);
+        COLUMNS_WIDTH.put(LogRepositoryConstants.EXEC_COUNT_COLUMN, 100);
+        COLUMNS_WIDTH.put(LogRepositoryConstants.TOTAL_EXEC_TIME_COLUMN, 100);
+        COLUMNS_WIDTH.put(LogRepositoryConstants.ERROR_COLUMN, 0);
     }
 
     private JTextField txtFldSqlFilter;
@@ -148,10 +140,10 @@ public class PerfLoggerPanel extends JPanel {
         gbc_filterPanel.gridy = 0;
         topPanel.add(filterPanel, gbc_filterPanel);
         final GridBagLayout gbl_filterPanel = new GridBagLayout();
-        gbl_filterPanel.columnWidths = new int[] { 0, 51, 246, 0, 54, 0 };
-        gbl_filterPanel.rowHeights = new int[] { 30, 0 };
-        gbl_filterPanel.columnWeights = new double[] { 0.0, 0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE };
-        gbl_filterPanel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
+        gbl_filterPanel.columnWidths = new int[] { 0, 51, 246, 0 };
+        gbl_filterPanel.rowHeights = new int[] { 30, 0, 0 };
+        gbl_filterPanel.columnWeights = new double[] { 0.0, 0.0, 1.0, Double.MIN_VALUE };
+        gbl_filterPanel.rowWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
         filterPanel.setLayout(gbl_filterPanel);
 
         comboBoxFilterType = new JComboBox<FilterType>();
@@ -165,7 +157,7 @@ public class PerfLoggerPanel extends JPanel {
             }
         });
         final GridBagConstraints gbc_filterTypeComboBox = new GridBagConstraints();
-        gbc_filterTypeComboBox.insets = new Insets(0, 0, 0, 5);
+        gbc_filterTypeComboBox.insets = new Insets(0, 0, 5, 5);
         gbc_filterTypeComboBox.fill = GridBagConstraints.HORIZONTAL;
         gbc_filterTypeComboBox.gridx = 0;
         gbc_filterTypeComboBox.gridy = 0;
@@ -174,7 +166,7 @@ public class PerfLoggerPanel extends JPanel {
         final JLabel lblText = new JLabel("Text:");
         final GridBagConstraints gbc_lblText = new GridBagConstraints();
         gbc_lblText.anchor = GridBagConstraints.BASELINE_TRAILING;
-        gbc_lblText.insets = new Insets(0, 0, 0, 5);
+        gbc_lblText.insets = new Insets(0, 0, 5, 5);
         gbc_lblText.gridx = 1;
         gbc_lblText.gridy = 0;
         filterPanel.add(lblText, gbc_lblText);
@@ -184,7 +176,7 @@ public class PerfLoggerPanel extends JPanel {
             final GridBagConstraints gbc_txtFldSqlFilter = new GridBagConstraints();
             gbc_txtFldSqlFilter.anchor = GridBagConstraints.BASELINE;
             gbc_txtFldSqlFilter.fill = GridBagConstraints.HORIZONTAL;
-            gbc_txtFldSqlFilter.insets = new Insets(0, 0, 0, 5);
+            gbc_txtFldSqlFilter.insets = new Insets(0, 0, 5, 0);
             gbc_txtFldSqlFilter.gridx = 2;
             gbc_txtFldSqlFilter.gridy = 0;
             filterPanel.add(txtFldSqlFilter, gbc_txtFldSqlFilter);
@@ -198,23 +190,47 @@ public class PerfLoggerPanel extends JPanel {
             });
         }
         {
-            final JLabel lblDurationms = new JLabel("Exec duration (ms) >=");
-            final GridBagConstraints gbc_lblDurationms = new GridBagConstraints();
-            gbc_lblDurationms.anchor = GridBagConstraints.BASELINE_TRAILING;
-            gbc_lblDurationms.insets = new Insets(0, 0, 0, 5);
-            gbc_lblDurationms.gridx = 3;
-            gbc_lblDurationms.gridy = 0;
-            filterPanel.add(lblDurationms, gbc_lblDurationms);
-        }
-        {
+
+            final JPanel panel = new JPanel();
+            final GridBagConstraints gbc_panel = new GridBagConstraints();
+            gbc_panel.gridwidth = 3;
+            gbc_panel.fill = GridBagConstraints.BOTH;
+            gbc_panel.gridx = 0;
+            gbc_panel.gridy = 1;
+            filterPanel.add(panel, gbc_panel);
+            final GridBagLayout gbl_panel = new GridBagLayout();
+            gbl_panel.columnWidths = new int[] { 0, 0, 0, 0 };
+            gbl_panel.rowHeights = new int[] { 0, 0 };
+            gbl_panel.columnWeights = new double[] { 0.0, 0.0, 0.0, Double.MIN_VALUE };
+            gbl_panel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
+            panel.setLayout(gbl_panel);
+            {
+                final JLabel lblDurationms = new JLabel("Exec duration (ms) >=");
+                final GridBagConstraints gbc_lblDurationms = new GridBagConstraints();
+                gbc_lblDurationms.insets = new Insets(0, 0, 0, 5);
+                gbc_lblDurationms.gridx = 0;
+                gbc_lblDurationms.gridy = 0;
+                panel.add(lblDurationms, gbc_lblDurationms);
+            }
             txtFldMinDuration = new JTextField();
             final GridBagConstraints gbc_txtFldMinDuration = new GridBagConstraints();
-            gbc_txtFldMinDuration.anchor = GridBagConstraints.BASELINE;
-            gbc_txtFldMinDuration.fill = GridBagConstraints.HORIZONTAL;
-            gbc_txtFldMinDuration.gridx = 4;
+            gbc_txtFldMinDuration.insets = new Insets(0, 0, 0, 5);
+            gbc_txtFldMinDuration.gridx = 1;
             gbc_txtFldMinDuration.gridy = 0;
+            panel.add(txtFldMinDuration, gbc_txtFldMinDuration);
             txtFldMinDuration.setColumns(5);
-            filterPanel.add(txtFldMinDuration, gbc_txtFldMinDuration);
+
+            final JCheckBox chckbxExcludeCommits = new JCheckBox("Exclude commits");
+            final GridBagConstraints gbc_chckbxExcludeCommits = new GridBagConstraints();
+            gbc_chckbxExcludeCommits.gridx = 2;
+            gbc_chckbxExcludeCommits.gridy = 0;
+            panel.add(chckbxExcludeCommits, gbc_chckbxExcludeCommits);
+            chckbxExcludeCommits.addItemListener(new ItemListener() {
+                @Override
+                public void itemStateChanged(@SuppressWarnings("null") final ItemEvent e) {
+                    perfLoggerController.setExcludeCommits(chckbxExcludeCommits.isSelected());
+                }
+            });
             txtFldMinDuration.getDocument().addUndoableEditListener(new UndoableEditListener() {
                 @Override
                 public void undoableEditHappened(@Nullable final UndoableEditEvent e) {

@@ -26,4 +26,9 @@ public interface LogRepositoryUpdate {
 
     void clear();
 
+    void deleteStatementLog(final long... logIds);
+
+    void dispose();
+
+    long getLastModificationTime();
 }

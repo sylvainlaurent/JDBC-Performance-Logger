@@ -15,8 +15,6 @@
  */
 package ch.sla.jdbcperflogger.console.ui;
 
-import static ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc.ERROR_COLUMN;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.MouseEvent;
@@ -27,7 +25,7 @@ import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 
-import ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryConstants;
 
 public class CustomTable extends JTable {
     private static final Color ERROR_COLOR = Color.RED;
@@ -73,22 +71,23 @@ public class CustomTable extends JTable {
             final int modelIndex = convertRowIndexToModel(row);
 
             Color bgColor = DEFAULT_BG_COLOR;
-            final Integer error = (Integer) model.getValueAt(modelIndex, ERROR_COLUMN);
+            final Integer error = (Integer) model.getValueAt(modelIndex, LogRepositoryConstants.ERROR_COLUMN);
             if (error != null && error.intValue() != 0) {
                 bgColor = ERROR_COLOR;
             } else if (txtToHighlightUpper != null) {
-                final String sql = (String) model.getValueAt(modelIndex, LogRepositoryJdbc.RAW_SQL_COLUMN);
+                final String sql = (String) model.getValueAt(modelIndex, LogRepositoryConstants.RAW_SQL_COLUMN);
                 if (sql != null && sql.toUpperCase().contains(txtToHighlightUpper)) {
                     bgColor = HIGHLIGHT_COLOR;
                 }
             } else {
                 final Long minDurationNanoToHighlight2 = minDurationNanoToHighlight;
                 if (minDurationNanoToHighlight2 != null) {
-                    Long duration = (Long) model.getValueAt(modelIndex, LogRepositoryJdbc.EXEC_PLUS_FETCH_TIME_COLUMN);
+                    Long duration = (Long) model.getValueAt(modelIndex,
+                            LogRepositoryConstants.EXEC_PLUS_FETCH_TIME_COLUMN);
                     if (duration == null) {
                         // in case we are in group by mode
                         final BigDecimal val = (BigDecimal) model.getValueAt(modelIndex,
-                                LogRepositoryJdbc.TOTAL_EXEC_TIME_COLUMN);
+                                LogRepositoryConstants.TOTAL_EXEC_TIME_COLUMN);
                         if (val != null) {
                             duration = val.longValue();
                         }

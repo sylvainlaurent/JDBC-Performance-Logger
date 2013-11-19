@@ -29,7 +29,10 @@ import javax.swing.ToolTipManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryRead;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryReadJdbc;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryUpdate;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryUpdateJdbc;
 import ch.sla.jdbcperflogger.console.net.AbstractLogReceiver;
 import ch.sla.jdbcperflogger.console.net.ClientLogReceiver;
 import ch.sla.jdbcperflogger.console.net.ServerLogReceiver;
@@ -102,23 +105,25 @@ public class PerfLoggerGuiMain implements IClientConnectionDelegate {
         final String hostAndPort = targetHost + "_" + targetPort;
         PerfLoggerController perfLoggerController = connectionsToLogController.get(hostAndPort);
         if (perfLoggerController == null) {
-            final LogRepositoryJdbc logRepository = new LogRepositoryJdbc(hostAndPort);
-            final AbstractLogReceiver logReceiver = new ClientLogReceiver(targetHost, targetPort, logRepository);
+            final LogRepositoryUpdate logRepositoryUpdate = new LogRepositoryUpdateJdbc(hostAndPort);
+            final LogRepositoryRead logRepositoryRead = new LogRepositoryReadJdbc(hostAndPort);
+            final AbstractLogReceiver logReceiver = new ClientLogReceiver(targetHost, targetPort, logRepositoryUpdate);
             logReceiver.start();
 
-            perfLoggerController = new PerfLoggerController(this, logReceiver, logRepository);
+            perfLoggerController = new PerfLoggerController(this, logReceiver, logRepositoryUpdate, logRepositoryRead);
             connectionsToLogController.put(hostAndPort, perfLoggerController);
         }
         return perfLoggerController;
     }
 
     private PerfLoggerController createServer(final int listeningPort) {
-        final LogRepositoryJdbc logRepository = new LogRepositoryJdbc("server_" + listeningPort);
+        final LogRepositoryUpdate logRepositoryUpdate = new LogRepositoryUpdateJdbc("server_" + listeningPort);
+        final LogRepositoryRead logRepositoryRead = new LogRepositoryReadJdbc("server_" + listeningPort);
 
-        final AbstractLogReceiver logReceiver = new ServerLogReceiver(listeningPort, logRepository);
+        final AbstractLogReceiver logReceiver = new ServerLogReceiver(listeningPort, logRepositoryUpdate);
         logReceiver.start();
 
-        return new PerfLoggerController(this, logReceiver, logRepository);
+        return new PerfLoggerController(this, logReceiver, logRepositoryUpdate, logRepositoryRead);
     }
 
 }

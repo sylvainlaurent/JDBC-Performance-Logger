@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 import javax.swing.table.AbstractTableModel;
 
 import ch.sla.jdbcperflogger.StatementType;
-import ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryConstants;
 
 class ResultSetDataModel extends AbstractTableModel {
 
@@ -81,7 +81,7 @@ class ResultSetDataModel extends AbstractTableModel {
             return null;
         }
         final String col = getColumnName(columnIndex);
-        if (LogRepositoryJdbc.STMT_TYPE_COLUMN.equals(col)) {
+        if (LogRepositoryConstants.STMT_TYPE_COLUMN.equals(col)) {
             o = StatementType.fromId(((Byte) o).byteValue());
         } else if (col.endsWith("TIME")) {
             // all time retrieved from the DB is in ns, we just convert it for display to have the best perf

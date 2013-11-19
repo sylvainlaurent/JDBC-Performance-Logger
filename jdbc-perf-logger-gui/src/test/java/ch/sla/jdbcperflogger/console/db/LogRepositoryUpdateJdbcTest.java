@@ -17,8 +17,6 @@ package ch.sla.jdbcperflogger.console.db;
 
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,21 +24,21 @@ import org.junit.Test;
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.model.StatementLog;
 
-public class LogRepositoryJdbcTest {
-    @Nullable
-    private LogRepositoryJdbc repository;
+@SuppressWarnings("null")
+public class LogRepositoryUpdateJdbcTest {
+    private LogRepositoryUpdate repositoryUpdate;
+    private LogRepositoryRead repositoryRead;
 
     @Before
     public void setup() {
-        repository = new LogRepositoryJdbc("test");
+        repositoryUpdate = new LogRepositoryUpdateJdbc("test");
+        repositoryRead = new LogRepositoryReadJdbc("test");
     }
 
     @After
     public void tearDown() {
-        final LogRepositoryJdbc repository2 = repository;
-        if (repository2 != null) {
-            repository2.dispose();
-        }
+        repositoryUpdate.dispose();
+        repositoryRead.dispose();
     }
 
     @Test
@@ -52,11 +50,8 @@ public class LogRepositoryJdbcTest {
     public void testInsertAndRead() {
         final StatementLog log = new StatementLog(UUID.randomUUID(), UUID.randomUUID(), System.currentTimeMillis(),
                 StatementType.BASE_NON_PREPARED_STMT, "myrawsql", Thread.currentThread().getName());
-        final LogRepositoryJdbc repository2 = repository;
-        if (repository2 != null) {
-            repository2.addStatementLog(log);
-            repository2.addStatementLog(log);
-            repository2.getStatementLog(1);
-        }
+        repositoryUpdate.addStatementLog(log);
+        repositoryUpdate.addStatementLog(log);
+        repositoryRead.getStatementLog(1);
     }
 }

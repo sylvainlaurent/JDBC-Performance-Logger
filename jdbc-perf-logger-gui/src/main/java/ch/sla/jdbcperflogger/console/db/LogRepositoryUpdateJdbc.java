@@ -29,7 +29,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import org.h2.Driver;
 import org.slf4j.Logger;
@@ -44,32 +43,16 @@ import ch.sla.jdbcperflogger.model.StatementExecutedLog;
 import ch.sla.jdbcperflogger.model.StatementLog;
 import ch.sla.jdbcperflogger.model.TxCompleteLog;
 
-public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate {
+public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
     // TODO ajouter colonne clientId (processId)
     public static final int SCHEMA_VERSION = 6;
-
-    public static final String TSTAMP_COLUMN = "TSTAMP";
-    public static final String STMT_TYPE_COLUMN = "STATEMENTTYPE";
-    public static final String FILLED_SQL_COLUMN = "FILLEDSQL";
-    public static final String RAW_SQL_COLUMN = "RAWSQL";
-    public static final String EXEC_TIME_COLUMN = "execution_time";
-    public static final String FETCH_TIME_COLUMN = "fetch_time";
-    public static final String NB_ROWS_COLUMN = "nbRowsIterated";
-    public static final String EXEC_PLUS_FETCH_TIME_COLUMN = "EXEC_PLUS_FETCH_TIME";
-    public static final String THREAD_NAME_COLUMN = "threadName";
-    public static final String CONNECTION_NUMBER_COLUMN = "connectionNumber";
-    public static final String ERROR_COLUMN = "ERROR";
-    public static final String EXEC_COUNT_COLUMN = "EXEC_COUNT";
-    public static final String TOTAL_EXEC_TIME_COLUMN = "TOTAL_EXEC_TIME";
 
     private static final int NB_ROWS_MAX = Integer.parseInt(System.getProperty("maxLoggedStatements", "20000"));
     private static final long CLEAN_UP_PERIOD_MS = TimeUnit.SECONDS.toMillis(30);
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LogRepositoryJdbc.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LogRepositoryUpdateJdbc.class);
 
     private final Connection connectionUpdate;
-    private final Connection connectionRead;
-    private final String repoName;
     private final PreparedStatement addStatementLog;
     private final PreparedStatement updateStatementLogWithResultSet;
     private final PreparedStatement updateStatementLogAfterExecution;
@@ -79,10 +62,9 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
     private final Timer cleanupTimer;
     private final String dbName;
 
-    public LogRepositoryJdbc(final String name) {
-        repoName = name;
+    public LogRepositoryUpdateJdbc(final String name) {
         try {
-            dbName = "logdb/logrepository_" + name;
+            dbName = getDbPath(name);
             connectionUpdate = createDbConnection(dbName);
             final Statement stmt = connectionUpdate.createStatement();
             try {
@@ -114,17 +96,20 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
             cleanupTimer = new Timer(true);
             cleanupTimer.schedule(new CleanupTask(), CLEAN_UP_PERIOD_MS, CLEAN_UP_PERIOD_MS);
 
-            connectionRead = createDbConnection(dbName);
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private Connection createDbConnection(final String path) throws SQLException {
-        return createDbConnection(path, false);
+    static String getDbPath(final String name) {
+        return "logdb/logrepository_" + name;
     }
 
-    private Connection createDbConnection(final String path, final boolean inRecursion) throws SQLException {
+    static Connection createDbConnection(final String dbName) throws SQLException {
+        return createDbConnection(dbName, false);
+    }
+
+    private static Connection createDbConnection(final String path, final boolean inRecursion) throws SQLException {
         Driver.class.getClass();
         LOGGER.debug("Opening H2 connection for log repository " + path);
         try {
@@ -146,21 +131,21 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
         }
     }
 
-    private void deleteDbFiles(final String path) {
+    private static void deleteDbFiles(final String path) {
         final File dbFile = new File(path + ".h2.db");
         dbFile.delete();
         final File dbTraceFile = new File(path + ".trace.db");
         dbTraceFile.delete();
     }
 
+    @Override
     public void dispose() {
-        LOGGER.debug("closing H2 connection for log repository " + repoName);
+        LOGGER.debug("closing H2 connection for log repository " + dbName);
         cleanupTimer.cancel();
         try {
             addStatementLog.close();
             updateStatementLogWithResultSet.close();
             addBatchedStatementLog.close();
-            connectionRead.close();
             connectionUpdate.close();
         } catch (final SQLException e) {
             LOGGER.error("error while closing the connection", e);
@@ -324,6 +309,7 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
         lastModificationTime = System.currentTimeMillis();
     }
 
+    @Override
     public void deleteStatementLog(final long... logIds) {
         try {
             final PreparedStatement statement = connectionUpdate
@@ -343,278 +329,6 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
             throw new RuntimeException(e);
         }
         lastModificationTime = System.currentTimeMillis();
-    }
-
-    @Override
-    public void getStatements(final @Nullable String filter, final @Nullable Long minDurationNanos,
-            final ResultSetAnalyzer analyzer, final boolean withFilledSql) {
-        String sql = "select id, tstamp, statementType, rawSql, " //
-                + "exec_plus_fetch_time, execution_time, fetch_time, "//
-                + "nbRowsIterated, threadName, connectionNumber, error ";
-        if (withFilledSql) {
-            sql += ", " + FILLED_SQL_COLUMN;
-        }
-        sql += " from v_statement_log ";
-        sql += getWhereClause(filter, minDurationNanos);
-        sql += "order by tstamp";
-
-        try {
-            @Nonnull
-            final PreparedStatement statement = connectionRead.prepareStatement(sql);
-            applyParametersForWhereClause(filter, minDurationNanos, statement);
-            @Nonnull
-            final ResultSet resultSet = statement.executeQuery();
-            try {
-                analyzer.analyze(resultSet);
-            } finally {
-                resultSet.close();
-                statement.close();
-            }
-        } catch (final SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    @Override
-    public void getStatementsGroupByRawSQL(final @Nullable String filter, final @Nullable Long minDurationNanos,
-            final ResultSetAnalyzer analyzer) {
-        String sql = "select min(id) as ID, statementType, rawSql, count(1) as exec_count, " //
-                + "sum(executionDurationNanos) as total_exec_time, "//
-                + "max(executionDurationNanos) as max_exec_time, " //
-                + "min(executionDurationNanos) as min_exec_time, " //
-                + "avg(executionDurationNanos) as avg_exec_time " //
-                + "from statement_log ";
-        if (filter != null && filter.length() > 0) {
-            sql += "where (UPPER(rawSql) like ? or UPPER(filledSql) like ?)";
-        }
-        sql += "group by statementType, rawSql ";
-        if (minDurationNanos != null) {
-            sql += "having sum(executionDurationNanos)>=? ";
-        }
-        sql += "order by total_exec_time desc";
-
-        try {
-            @Nonnull
-            final PreparedStatement statement = connectionRead.prepareStatement(sql);
-            applyParametersForWhereClause(filter, minDurationNanos, statement);
-            @Nonnull
-            final ResultSet resultSet = statement.executeQuery();
-            try {
-                analyzer.analyze(resultSet);
-            } finally {
-                resultSet.close();
-                statement.close();
-            }
-        } catch (final SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    @Override
-    public void getStatementsGroupByFilledSQL(final @Nullable String filter, final @Nullable Long minDurationNanos,
-            final ResultSetAnalyzer analyzer) {
-        String sql = "select min(id) as ID, statementType, rawSql, filledSql, count(1) as exec_count, " //
-                + "sum(executionDurationNanos) as total_exec_time, "//
-                + "max(executionDurationNanos) as max_exec_time, " //
-                + "min(executionDurationNanos) as min_exec_time, " //
-                + "avg(executionDurationNanos) as avg_exec_time " //
-                + "from statement_log ";
-        if (filter != null && filter.length() > 0) {
-            sql += "where (UPPER(rawSql) like ? or UPPER(filledSql) like ?)";
-        }
-        sql += "group by statementType, rawSql, filledSql ";
-        if (minDurationNanos != null) {
-            sql += "having sum(executionDurationNanos)>=?";
-        }
-        sql += "order by total_exec_time desc";
-
-        try {
-            @Nonnull
-            final PreparedStatement statement = connectionRead.prepareStatement(sql);
-            applyParametersForWhereClause(filter, minDurationNanos, statement);
-            @Nonnull
-            final ResultSet resultSet = statement.executeQuery();
-            try {
-                analyzer.analyze(resultSet);
-            } finally {
-                resultSet.close();
-                statement.close();
-            }
-        } catch (final SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    private String getWhereClause(@Nullable final String filter, @Nullable final Long minDurationNanos) {
-        String sql = "";
-        boolean whereAdded = false;
-        if (filter != null) {
-            sql += "where (UPPER(rawSql) like ? or UPPER(filledSql) like ?) ";
-            whereAdded = true;
-        }
-        if (minDurationNanos != null) {
-            if (!whereAdded) {
-                sql += "where ";
-                whereAdded = true;
-            } else {
-                sql += "and ";
-            }
-            sql += "exec_plus_fetch_time>? ";
-        }
-        return sql;
-    }
-
-    private void applyParametersForWhereClause(@Nullable final String filter, @Nullable final Long minDurationNanos,
-            final PreparedStatement statement) throws SQLException {
-        if (filter != null) {
-            statement.setString(1, "%" + filter.toUpperCase() + "%");
-            statement.setString(2, "%" + filter.toUpperCase() + "%");
-        }
-        if (minDurationNanos != null) {
-            statement.setLong(filter != null ? 3 : 1, minDurationNanos.longValue());
-        }
-
-    }
-
-    @Override
-    public synchronized long getLastModificationTime() {
-        return lastModificationTime;
-    }
-
-    @Nullable
-    @Override
-    public DetailedViewStatementLog getStatementLog(final long id) {
-        try {
-            final PreparedStatement statement = connectionRead
-                    .prepareStatement("select statement_log.logId, statement_log.tstamp, statement_log.statementType, "//
-                            + "statement_log.rawSql, statement_log.filledSql, " //
-                            + "statement_log.executionDurationNanos, statement_log.threadName, statement_log.exception, "//
-                            + "statement_log.connectionId,"//
-                            + "connection_info.connectionNumber, connection_info.url, connection_info.creationDate "//
-                            + "from statement_log join connection_info on (statement_log.connectionId=connection_info.connectionId) "//
-                            + "where statement_log.id=?");
-            statement.setLong(1, id);
-            try {
-                final ResultSet resultSet = statement.executeQuery();
-                DetailedViewStatementLog result = null;
-                if (resultSet.next()) {
-                    int i = 1;
-                    final UUID logId = (UUID) resultSet.getObject(i++);
-                    final Timestamp tstamp = resultSet.getTimestamp(i++);
-                    final StatementType statementType = StatementType.fromId(resultSet.getInt(i++));
-                    @Nonnull
-                    final String rawSql = resultSet.getString(i++);
-                    @Nonnull
-                    final String filledSql = resultSet.getString(i++);
-                    final long durationNanos = resultSet.getLong(i++);
-                    @Nonnull
-                    final String threadName = resultSet.getString(i++);
-                    final SQLException exception = (SQLException) resultSet.getObject(i++);
-                    final UUID connectionId = (UUID) resultSet.getObject(i++);
-                    final int connectionNumber = resultSet.getInt(i++);
-                    final String connectionUrl = resultSet.getString(i++);
-                    final Timestamp creationDate = resultSet.getTimestamp(i++);
-
-                    final ConnectionInfo connectionInfo = new ConnectionInfo(connectionId, connectionNumber,
-                            connectionUrl, creationDate);
-
-                    result = new DetailedViewStatementLog(logId, connectionInfo, tstamp.getTime(), statementType,
-                            rawSql, filledSql, threadName, durationNanos, exception);
-                }
-                resultSet.close();
-                return result;
-            } finally {
-                statement.close();
-            }
-        } catch (final SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public int countStatements() {
-        try {
-            final PreparedStatement statement = connectionRead.prepareStatement("select count(1) from statement_log");
-            try {
-                final ResultSet resultSet = statement.executeQuery();
-                resultSet.next();
-                final int result = resultSet.getInt(1);
-                resultSet.close();
-                return result;
-            } finally {
-                statement.close();
-            }
-        } catch (final SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public long getTotalExecAndFetchTimeNanos() {
-        try {
-            final PreparedStatement statement = connectionRead
-                    .prepareStatement("select sum(exec_plus_fetch_time) from v_statement_log");
-            try {
-                final ResultSet resultSet = statement.executeQuery();
-                resultSet.next();
-                final long result = resultSet.getLong(1);
-                resultSet.close();
-                return result;
-            } finally {
-                statement.close();
-            }
-        } catch (final SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public long getTotalExecAndFetchTimeNanos(final @Nullable String filter, final @Nullable Long minDurationNanos) {
-        String sql = "select sum(exec_plus_fetch_time) from v_statement_log ";
-        sql += getWhereClause(filter, minDurationNanos);
-
-        try {
-            @Nonnull
-            final PreparedStatement statement = connectionRead.prepareStatement(sql);
-            applyParametersForWhereClause(filter, minDurationNanos, statement);
-            try {
-                final ResultSet resultSet = statement.executeQuery();
-                resultSet.next();
-                final long result = resultSet.getLong(1);
-                resultSet.close();
-                return result;
-            } finally {
-                statement.close();
-            }
-        } catch (final SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    @Override
-    public void getBatchStatementExecutions(final UUID logId, final ResultSetAnalyzer analyzer) {
-        String sql = "select batched_stmt_order, filledSql from batched_statement_log where logId=? ";
-        sql += "order by batched_stmt_order";
-
-        try {
-            final PreparedStatement statement = connectionRead.prepareStatement(sql);
-            statement.setObject(1, logId);
-            @Nonnull
-            final ResultSet resultSet = statement.executeQuery();
-            try {
-                analyzer.analyze(resultSet);
-            } finally {
-                resultSet.close();
-                statement.close();
-            }
-        } catch (final SQLException e) {
-            throw new RuntimeException(e);
-        }
-
     }
 
     public void deleteOldRowsIfTooMany() {
@@ -665,7 +379,12 @@ public class LogRepositoryJdbc implements LogRepositoryRead, LogRepositoryUpdate
         }
     }
 
-    private void checkSchemaVersion(final Connection conn) throws SQLException {
+    @Override
+    public synchronized long getLastModificationTime() {
+        return lastModificationTime;
+    }
+
+    private static void checkSchemaVersion(final Connection conn) throws SQLException {
         final Statement statement = conn.createStatement();
         statement.execute("create table if not exists schema_version (version int not null)");
 

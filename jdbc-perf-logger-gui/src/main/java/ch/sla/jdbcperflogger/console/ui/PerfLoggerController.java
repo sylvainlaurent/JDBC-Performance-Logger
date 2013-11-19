@@ -34,13 +34,16 @@ import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import ch.sla.jdbcperflogger.console.db.DetailedViewStatementLog;
-import ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryRead;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryUpdate;
+import ch.sla.jdbcperflogger.console.db.LogSearchCriteria;
 import ch.sla.jdbcperflogger.console.db.ResultSetAnalyzer;
 import ch.sla.jdbcperflogger.console.net.AbstractLogReceiver;
 
 public class PerfLoggerController {
     private final AbstractLogReceiver logReceiver;
-    private final LogRepositoryJdbc logRepository;
+    private final LogRepositoryUpdate logRepositoryUpdate;
+    private final LogRepositoryRead logRepositoryRead;
     private final IClientConnectionDelegate clientConnectionDelegate;
     private final LogExporter logExporter;
     private final PerfLoggerPanel perfLoggerPanel;
@@ -48,45 +51,38 @@ public class PerfLoggerController {
     private abstract class SelectLogRunner {
         abstract void doSelect(ResultSetAnalyzer resultSetAnalyzer);
 
-        @Nullable
-        protected String getTxtFilter() {
-            return filterType == FilterType.FILTER ? txtFilter : null;
-        }
-
-        @Nullable
-        protected Long getMinDurationNanoFilter() {
-            return filterType == FilterType.FILTER ? minDurationNanos : null;
-        }
     }
 
     private final SelectLogRunner selectAllLogStatements = new SelectLogRunner() {
         @Override
         public void doSelect(final ResultSetAnalyzer resultSetAnalyzer) {
-            logRepository.getStatements(getTxtFilter(), getMinDurationNanoFilter(), resultSetAnalyzer, false);
+            logRepositoryRead.getStatements(createSearchCriteria(), resultSetAnalyzer, false);
         }
     };
     private final SelectLogRunner selectAllLogStatementsWithFilledSql = new SelectLogRunner() {
         @Override
         public void doSelect(final ResultSetAnalyzer resultSetAnalyzer) {
-            logRepository.getStatements(getTxtFilter(), getMinDurationNanoFilter(), resultSetAnalyzer, true);
+            logRepositoryRead.getStatements(createSearchCriteria(), resultSetAnalyzer, true);
         }
     };
     private final SelectLogRunner selectLogStatementsGroupByRawSql = new SelectLogRunner() {
         @Override
         public void doSelect(final ResultSetAnalyzer resultSetAnalyzer) {
-            logRepository.getStatementsGroupByRawSQL(getTxtFilter(), getMinDurationNanoFilter(), resultSetAnalyzer);
+            logRepositoryRead.getStatementsGroupByRawSQL(createSearchCriteria(), resultSetAnalyzer);
         }
     };
     private final SelectLogRunner selectLogStatementsGroupByFilledSql = new SelectLogRunner() {
         @Override
         public void doSelect(final ResultSetAnalyzer resultSetAnalyzer) {
-            logRepository.getStatementsGroupByFilledSQL(getTxtFilter(), getMinDurationNanoFilter(), resultSetAnalyzer);
+            logRepositoryRead.getStatementsGroupByFilledSQL(createSearchCriteria(), resultSetAnalyzer);
         }
     };
     @Nullable
     private volatile String txtFilter;
     @Nullable
     private volatile Long minDurationNanos;
+    private boolean excludeCommits;
+
     private SelectLogRunner currentSelectLogRunner = selectAllLogStatements;
     private boolean tableStructureChanged = true;
     private GroupBy groupBy = GroupBy.NONE;
@@ -95,12 +91,14 @@ public class PerfLoggerController {
     private final ScheduledExecutorService refreshDataScheduledExecutorService;
 
     PerfLoggerController(final IClientConnectionDelegate clientConnectionDelegate,
-            final AbstractLogReceiver logReceiver, final LogRepositoryJdbc logRepository) {
+            final AbstractLogReceiver logReceiver, final LogRepositoryUpdate logRepositoryUpdate,
+            final LogRepositoryRead logRepositoryRead) {
         this.clientConnectionDelegate = clientConnectionDelegate;
         this.logReceiver = logReceiver;
-        this.logRepository = logRepository;
+        this.logRepositoryUpdate = logRepositoryUpdate;
+        this.logRepositoryRead = logRepositoryRead;
 
-        logExporter = new LogExporter(logRepository);
+        logExporter = new LogExporter(logRepositoryRead);
 
         perfLoggerPanel = new PerfLoggerPanel(this);
         perfLoggerPanel.setCloseEnable(!logReceiver.isServerMode());
@@ -132,6 +130,11 @@ public class PerfLoggerController {
         refresh();
     }
 
+    void setExcludeCommits(final boolean excludeCommits) {
+        this.excludeCommits = excludeCommits;
+        refresh();
+    }
+
     void setGroupBy(final GroupBy groupBy) {
         this.groupBy = groupBy;
         switch (groupBy) {
@@ -159,12 +162,12 @@ public class PerfLoggerController {
     }
 
     public void onDeleteSelectedStatements(final long... logIds) {
-        logRepository.deleteStatementLog(logIds);
+        logRepositoryUpdate.deleteStatementLog(logIds);
         refresh();
     }
 
     void onClear() {
-        logRepository.clear();
+        logRepositoryUpdate.clear();
         refresh();
         statementSelected(null);
     }
@@ -188,7 +191,7 @@ public class PerfLoggerController {
             e.printStackTrace();
         }
         logReceiver.dispose();
-        logRepository.dispose();
+        logRepositoryUpdate.dispose();
         clientConnectionDelegate.close(this);
     }
 
@@ -223,7 +226,7 @@ public class PerfLoggerController {
         String connectionCreationDate = null;
         DetailedViewStatementLog statementLog = null;
         if (logId != null) {
-            statementLog = logRepository.getStatementLog(logId);
+            statementLog = logRepositoryRead.getStatementLog(logId);
         }
         long deltaTimestampBaseMillis = 0;
 
@@ -329,8 +332,26 @@ public class PerfLoggerController {
         }
     }
 
+    @Nullable
+    protected String getTxtFilter() {
+        return filterType == FilterType.FILTER ? txtFilter : null;
+    }
+
+    @Nullable
+    protected Long getMinDurationNanoFilter() {
+        return filterType == FilterType.FILTER ? minDurationNanos : null;
+    }
+
+    protected LogSearchCriteria createSearchCriteria() {
+        final LogSearchCriteria searchCriteria = new LogSearchCriteria();
+        searchCriteria.setFilter(getTxtFilter());
+        searchCriteria.setMinDurationNanos(getMinDurationNanoFilter());
+        searchCriteria.setRemoveTransactionCompletions(excludeCommits);
+        return searchCriteria;
+    }
+
     /**
-     * A task that regularly polls the associated {@link LogRepositoryJdbc} to check for new statements to display. If
+     * A task that regularly polls the associated {@link LogRepositoryUpdate} to check for new statements to display. If
      * the UI must be refreshed it is later done in the EDT.
      * 
      * @author slaurent
@@ -342,13 +363,13 @@ public class PerfLoggerController {
 
         @Override
         public void run() {
-            if (logRepository.getLastModificationTime() <= lastRefreshTime
+            if (logRepositoryUpdate.getLastModificationTime() <= lastRefreshTime
                     && connectionsCount == logReceiver.getConnectionsCount()) {
                 return;
             }
             connectionsCount = logReceiver.getConnectionsCount();
 
-            lastRefreshTime = logRepository.getLastModificationTime();
+            lastRefreshTime = logRepositoryUpdate.getLastModificationTime();
             doRefreshData(currentSelectLogRunner);
 
             final StringBuilder txt = new StringBuilder();
@@ -363,17 +384,16 @@ public class PerfLoggerController {
                 }
             }
             txt.append(" - ");
-            txt.append(logRepository.countStatements());
+            txt.append(logRepositoryRead.countStatements());
             txt.append(" statements logged - ");
-            txt.append(TimeUnit.NANOSECONDS.toMillis(logRepository.getTotalExecAndFetchTimeNanos()));
+            txt.append(TimeUnit.NANOSECONDS.toMillis(logRepositoryRead.getTotalExecAndFetchTimeNanos()));
             txt.append("ms total execution time (with fetch)");
-            final String txtFilterFinal = txtFilter;
-            final Long minDurationNanosFinal = minDurationNanos;
-            if ((txtFilterFinal != null && txtFilterFinal.length() > 0)
-                    || (minDurationNanosFinal != null && minDurationNanosFinal.longValue() > 0)) {
+
+            final LogSearchCriteria searchCriteria = createSearchCriteria();
+            if (searchCriteria.atLeastOneFilterApplied()) {
                 txt.append(" - ");
-                txt.append(TimeUnit.NANOSECONDS.toMillis(logRepository.getTotalExecAndFetchTimeNanos(txtFilter,
-                        minDurationNanos)));
+                txt.append(TimeUnit.NANOSECONDS.toMillis(logRepositoryRead
+                        .getTotalExecAndFetchTimeNanos(searchCriteria)));
                 txt.append("ms total filtered");
             }
             SwingUtilities.invokeLater(new Runnable() {

@@ -23,7 +23,7 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import ch.sla.jdbcperflogger.StatementType;
-import ch.sla.jdbcperflogger.console.db.LogRepositoryJdbc;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryConstants;
 
 @SuppressWarnings("serial")
 public class CustomTableCellRenderer extends DefaultTableCellRenderer {
@@ -37,7 +37,7 @@ public class CustomTableCellRenderer extends DefaultTableCellRenderer {
                 value, isSelected, hasFocus, row, column);
 
         final ResultSetDataModel dataModel = (ResultSetDataModel) table.getModel();
-        if (LogRepositoryJdbc.STMT_TYPE_COLUMN.equals(dataModel.getColumnName(column))) {
+        if (LogRepositoryConstants.STMT_TYPE_COLUMN.equals(dataModel.getColumnName(column))) {
             final int modelRowIndex = table.convertRowIndexToModel(row);
             final StatementType statementType = (StatementType) dataModel.getValueAt(modelRowIndex, column);
             switch (statementType) {
