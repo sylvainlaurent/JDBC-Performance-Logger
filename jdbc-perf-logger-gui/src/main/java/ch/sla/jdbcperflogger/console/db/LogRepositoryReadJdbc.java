@@ -58,19 +58,19 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
     @Override
     public void getStatements(final LogSearchCriteria searchCriteria, final ResultSetAnalyzer analyzer,
             final boolean withFilledSql) {
-        String sql = "select id, tstamp, statementType, rawSql, " //
+        final StringBuilder sql = new StringBuilder("select id, tstamp, statementType, rawSql, " //
                 + "exec_plus_fetch_time, execution_time, fetch_time, "//
-                + "nbRowsIterated, threadName, connectionNumber, error ";
+                + "nbRowsIterated, threadName, connectionNumber, error ");
         if (withFilledSql) {
-            sql += ", " + LogRepositoryConstants.FILLED_SQL_COLUMN;
+            sql.append(", " + LogRepositoryConstants.FILLED_SQL_COLUMN);
         }
-        sql += " from v_statement_log ";
-        sql += getWhereClause(searchCriteria);
-        sql += "order by tstamp";
+        sql.append(" from v_statement_log ");
+        sql.append(getWhereClause(searchCriteria));
+        sql.append(" order by tstamp");
 
         try {
             @Nonnull
-            final PreparedStatement statement = connectionRead.prepareStatement(sql);
+            final PreparedStatement statement = connectionRead.prepareStatement(sql.toString());
             applyParametersForWhereClause(searchCriteria, statement);
             @Nonnull
             final ResultSet resultSet = statement.executeQuery();
@@ -88,24 +88,31 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
 
     @Override
     public void getStatementsGroupByRawSQL(final LogSearchCriteria searchCriteria, final ResultSetAnalyzer analyzer) {
-        String sql = "select min(id) as ID, statementType, rawSql, count(1) as exec_count, " //
-                + "sum(executionDurationNanos) as total_exec_time, "//
-                + "max(executionDurationNanos) as max_exec_time, " //
-                + "min(executionDurationNanos) as min_exec_time, " //
-                + "avg(executionDurationNanos) as avg_exec_time " //
-                + "from statement_log ";
+        final StringBuilder sql = new StringBuilder(
+                "select * from (select min(id) as ID, statementType, rawSql, count(1) as exec_count, " //
+                        + "sum(executionDurationNanos) as total_exec_time, "//
+                        + "max(executionDurationNanos) as max_exec_time, " //
+                        + "min(executionDurationNanos) as min_exec_time, " //
+                        + "avg(executionDurationNanos) as avg_exec_time " //
+                        + "from statement_log ");
+        boolean whereAdded = false;
+
         if (searchCriteria.getFilter() != null) {
-            sql += "where (UPPER(rawSql) like ? or UPPER(filledSql) like ?)";
+            whereAdded = addWhereClause(sql, whereAdded, "(UPPER(rawSql) like ? or UPPER(filledSql) like ?)");
         }
-        sql += "group by statementType, rawSql ";
+        sql.append("group by statementType, rawSql ");
         if (searchCriteria.getMinDurationNanos() != null) {
-            sql += "having sum(executionDurationNanos)>=? ";
+            sql.append("having sum(executionDurationNanos)>=? ");
         }
-        sql += "order by total_exec_time desc";
+        sql.append(") ");
+        if (searchCriteria.getSqlPassThroughFilter() != null) {
+            addWhereClause(sql, false, searchCriteria.getSqlPassThroughFilter());
+        }
+        sql.append(" order by total_exec_time desc");
 
         try {
             @Nonnull
-            final PreparedStatement statement = connectionRead.prepareStatement(sql);
+            final PreparedStatement statement = connectionRead.prepareStatement(sql.toString());
             applyParametersForWhereClause(searchCriteria, statement);
             @Nonnull
             final ResultSet resultSet = statement.executeQuery();
@@ -123,24 +130,29 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
 
     @Override
     public void getStatementsGroupByFilledSQL(final LogSearchCriteria searchCriteria, final ResultSetAnalyzer analyzer) {
-        String sql = "select min(id) as ID, statementType, rawSql, filledSql, count(1) as exec_count, " //
-                + "sum(executionDurationNanos) as total_exec_time, "//
-                + "max(executionDurationNanos) as max_exec_time, " //
-                + "min(executionDurationNanos) as min_exec_time, " //
-                + "avg(executionDurationNanos) as avg_exec_time " //
-                + "from statement_log ";
+        final StringBuilder sql = new StringBuilder(
+                "select * from (select min(id) as ID, statementType, rawSql, filledSql, count(1) as exec_count, " //
+                        + "sum(executionDurationNanos) as total_exec_time, "//
+                        + "max(executionDurationNanos) as max_exec_time, " //
+                        + "min(executionDurationNanos) as min_exec_time, " //
+                        + "avg(executionDurationNanos) as avg_exec_time " //
+                        + "from statement_log ");
         if (searchCriteria.getFilter() != null) {
-            sql += "where (UPPER(rawSql) like ? or UPPER(filledSql) like ?)";
+            sql.append("where (UPPER(rawSql) like ? or UPPER(filledSql) like ?)");
         }
-        sql += "group by statementType, rawSql, filledSql ";
+        sql.append("group by statementType, rawSql, filledSql ");
         if (searchCriteria.getMinDurationNanos() != null) {
-            sql += "having sum(executionDurationNanos)>=?";
+            sql.append("having sum(executionDurationNanos)>=?");
         }
-        sql += "order by total_exec_time desc";
+        sql.append(") ");
+        if (searchCriteria.getSqlPassThroughFilter() != null) {
+            addWhereClause(sql, false, searchCriteria.getSqlPassThroughFilter());
+        }
+        sql.append(" order by total_exec_time desc");
 
         try {
             @Nonnull
-            final PreparedStatement statement = connectionRead.prepareStatement(sql);
+            final PreparedStatement statement = connectionRead.prepareStatement(sql.toString());
             applyParametersForWhereClause(searchCriteria, statement);
             @Nonnull
             final ResultSet resultSet = statement.executeQuery();
@@ -156,32 +168,33 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
 
     }
 
-    private String getWhereClause(final LogSearchCriteria searchCriteria) {
-        String sql = "";
+    private CharSequence getWhereClause(final LogSearchCriteria searchCriteria) {
+        final StringBuilder sql = new StringBuilder(50);
         boolean whereAdded = false;
         if (searchCriteria.getFilter() != null) {
-            sql += "where (UPPER(rawSql) like ? or UPPER(filledSql) like ?) ";
-            whereAdded = true;
+            whereAdded = addWhereClause(sql, whereAdded, "(UPPER(rawSql) like ? or UPPER(filledSql) like ?) ");
         }
         if (searchCriteria.getMinDurationNanos() != null) {
-            if (!whereAdded) {
-                sql += "where ";
-                whereAdded = true;
-            } else {
-                sql += "and ";
-            }
-            sql += "exec_plus_fetch_time>? ";
+            whereAdded = addWhereClause(sql, whereAdded, "exec_plus_fetch_time>? ");
         }
         if (searchCriteria.isRemoveTransactionCompletions()) {
-            if (!whereAdded) {
-                sql += "where ";
-                whereAdded = true;
-            } else {
-                sql += "and ";
-            }
-            sql += "statementType<>" + StatementType.TRANSACTION.getId() + " ";
+            whereAdded = addWhereClause(sql, whereAdded, "statementType<>" + StatementType.TRANSACTION.getId() + " ");
+        }
+        if (searchCriteria.getSqlPassThroughFilter() != null) {
+            whereAdded = addWhereClause(sql, whereAdded, searchCriteria.getSqlPassThroughFilter());
         }
         return sql;
+    }
+
+    private boolean addWhereClause(final StringBuilder buffer, boolean whereAdded, final String clause) {
+        if (!whereAdded) {
+            buffer.append(" where ");
+            whereAdded = true;
+        } else {
+            buffer.append(" and ");
+        }
+        buffer.append(clause);
+        return whereAdded;
     }
 
     private void applyParametersForWhereClause(final LogSearchCriteria searchCriteria, final PreparedStatement statement)

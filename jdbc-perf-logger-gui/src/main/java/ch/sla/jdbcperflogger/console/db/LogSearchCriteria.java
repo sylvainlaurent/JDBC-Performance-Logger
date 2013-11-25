@@ -7,6 +7,7 @@ public class LogSearchCriteria {
     private String filter;
     private Long minDurationNanos;
     private boolean removeTransactionCompletions;
+    private String sqlPassThroughFilter;
 
     public String getFilter() {
         return filter;
@@ -35,4 +36,13 @@ public class LogSearchCriteria {
     public boolean atLeastOneFilterApplied() {
         return (filter != null && !filter.isEmpty()) || minDurationNanos != null || removeTransactionCompletions;
     }
+
+    public String getSqlPassThroughFilter() {
+        return sqlPassThroughFilter;
+    }
+
+    public void setSqlPassThroughFilter(final String sqlPassThroughFilter) {
+        this.sqlPassThroughFilter = sqlPassThroughFilter;
+    }
+
 }

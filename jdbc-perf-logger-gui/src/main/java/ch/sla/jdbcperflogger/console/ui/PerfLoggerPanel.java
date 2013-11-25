@@ -105,6 +105,7 @@ public class PerfLoggerPanel extends JPanel {
     private StatementTimestampTableCellRenderer stmtTimestampCellRenderer;
     JTextField connectionUrlField;
     JTextField connectionCreationDateField;
+    private JTextField sqlClauseField;
 
     public PerfLoggerPanel(final PerfLoggerController perfLoggerController) {
 
@@ -199,30 +200,56 @@ public class PerfLoggerPanel extends JPanel {
             gbc_panel.gridy = 1;
             filterPanel.add(panel, gbc_panel);
             final GridBagLayout gbl_panel = new GridBagLayout();
-            gbl_panel.columnWidths = new int[] { 0, 0, 0, 0 };
+            gbl_panel.columnWidths = new int[] { 0, 0, 0, 0, 0, 0 };
             gbl_panel.rowHeights = new int[] { 0, 0 };
-            gbl_panel.columnWeights = new double[] { 0.0, 0.0, 0.0, Double.MIN_VALUE };
+            gbl_panel.columnWeights = new double[] { 0.0, 1.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
             gbl_panel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
             panel.setLayout(gbl_panel);
+
+            final JLabel lblSqlClause = new JLabel("Advanced filter");
+            final GridBagConstraints gbc_lblSqlClause = new GridBagConstraints();
+            gbc_lblSqlClause.anchor = GridBagConstraints.EAST;
+            gbc_lblSqlClause.insets = new Insets(0, 0, 0, 5);
+            gbc_lblSqlClause.gridx = 0;
+            gbc_lblSqlClause.gridy = 0;
+            panel.add(lblSqlClause, gbc_lblSqlClause);
+            {
+                sqlClauseField = new JTextField();
+                sqlClauseField
+                        .setToolTipText("<html>\n<p>Use this field to further filter statements by directly injecting a<br>\nWHERE clause to the SELECT statement used by the console<br>\nagainst its internal H2 database.</p>\n<p>You may use the column names that appear in the list below.<br>\nCaution: times are in nanoseconds in the internal DB<br>\nExamples:</p>\n<ul>\n<li>THREADNAME like 'Execute%'</li>\n<li>CONNECTIONNUMBER=2</li>\n<li>NBROWSITERATED>10</li>\n<li>ERROR=1</li>\n</ul>\n</html>");
+                final GridBagConstraints gbc_sqlClauseField = new GridBagConstraints();
+                gbc_sqlClauseField.insets = new Insets(0, 0, 0, 5);
+                gbc_sqlClauseField.fill = GridBagConstraints.HORIZONTAL;
+                gbc_sqlClauseField.gridx = 1;
+                gbc_sqlClauseField.gridy = 0;
+                panel.add(sqlClauseField, gbc_sqlClauseField);
+                sqlClauseField.setColumns(10);
+                sqlClauseField.getDocument().addUndoableEditListener(new UndoableEditListener() {
+                    @Override
+                    public void undoableEditHappened(@Nullable final UndoableEditEvent e) {
+                        perfLoggerController.setSqlPassThroughFilter(sqlClauseField.getText());
+                    }
+                });
+            }
             {
                 final JLabel lblDurationms = new JLabel("Exec duration (ms) >=");
                 final GridBagConstraints gbc_lblDurationms = new GridBagConstraints();
                 gbc_lblDurationms.insets = new Insets(0, 0, 0, 5);
-                gbc_lblDurationms.gridx = 0;
+                gbc_lblDurationms.gridx = 2;
                 gbc_lblDurationms.gridy = 0;
                 panel.add(lblDurationms, gbc_lblDurationms);
             }
             txtFldMinDuration = new JTextField();
             final GridBagConstraints gbc_txtFldMinDuration = new GridBagConstraints();
             gbc_txtFldMinDuration.insets = new Insets(0, 0, 0, 5);
-            gbc_txtFldMinDuration.gridx = 1;
+            gbc_txtFldMinDuration.gridx = 3;
             gbc_txtFldMinDuration.gridy = 0;
             panel.add(txtFldMinDuration, gbc_txtFldMinDuration);
             txtFldMinDuration.setColumns(5);
 
             final JCheckBox chckbxExcludeCommits = new JCheckBox("Exclude commits");
             final GridBagConstraints gbc_chckbxExcludeCommits = new GridBagConstraints();
-            gbc_chckbxExcludeCommits.gridx = 2;
+            gbc_chckbxExcludeCommits.gridx = 4;
             gbc_chckbxExcludeCommits.gridy = 0;
             panel.add(chckbxExcludeCommits, gbc_chckbxExcludeCommits);
             chckbxExcludeCommits.addItemListener(new ItemListener() {

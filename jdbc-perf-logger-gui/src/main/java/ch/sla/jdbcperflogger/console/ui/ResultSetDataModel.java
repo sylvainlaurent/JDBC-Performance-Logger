@@ -49,7 +49,7 @@ class ResultSetDataModel extends AbstractTableModel {
 
         this.rows = rows;
         this.columnNames = columnNames;
-        firstColumnIsID = "ID".equals(columnNames.get(0));
+        firstColumnIsID = !columnNames.isEmpty() && "ID".equals(columnNames.get(0));
         this.columnTypes = columnTypes;
 
         if (columnsChanged) {

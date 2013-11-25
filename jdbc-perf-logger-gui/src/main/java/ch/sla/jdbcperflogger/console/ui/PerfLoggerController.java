@@ -33,6 +33,9 @@ import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ch.sla.jdbcperflogger.console.db.DetailedViewStatementLog;
 import ch.sla.jdbcperflogger.console.db.LogRepositoryRead;
 import ch.sla.jdbcperflogger.console.db.LogRepositoryUpdate;
@@ -41,6 +44,8 @@ import ch.sla.jdbcperflogger.console.db.ResultSetAnalyzer;
 import ch.sla.jdbcperflogger.console.net.AbstractLogReceiver;
 
 public class PerfLoggerController {
+    private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerController.class);
+
     private final AbstractLogReceiver logReceiver;
     private final LogRepositoryUpdate logRepositoryUpdate;
     private final LogRepositoryRead logRepositoryRead;
@@ -80,6 +85,8 @@ public class PerfLoggerController {
     @Nullable
     private volatile String txtFilter;
     @Nullable
+    private volatile String sqlPassthroughFilter;
+    @Nullable
     private volatile Long minDurationNanos;
     private boolean excludeCommits;
 
@@ -89,6 +96,7 @@ public class PerfLoggerController {
     private FilterType filterType = FilterType.FILTER;
     private final RefreshDataTask refreshDataTask;
     private final ScheduledExecutorService refreshDataScheduledExecutorService;
+    private boolean lastSelectFromRepositoryIsInError = false;
 
     PerfLoggerController(final IClientConnectionDelegate clientConnectionDelegate,
             final AbstractLogReceiver logReceiver, final LogRepositoryUpdate logRepositoryUpdate,
@@ -117,6 +125,15 @@ public class PerfLoggerController {
             txtFilter = null;
         } else {
             txtFilter = filter;
+        }
+        refresh();
+    }
+
+    void setSqlPassThroughFilter(@Nullable final String filter) {
+        if (filter == null || filter.isEmpty()) {
+            sqlPassthroughFilter = null;
+        } else {
+            sqlPassthroughFilter = filter;
         }
         refresh();
     }
@@ -347,6 +364,7 @@ public class PerfLoggerController {
         searchCriteria.setFilter(getTxtFilter());
         searchCriteria.setMinDurationNanos(getMinDurationNanoFilter());
         searchCriteria.setRemoveTransactionCompletions(excludeCommits);
+        searchCriteria.setSqlPassThroughFilter(sqlPassthroughFilter);
         return searchCriteria;
     }
 
@@ -409,41 +427,60 @@ public class PerfLoggerController {
         }
 
         void doRefreshData(final SelectLogRunner selectLogRunner) {
-            selectLogRunner.doSelect(new ResultSetAnalyzer() {
-                @Override
-                public void analyze(final ResultSet resultSet) throws SQLException {
-                    final ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-                    final int columnCount = resultSetMetaData.getColumnCount();
+            try {
+                selectLogRunner.doSelect(new ResultSetAnalyzer() {
+                    @Override
+                    public void analyze(final ResultSet resultSet) throws SQLException {
+                        final ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+                        final int columnCount = resultSetMetaData.getColumnCount();
 
-                    final List<String> tempColumnNames = new ArrayList<String>();
-                    final List<Class<?>> tempColumnTypes = new ArrayList<Class<?>>();
-                    final List<Object[]> tempRows = new ArrayList<Object[]>();
-                    try {
-                        for (int i = 1; i <= columnCount; i++) {
-                            tempColumnNames.add(resultSetMetaData.getColumnLabel(i).toUpperCase());
-                            tempColumnTypes.add(Class.forName(resultSetMetaData.getColumnClassName(i)));
-                        }
-
-                        while (resultSet.next()) {
-                            final Object[] row = new Object[columnCount];
+                        final List<String> tempColumnNames = new ArrayList<String>();
+                        final List<Class<?>> tempColumnTypes = new ArrayList<Class<?>>();
+                        final List<Object[]> tempRows = new ArrayList<Object[]>();
+                        try {
                             for (int i = 1; i <= columnCount; i++) {
-                                row[i - 1] = resultSet.getObject(i);
+                                tempColumnNames.add(resultSetMetaData.getColumnLabel(i).toUpperCase());
+                                tempColumnTypes.add(Class.forName(resultSetMetaData.getColumnClassName(i)));
                             }
-                            tempRows.add(row);
-                        }
-                    } catch (final ClassNotFoundException e) {
-                        throw new RuntimeException(e);
-                    }
 
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            perfLoggerPanel.setData(tempRows, tempColumnNames, tempColumnTypes, tableStructureChanged);
-                            tableStructureChanged = false;
+                            while (resultSet.next()) {
+                                final Object[] row = new Object[columnCount];
+                                for (int i = 1; i <= columnCount; i++) {
+                                    row[i - 1] = resultSet.getObject(i);
+                                }
+                                tempRows.add(row);
+                            }
+                        } catch (final ClassNotFoundException e) {
+                            throw new RuntimeException(e);
                         }
-                    });
-                }
-            });
+
+                        SwingUtilities.invokeLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (lastSelectFromRepositoryIsInError) {
+                                    perfLoggerPanel.txtFieldRawSql.setText("");
+                                }
+                                lastSelectFromRepositoryIsInError = false;
+                                perfLoggerPanel.setData(tempRows, tempColumnNames, tempColumnTypes,
+                                        tableStructureChanged);
+                                tableStructureChanged = false;
+                            }
+                        });
+                    }
+                });
+            } catch (final Exception ex) {
+                LOGGER.debug("error retrieving log statements", ex);
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        lastSelectFromRepositoryIsInError = true;
+                        perfLoggerPanel.txtFieldRawSql.setText(ex.getMessage());
+                        perfLoggerPanel.setData(new ArrayList<Object[]>(), new ArrayList<String>(),
+                                new ArrayList<Class<?>>(), true);
+                        tableStructureChanged = true;
+                    }
+                });
+            }
         }
 
     }
