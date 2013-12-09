@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.sla.jdbcperflogger.StatementType;
-import ch.sla.jdbcperflogger.logger.ConnectionInfo;
+import ch.sla.jdbcperflogger.model.ConnectionInfo;
 
 public class LogRepositoryReadJdbc implements LogRepositoryRead {
 

@@ -425,7 +425,7 @@ public class PerfLoggerPanel extends JPanel {
         gbl_panelRawSql.columnWidths = new int[] { 0, 0, 0 };
         gbl_panelRawSql.rowHeights = new int[] { 0, 0, 0 };
         gbl_panelRawSql.columnWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
-        gbl_panelRawSql.rowWeights = new double[] { 1.0, 1.0, Double.MIN_VALUE };
+        gbl_panelRawSql.rowWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
         panelRawSql.setLayout(gbl_panelRawSql);
 
         final JPanel connectinInfoPanel = new JPanel();

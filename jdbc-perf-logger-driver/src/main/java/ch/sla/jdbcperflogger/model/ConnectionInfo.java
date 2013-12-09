@@ -1,9 +1,7 @@
-package ch.sla.jdbcperflogger.logger;
+package ch.sla.jdbcperflogger.model;
 
 import java.util.Date;
 import java.util.UUID;
-
-import ch.sla.jdbcperflogger.model.LogMessage;
 
 public class ConnectionInfo implements LogMessage {
     private static final long serialVersionUID = 1L;

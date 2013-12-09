@@ -47,6 +47,7 @@ import org.xml.sax.SAXException;
 
 import ch.sla.jdbcperflogger.PerfLoggerConstants;
 import ch.sla.jdbcperflogger.driver.LoggingConnectionInvocationHandler;
+import ch.sla.jdbcperflogger.model.ConnectionInfo;
 import ch.sla.jdbcperflogger.model.LogMessage;
 
 public class PerfLoggerRemoting {

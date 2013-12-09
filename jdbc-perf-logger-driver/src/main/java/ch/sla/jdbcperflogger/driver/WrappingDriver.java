@@ -52,7 +52,7 @@ public class WrappingDriver implements Driver {
         }
     }
 
-    private final AtomicInteger connectionCounter = new AtomicInteger();
+    private static final AtomicInteger connectionCounter = new AtomicInteger();
 
     public WrappingDriver() {
     }

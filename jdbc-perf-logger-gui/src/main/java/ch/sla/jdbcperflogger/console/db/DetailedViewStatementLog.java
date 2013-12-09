@@ -5,7 +5,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import ch.sla.jdbcperflogger.StatementType;
-import ch.sla.jdbcperflogger.logger.ConnectionInfo;
+import ch.sla.jdbcperflogger.model.ConnectionInfo;
 
 public class DetailedViewStatementLog {
     private final UUID logId;

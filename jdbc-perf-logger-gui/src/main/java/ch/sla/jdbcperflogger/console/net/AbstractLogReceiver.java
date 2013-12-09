@@ -26,9 +26,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.sla.jdbcperflogger.console.db.LogRepositoryUpdate;
-import ch.sla.jdbcperflogger.logger.ConnectionInfo;
 import ch.sla.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.BatchedPreparedStatementsLog;
+import ch.sla.jdbcperflogger.model.ConnectionInfo;
 import ch.sla.jdbcperflogger.model.ResultSetLog;
 import ch.sla.jdbcperflogger.model.StatementExecutedLog;
 import ch.sla.jdbcperflogger.model.StatementLog;
