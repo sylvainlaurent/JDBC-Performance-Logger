@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Savepoint;
 import java.sql.Statement;
+import java.util.Properties;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -36,13 +37,16 @@ public class LoggingConnectionInvocationHandler implements InvocationHandler {
     private final Connection wrappedConnection;
     private final DatabaseType databaseType;
     private final String url;
+    private final Properties connectionProperties;
 
-    LoggingConnectionInvocationHandler(final int connectionId, final Connection wrappedConnection, final String url) {
+    LoggingConnectionInvocationHandler(final int connectionId, final Connection wrappedConnection, final String url,
+            final Properties connectionProperties) {
         connectionUuid = UUID.randomUUID();
         this.connectionId = connectionId;
         this.wrappedConnection = wrappedConnection;
         databaseType = Utils.getDatabaseType(wrappedConnection);
         this.url = url;
+        this.connectionProperties = connectionProperties;
     }
 
     @Override
@@ -110,6 +114,10 @@ public class LoggingConnectionInvocationHandler implements InvocationHandler {
 
     public String getUrl() {
         return url;
+    }
+
+    public Properties getConnectionProperties() {
+        return connectionProperties;
     }
 
 }

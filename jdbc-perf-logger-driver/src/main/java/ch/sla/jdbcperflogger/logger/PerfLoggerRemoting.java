@@ -133,7 +133,8 @@ public class PerfLoggerRemoting {
 
     public static void connectionCreated(final LoggingConnectionInvocationHandler connectionHandler) {
         final ConnectionInfo info = new ConnectionInfo(connectionHandler.getConnectionUuid(),
-                connectionHandler.getConnectionId(), connectionHandler.getUrl(), new Date());
+                connectionHandler.getConnectionId(), connectionHandler.getUrl(), new Date(),
+                connectionHandler.getConnectionProperties());
         synchronized (connectionToInfo) {
             connectionToInfo.put(connectionHandler, info);
             postLog(info);

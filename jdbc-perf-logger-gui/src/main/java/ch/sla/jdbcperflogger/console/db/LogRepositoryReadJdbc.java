@@ -20,6 +20,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Properties;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -220,7 +221,8 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
                             + "statement_log.rawSql, statement_log.filledSql, " //
                             + "statement_log.executionDurationNanos, statement_log.threadName, statement_log.exception, "//
                             + "statement_log.connectionId,"//
-                            + "connection_info.connectionNumber, connection_info.url, connection_info.creationDate "//
+                            + "connection_info.connectionNumber, connection_info.url, connection_info.creationDate,"//
+                            + "connection_info.connectionInfo "//
                             + "from statement_log join connection_info on (statement_log.connectionId=connection_info.connectionId) "//
                             + "where statement_log.id=?");
             statement.setLong(1, id);
@@ -244,9 +246,10 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
                     final int connectionNumber = resultSet.getInt(i++);
                     final String connectionUrl = resultSet.getString(i++);
                     final Timestamp creationDate = resultSet.getTimestamp(i++);
+                    final Properties connectionProperties = (Properties) resultSet.getObject(i++);
 
                     final ConnectionInfo connectionInfo = new ConnectionInfo(connectionId, connectionNumber,
-                            connectionUrl, creationDate);
+                            connectionUrl, creationDate, connectionProperties);
 
                     result = new DetailedViewStatementLog(logId, connectionInfo, tstamp.getTime(), statementType,
                             rawSql, filledSql, threadName, durationNanos, exception);

@@ -45,7 +45,7 @@ import ch.sla.jdbcperflogger.model.TxCompleteLog;
 
 public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
     // TODO ajouter colonne clientId (processId)
-    public static final int SCHEMA_VERSION = 6;
+    public static final int SCHEMA_VERSION = 7;
 
     private static final int NB_ROWS_MAX = Integer.parseInt(System.getProperty("maxLoggedStatements", "20000"));
     private static final long CLEAN_UP_PERIOD_MS = TimeUnit.SECONDS.toMillis(30);
@@ -260,11 +260,14 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
     public synchronized void addConnection(final ConnectionInfo connectionInfo) {
         try {
             final PreparedStatement stmt = connectionUpdate
-                    .prepareStatement("merge into connection_info (connectionId, connectionNumber, url, creationDate) key(connectionId) values (?,?,?,?)");
-            stmt.setObject(1, connectionInfo.getUuid());
-            stmt.setInt(2, connectionInfo.getConnectionNumber());
-            stmt.setString(3, connectionInfo.getUrl());
-            stmt.setTimestamp(4, new Timestamp(connectionInfo.getCreationDate().getTime()));
+                    .prepareStatement("merge into connection_info (connectionId, connectionNumber, url, creationDate, connectionInfo)"//
+                            + " key(connectionId) values (?,?,?,?,?)");
+            int i = 1;
+            stmt.setObject(i++, connectionInfo.getUuid());
+            stmt.setInt(i++, connectionInfo.getConnectionNumber());
+            stmt.setString(i++, connectionInfo.getUrl());
+            stmt.setTimestamp(i++, new Timestamp(connectionInfo.getCreationDate().getTime()));
+            stmt.setObject(i++, connectionInfo.getConnectionProperties());
 
             stmt.execute();
             stmt.close();

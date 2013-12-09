@@ -241,6 +241,7 @@ public class PerfLoggerController {
         String txt2 = "";
         String connectionUrl = null;
         String connectionCreationDate = null;
+        String connectionPropertiesString = null;
         DetailedViewStatementLog statementLog = null;
         if (logId != null) {
             statementLog = logRepositoryRead.getStatementLog(logId);
@@ -270,6 +271,7 @@ public class PerfLoggerController {
                 deltaTimestampBaseMillis = statementLog.getTimestamp();
 
                 connectionUrl = statementLog.getConnectionInfo().getUrl();
+                connectionPropertiesString = statementLog.getConnectionInfo().getConnectionProperties().toString();
                 final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 connectionCreationDate = format.format(statementLog.getConnectionInfo().getCreationDate());
                 break;
@@ -321,6 +323,7 @@ public class PerfLoggerController {
         perfLoggerPanel.txtFieldFilledSql.select(0, 0);
         perfLoggerPanel.connectionUrlField.setText(connectionUrl);
         perfLoggerPanel.connectionCreationDateField.setText(connectionCreationDate);
+        perfLoggerPanel.connectionPropertiesField.setText(connectionPropertiesString);
 
         perfLoggerPanel.setDeltaTimestampBaseMillis(deltaTimestampBaseMillis);
     }

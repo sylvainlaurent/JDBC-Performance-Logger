@@ -68,8 +68,17 @@ public class WrappingDriver implements Driver {
         final String unWrappedUrl = extractUrlForWrappedDriver(url);
         Connection connection = DriverManager.getConnection(unWrappedUrl, info);
 
+        final Properties cleanedConnectionProperties = new Properties();
+        if (info != null) {
+            for (final String str : info.stringPropertyNames()) {
+                if (!str.toLowerCase().contains("password")) {
+                    cleanedConnectionProperties.setProperty(str, info.getProperty(str));
+                }
+            }
+        }
+
         final LoggingConnectionInvocationHandler connectionInvocationHandler = new LoggingConnectionInvocationHandler(
-                connectionCounter.incrementAndGet(), connection, unWrappedUrl);
+                connectionCounter.incrementAndGet(), connection, unWrappedUrl, cleanedConnectionProperties);
         connection = (Connection) Proxy.newProxyInstance(WrappingDriver.class.getClassLoader(),
                 Utils.extractAllInterfaces(connection.getClass()), connectionInvocationHandler);
 

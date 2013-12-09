@@ -6,7 +6,8 @@ SET UNDO_LOG 0;
 --drop all objects;
 
 create table if not exists connection_info 
-    (id identity, connectionId UUID not null, connectionNumber int not null, url varchar not null, creationDate timestamp not null);
+    (id identity, connectionId UUID not null, connectionNumber int not null, 
+    url varchar not null, creationDate timestamp not null, connectionInfo other);
 
 create table if not exists statement_log 
     (id identity, connectionId UUID not null, logId UUID not null, tstamp timestamp not null, statementType tinyInt not null, 
