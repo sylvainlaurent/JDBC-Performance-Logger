@@ -15,6 +15,7 @@
  */
 package ch.sla.jdbcperflogger.console.ui;
 
+import java.awt.Cursor;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -29,19 +30,26 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import javax.annotation.Nullable;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.ListSelectionModel;
+import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 @SuppressWarnings("serial")
 public class WelcomePanel extends JPanel {
+    private final static String WEB_SITE_ADDRESS = "https://github.com/sylvainlaurent/JDBC-Performance-Logger";
+
     private final JTextField txtTargetHost;
     private final JTextField txtTargetPort;
     private final JList<HostPort> recentConnectionsList;
@@ -51,9 +59,9 @@ public class WelcomePanel extends JPanel {
     public WelcomePanel(final IClientConnectionDelegate clientConnectionCreator) {
         final GridBagLayout gridBagLayout = new GridBagLayout();
         gridBagLayout.columnWidths = new int[] { 438, 0 };
-        gridBagLayout.rowHeights = new int[] { 46, 88, 0 };
+        gridBagLayout.rowHeights = new int[] { 46, 88, 0, 0 };
         gridBagLayout.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
-        gridBagLayout.rowWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
+        gridBagLayout.rowWeights = new double[] { 0.0, 1.0, 1.0, Double.MIN_VALUE };
         setLayout(gridBagLayout);
 
         final JPanel serverModePanel = new JPanel();
@@ -90,8 +98,8 @@ public class WelcomePanel extends JPanel {
         final JPanel clientModePanel = new JPanel();
         clientModePanel.setBorder(new TitledBorder("Client mode"));
         final GridBagConstraints gbc_clientModePanel = new GridBagConstraints();
-        gbc_clientModePanel.anchor = GridBagConstraints.NORTH;
-        gbc_clientModePanel.fill = GridBagConstraints.HORIZONTAL;
+        gbc_clientModePanel.insets = new Insets(0, 0, 5, 0);
+        gbc_clientModePanel.fill = GridBagConstraints.BOTH;
         gbc_clientModePanel.gridx = 0;
         gbc_clientModePanel.gridy = 1;
         add(clientModePanel, gbc_clientModePanel);
@@ -166,6 +174,7 @@ public class WelcomePanel extends JPanel {
 
         final JScrollPane recentConnectionsScrollPane = new JScrollPane();
         final GridBagConstraints gbc_recentConnectionsScrollPane = new GridBagConstraints();
+        gbc_recentConnectionsScrollPane.insets = new Insets(0, 0, 5, 0);
         gbc_recentConnectionsScrollPane.fill = GridBagConstraints.BOTH;
         gbc_recentConnectionsScrollPane.gridwidth = 2;
         gbc_recentConnectionsScrollPane.gridx = 1;
@@ -214,6 +223,59 @@ public class WelcomePanel extends JPanel {
 
         });
         recentConnectionsScrollPane.setViewportView(recentConnectionsList);
+
+        final JPanel aboutPanel = new JPanel();
+        aboutPanel.setBorder(new TitledBorder(null, "About", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        final GridBagConstraints gbc_aboutPanel = new GridBagConstraints();
+        gbc_aboutPanel.fill = GridBagConstraints.BOTH;
+        gbc_aboutPanel.gridx = 0;
+        gbc_aboutPanel.gridy = 2;
+        add(aboutPanel, gbc_aboutPanel);
+        final GridBagLayout gbl_aboutPanel = new GridBagLayout();
+        gbl_aboutPanel.columnWidths = new int[] { 0, 0, 0 };
+        gbl_aboutPanel.rowHeights = new int[] { 0, 0 };
+        gbl_aboutPanel.columnWeights = new double[] { 1.0, 0.0, Double.MIN_VALUE };
+        gbl_aboutPanel.rowWeights = new double[] { 1.0, Double.MIN_VALUE };
+        aboutPanel.setLayout(gbl_aboutPanel);
+
+        final JTextPane aboutTextPane = new JTextPane();
+        aboutTextPane.setBackground(UIManager.getColor("control"));
+        aboutTextPane.setEditable(false);
+        aboutTextPane.setContentType("text/html");
+
+        String txt = "<p>Web site: <a href=\"" + WEB_SITE_ADDRESS + "\">" + WEB_SITE_ADDRESS + "</a></p>";
+        txt += "<p>Version: " + GuiUtils.getAppVersion() + "</p>";
+        aboutTextPane.setText(txt);
+        aboutTextPane.addHyperlinkListener(new HyperlinkListener() {
+            @Override
+            public void hyperlinkUpdate(@Nullable final HyperlinkEvent e) {
+                if (e != null && e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                    GuiUtils.openWebSite(e.getURL().toString());
+                }
+            }
+
+        });
+        final GridBagConstraints gbc_aboutTextPane = new GridBagConstraints();
+        gbc_aboutTextPane.insets = new Insets(0, 0, 0, 5);
+        gbc_aboutTextPane.fill = GridBagConstraints.BOTH;
+        gbc_aboutTextPane.gridx = 0;
+        gbc_aboutTextPane.gridy = 0;
+        aboutPanel.add(aboutTextPane, gbc_aboutTextPane);
+
+        final JLabel lblNewLabel = new JLabel();
+        lblNewLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        lblNewLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(@Nullable final MouseEvent e) {
+                GuiUtils.openWebSite(WEB_SITE_ADDRESS);
+            }
+        });
+        lblNewLabel.setIcon(new ImageIcon(WelcomePanel.class.getResource("/icons/forkme_right_green_007200.png")));
+        final GridBagConstraints gbc_lblNewLabel = new GridBagConstraints();
+        gbc_lblNewLabel.anchor = GridBagConstraints.NORTHEAST;
+        gbc_lblNewLabel.gridx = 1;
+        gbc_lblNewLabel.gridy = 0;
+        aboutPanel.add(lblNewLabel, gbc_lblNewLabel);
 
         readPrefsForRecentConnections();
     }
@@ -267,4 +329,5 @@ public class WelcomePanel extends JPanel {
             throw new IllegalStateException(e);
         }
     }
+
 }

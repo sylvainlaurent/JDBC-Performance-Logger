@@ -3,7 +3,7 @@
 ## Purpose
 Measuring performance of SQL statements executed through JDBC.
 
-![jdbcperflogger](https://f.cloud.github.com/assets/718370/1424220/067f8c18-401a-11e3-9b39-391bfbc700e7.png)
+![jdbcperflogger](https://f.cloud.github.com/assets/718370/1738122/d2f3a45a-637e-11e3-9f58-06d466aa78aa.png)
 
 ## Why yet another project?
 Although other tools already exist around JDBC performance monitoring ([log4jdbc](http://code.google.com/p/log4jdbc/), [P6Spy](http://sourceforge.net/projects/p6spy/), [JDbMonitor](http://www.jdbmonitor.com/)...), I did not find the features I was looking for : a GUI, measurement of statement execution and ResultSet iteration, cumulative measures...
@@ -11,11 +11,13 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 ## Features
 - Graphical console (Swing-based) with analysis feature
  - filter/highlight based on statement text, minimum execution time
- - Group statements to count executions of identical statements and measure cumulated time
+ - advanced filtering using custom SQL WHERE clause against the embedded H2 DB
+ - group statements to count executions of identical statements and measure cumulated time
  - support for multiple connections
  - the connection between the monitored java application (JDBC proxy driver) and the console can be initiated from either side
-- Logging of bound values of prepared statements
-- separate measure of statement execution time and result set iteration time
+- Logging of bound values of prepared statements, including the name of the set* method called to bind the value (very helpful to distinguish setDate and setTimestamp)
+- Separate measure of statement execution time and result set iteration time
+- Measures commit/rollback times
 - Handling of batched statements
 - Logging of SQLExceptions
 
@@ -25,7 +27,7 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 
 ## How to setup the JDBC Driver
 - Add one (and only one) of the following set of files to the classpath of the JDBC-client application (the files can be found in the `lib` directory of the binary distribution)
- - `jdbc-perf-logger-driver`, `slf4j-api` and `jsr305` jar files
+ - `jdbc-perf-logger-driver` and `slf4j-api` jar files
  - `jdbc-perf-logger-driver-depsincluded` jar file
 - Change the driver class name to `ch.sla.jdbcperflogger.driver.WrappingDriver`
 - Prefix your current JDBC URL with `jdbcperflogger:`, example: `jdbcperflogger:jdbc:h2:mem:` or `jdbcperflogger:jdbc:oracle:thin:@myhost:1521:orcl`
@@ -41,7 +43,7 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 
 ## Tested databases
 - H2 (lightly, used for our own unit tests)
-- Oracle 10.2
+- Oracle 10.2/11.2
 
 ## Current limitations
 - No DataSource nor XADataSource class provided
