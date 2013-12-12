@@ -3,7 +3,7 @@
 
   <groupId>ch.sla</groupId>
   <artifactId>jdbc-perf-logger</artifactId>
-  <version>0.3.1-SNAPSHOT</version>
+  <version>0.4.0</version>
   <packaging>pom</packaging>
   <name>JDBC Performance Logger Parent</name>
   <description>Parent/Reactor project for JDBC Performance Logger</description>
@@ -18,7 +18,7 @@
   <scm>
     <connection>scm:git:https://github.com/sylvainlaurent/JDBC-Performance-Logger.git</connection>
     <developerConnection>scm:git:https://github.com/sylvainlaurent/JDBC-Performance-Logger.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>0.4.0</tag>
   </scm>
 
   <modules>
