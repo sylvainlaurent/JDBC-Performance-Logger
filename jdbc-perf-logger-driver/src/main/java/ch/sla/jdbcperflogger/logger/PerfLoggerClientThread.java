@@ -17,6 +17,8 @@ package ch.sla.jdbcperflogger.logger;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -27,10 +29,33 @@ import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting.LogSender;
 class PerfLoggerClientThread extends Thread {
     private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerClientThread.class);
 
+    boolean done;
+
     private final String host;
     private final int port;
 
-    PerfLoggerClientThread(final String host, final int port) {
+    static PerfLoggerClientThread spawn(final String host, final int port) {
+        // avoid Classloader leaks
+
+        return AccessController.doPrivileged(new PrivilegedAction<PerfLoggerClientThread>() {
+            @Override
+            public PerfLoggerClientThread run() {
+                final ClassLoader savedClassLoader = Thread.currentThread().getContextClassLoader();
+                try {
+                    Thread.currentThread().setContextClassLoader(null);
+
+                    final PerfLoggerClientThread thread = new PerfLoggerClientThread(host, port);
+                    thread.start();
+                    return thread;
+                } finally {
+                    Thread.currentThread().setContextClassLoader(savedClassLoader);
+                }
+
+            }
+        });
+    }
+
+    private PerfLoggerClientThread(final String host, final int port) {
         this.setDaemon(true);
         this.setName("PerfLoggerClient " + host + ":" + port);
         this.host = host;
@@ -39,7 +64,7 @@ class PerfLoggerClientThread extends Thread {
 
     @Override
     public void run() {
-        while (true) {
+        while (!done) {
             final Socket socket;
             try {
                 socket = new Socket(host, port);

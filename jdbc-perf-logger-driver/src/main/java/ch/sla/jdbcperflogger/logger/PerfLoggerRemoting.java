@@ -68,7 +68,7 @@ public class PerfLoggerRemoting {
             final NodeList localServersList = root.getElementsByTagName("local-server");
             for (int i = 0; i < localServersList.getLength(); i++) {
                 final String port = localServersList.item(i).getAttributes().getNamedItem("port").getTextContent();
-                new PerfLoggerServerThread(Integer.parseInt(port)).start();
+                PerfLoggerServerThread.spawn(Integer.parseInt(port));
             }
             final NodeList targetClientList = root.getElementsByTagName("target-console");
             for (int i = 0; i < targetClientList.getLength(); i++) {
@@ -77,7 +77,7 @@ public class PerfLoggerRemoting {
                 final String host = attributes.getNamedItem("host").getTextContent();
                 @Nonnull
                 final String port = attributes.getNamedItem("port").getTextContent();
-                new PerfLoggerClientThread(host, Integer.parseInt(port)).start();
+                PerfLoggerClientThread.spawn(host, Integer.parseInt(port));
             }
         } catch (final ParserConfigurationException e) {
             throw new RuntimeException(e);

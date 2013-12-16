@@ -18,6 +18,8 @@ package ch.sla.jdbcperflogger.logger;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,9 +29,31 @@ import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting.LogSender;
 class PerfLoggerServerThread extends Thread {
     private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerServerThread.class);
 
-    private ServerSocket serverSocket;
+    ServerSocket serverSocket;
+    boolean done;
 
-    PerfLoggerServerThread(final int serverPort) {
+    static PerfLoggerServerThread spawn(final int serverPort) {
+        // avoid Classloader leaks
+
+        return AccessController.doPrivileged(new PrivilegedAction<PerfLoggerServerThread>() {
+            @Override
+            public PerfLoggerServerThread run() {
+                final ClassLoader savedClassLoader = Thread.currentThread().getContextClassLoader();
+                try {
+                    Thread.currentThread().setContextClassLoader(null);
+
+                    final PerfLoggerServerThread thread = new PerfLoggerServerThread(serverPort);
+                    thread.start();
+                    return thread;
+                } finally {
+                    Thread.currentThread().setContextClassLoader(savedClassLoader);
+                }
+
+            }
+        });
+    }
+
+    private PerfLoggerServerThread(final int serverPort) {
         this.setDaemon(true);
         this.setName("PerfLoggerServer acceptor port " + serverPort);
         try {
@@ -42,7 +66,7 @@ class PerfLoggerServerThread extends Thread {
     @Override
     public void run() {
         try {
-            while (true) {
+            while (!done) {
                 try {
                     final Socket socket = serverSocket.accept();
                     LOGGER.debug("Got client connection from " + socket);
