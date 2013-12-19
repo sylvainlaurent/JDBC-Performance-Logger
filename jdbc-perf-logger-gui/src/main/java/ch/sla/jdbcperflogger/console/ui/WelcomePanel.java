@@ -181,7 +181,7 @@ public class WelcomePanel extends JPanel {
         gbc_recentConnectionsScrollPane.gridy = 2;
         clientModePanel.add(recentConnectionsScrollPane, gbc_recentConnectionsScrollPane);
 
-        recentConnectionsList = new JList<HostPort>();
+        recentConnectionsList = new JList<>();
         recentConnectionsList.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(@Nullable final KeyEvent e) {

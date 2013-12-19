@@ -28,9 +28,9 @@ import ch.sla.jdbcperflogger.console.db.LogRepositoryConstants;
 class ResultSetDataModel extends AbstractTableModel {
 
     private static final long serialVersionUID = 1L;
-    private List<String> columnNames = new ArrayList<String>();
-    private List<Class<?>> columnTypes = new ArrayList<Class<?>>();
-    private List<Object[]> rows = new ArrayList<Object[]>();
+    private List<String> columnNames = new ArrayList<>();
+    private List<Class<?>> columnTypes = new ArrayList<>();
+    private List<Object[]> rows = new ArrayList<>();
     private boolean firstColumnIsID;
 
     /**

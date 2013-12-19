@@ -76,7 +76,7 @@ public class PerfLoggerPanel extends JPanel {
     private static final Map<String, Integer> COLUMNS_WIDTH;
 
     static {
-        COLUMNS_WIDTH = new HashMap<String, Integer>();
+        COLUMNS_WIDTH = new HashMap<>();
         COLUMNS_WIDTH.put(LogRepositoryConstants.TSTAMP_COLUMN, 150);
         COLUMNS_WIDTH.put(LogRepositoryConstants.FETCH_TIME_COLUMN, 50);
         COLUMNS_WIDTH.put(LogRepositoryConstants.EXEC_TIME_COLUMN, 50);
@@ -148,8 +148,8 @@ public class PerfLoggerPanel extends JPanel {
         gbl_filterPanel.rowWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
         filterPanel.setLayout(gbl_filterPanel);
 
-        comboBoxFilterType = new JComboBox<FilterType>();
-        comboBoxFilterType.setModel(new DefaultComboBoxModel<FilterType>(EnumSet.allOf(FilterType.class).toArray(
+        comboBoxFilterType = new JComboBox<>();
+        comboBoxFilterType.setModel(new DefaultComboBoxModel<>(EnumSet.allOf(FilterType.class).toArray(
                 new FilterType[0])));
         comboBoxFilterType.setSelectedItem(FilterType.FILTER);
         comboBoxFilterType.addActionListener(new ActionListener() {
@@ -293,14 +293,14 @@ public class PerfLoggerPanel extends JPanel {
         gbl_groupByPanel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
         groupByPanel.setLayout(gbl_groupByPanel);
 
-        comboBoxGroupBy = new JComboBox<GroupBy>();
+        comboBoxGroupBy = new JComboBox<>();
         final GridBagConstraints gbc_comboBoxGroupBy = new GridBagConstraints();
         gbc_comboBoxGroupBy.fill = GridBagConstraints.HORIZONTAL;
         gbc_comboBoxGroupBy.gridx = 0;
         gbc_comboBoxGroupBy.gridy = 0;
         groupByPanel.add(comboBoxGroupBy, gbc_comboBoxGroupBy);
         comboBoxGroupBy
-                .setModel(new DefaultComboBoxModel<GroupBy>(EnumSet.allOf(GroupBy.class).toArray(new GroupBy[0])));
+                .setModel(new DefaultComboBoxModel<>(EnumSet.allOf(GroupBy.class).toArray(new GroupBy[0])));
         comboBoxGroupBy.setSelectedIndex(0);
         comboBoxGroupBy.addActionListener(new ActionListener() {
             @Override

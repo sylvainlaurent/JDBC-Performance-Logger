@@ -437,9 +437,9 @@ public class PerfLoggerController {
                         final ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
                         final int columnCount = resultSetMetaData.getColumnCount();
 
-                        final List<String> tempColumnNames = new ArrayList<String>();
-                        final List<Class<?>> tempColumnTypes = new ArrayList<Class<?>>();
-                        final List<Object[]> tempRows = new ArrayList<Object[]>();
+                        final List<String> tempColumnNames = new ArrayList<>();
+                        final List<Class<?>> tempColumnTypes = new ArrayList<>();
+                        final List<Object[]> tempRows = new ArrayList<>();
                         try {
                             for (int i = 1; i <= columnCount; i++) {
                                 tempColumnNames.add(resultSetMetaData.getColumnLabel(i).toUpperCase());

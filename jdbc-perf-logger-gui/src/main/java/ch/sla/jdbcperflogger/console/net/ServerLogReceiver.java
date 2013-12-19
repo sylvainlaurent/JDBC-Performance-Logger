@@ -34,7 +34,7 @@ public class ServerLogReceiver extends AbstractLogReceiver {
     final static Logger LOGGER = LoggerFactory.getLogger(ServerLogReceiver.class);
 
     private ServerSocket serverSocket;
-    private final Set<AbstractLogReceiver> childReceivers = new CopyOnWriteArraySet<AbstractLogReceiver>();
+    private final Set<AbstractLogReceiver> childReceivers = new CopyOnWriteArraySet<>();
 
     public ServerLogReceiver(final int listenPort, final LogRepositoryUpdate logRepository) {
         super(logRepository);

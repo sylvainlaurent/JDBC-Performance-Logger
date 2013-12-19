@@ -21,8 +21,8 @@ public class DetailedViewStatementLog {
     private final ConnectionInfo connectionInfo;
 
     public DetailedViewStatementLog(final UUID logId, final ConnectionInfo connectionInfo, final long timestamp,
-            final StatementType statementType, final String rawSql, final String filledSql, final String threadName,
-            final long durationNanos, final Throwable exception) {
+            @Nullable final StatementType statementType, final String rawSql, final String filledSql, final String threadName,
+            final long durationNanos, @Nullable final Throwable exception) {
         this.logId = logId;
         this.connectionInfo = connectionInfo;
         this.timestamp = timestamp;
