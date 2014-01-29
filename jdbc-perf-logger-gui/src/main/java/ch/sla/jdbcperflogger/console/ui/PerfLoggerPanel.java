@@ -151,7 +151,7 @@ public class PerfLoggerPanel extends JPanel {
         comboBoxFilterType = new JComboBox<>();
         comboBoxFilterType.setModel(new DefaultComboBoxModel<>(EnumSet.allOf(FilterType.class).toArray(
                 new FilterType[0])));
-        comboBoxFilterType.setSelectedItem(FilterType.FILTER);
+        comboBoxFilterType.setSelectedItem(FilterType.HIGHLIGHT);
         comboBoxFilterType.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(@Nullable final ActionEvent e) {

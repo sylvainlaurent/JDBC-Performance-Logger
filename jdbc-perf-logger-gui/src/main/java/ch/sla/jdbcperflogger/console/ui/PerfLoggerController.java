@@ -93,7 +93,7 @@ public class PerfLoggerController {
     private SelectLogRunner currentSelectLogRunner = selectAllLogStatements;
     private boolean tableStructureChanged = true;
     private GroupBy groupBy = GroupBy.NONE;
-    private FilterType filterType = FilterType.FILTER;
+    private FilterType filterType = FilterType.HIGHLIGHT;
     private final RefreshDataTask refreshDataTask;
     private final ScheduledExecutorService refreshDataScheduledExecutorService;
     private boolean lastSelectFromRepositoryIsInError = false;

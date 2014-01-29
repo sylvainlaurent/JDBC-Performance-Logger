@@ -1,7 +1,9 @@
 package ch.sla.jdbcperflogger.console.ui;
 
+import javax.annotation.Nullable;
 import java.awt.Desktop;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Properties;
@@ -15,8 +17,12 @@ public class GuiUtils {
     static String getAppVersion() {
         final Properties mavenProps = new Properties();
         try {
-            mavenProps.load(WelcomePanel.class
-                    .getResourceAsStream("/META-INF/maven/ch.sla/jdbc-perf-logger-gui/pom.properties"));
+            @Nullable
+            InputStream pomPropsFile = WelcomePanel.class
+                    .getResourceAsStream("/META-INF/maven/ch.sla/jdbc-perf-logger-gui/pom.properties");
+            if(pomPropsFile!=null) {
+                mavenProps.load(pomPropsFile);
+            }
             return mavenProps.getProperty("version");
         } catch (final IOException e) {
             LOGGER.warn("", e);
