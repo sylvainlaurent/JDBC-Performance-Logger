@@ -3,7 +3,7 @@
   <parent>
     <groupId>ch.sla</groupId>
     <artifactId>jdbc-perf-logger</artifactId>
-    <version>0.4.1-SNAPSHOT</version>
+    <version>0.4.1</version>
   </parent>
 
   <artifactId>jdbc-perf-logger-gui</artifactId>
