@@ -36,10 +36,12 @@ public class CustomTableCellRenderer extends DefaultTableCellRenderer {
         final CustomTableCellRenderer component = (CustomTableCellRenderer) super.getTableCellRendererComponent(table,
                 value, isSelected, hasFocus, row, column);
 
+        final int columnModelIndex = table.convertColumnIndexToModel(column);
+
         final ResultSetDataModel dataModel = (ResultSetDataModel) table.getModel();
-        if (LogRepositoryConstants.STMT_TYPE_COLUMN.equals(dataModel.getColumnName(column))) {
+        if (LogRepositoryConstants.STMT_TYPE_COLUMN.equals(dataModel.getColumnName(columnModelIndex))) {
             final int modelRowIndex = table.convertRowIndexToModel(row);
-            final StatementType statementType = (StatementType) dataModel.getValueAt(modelRowIndex, column);
+            final StatementType statementType = (StatementType) dataModel.getValueAt(modelRowIndex, columnModelIndex);
             switch (statementType) {
             case BASE_NON_PREPARED_STMT:
                 component.setForeground(Color.ORANGE);

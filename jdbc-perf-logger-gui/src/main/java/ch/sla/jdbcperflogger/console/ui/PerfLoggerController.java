@@ -384,6 +384,16 @@ public class PerfLoggerController {
 
         @Override
         public void run() {
+            try {
+                doRun();
+            } catch (final Exception exc) {
+                // we must catch any exception otherwise the scheduling stops
+                LOGGER.error("Error in background refresh task", exc);
+            }
+        }
+
+        private void doRun() {
+
             if (logRepositoryUpdate.getLastModificationTime() <= lastRefreshTime
                     && connectionsCount == logReceiver.getConnectionsCount()) {
                 return;

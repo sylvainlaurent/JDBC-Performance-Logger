@@ -299,8 +299,7 @@ public class PerfLoggerPanel extends JPanel {
         gbc_comboBoxGroupBy.gridx = 0;
         gbc_comboBoxGroupBy.gridy = 0;
         groupByPanel.add(comboBoxGroupBy, gbc_comboBoxGroupBy);
-        comboBoxGroupBy
-                .setModel(new DefaultComboBoxModel<>(EnumSet.allOf(GroupBy.class).toArray(new GroupBy[0])));
+        comboBoxGroupBy.setModel(new DefaultComboBoxModel<>(EnumSet.allOf(GroupBy.class).toArray(new GroupBy[0])));
         comboBoxGroupBy.setSelectedIndex(0);
         comboBoxGroupBy.addActionListener(new ActionListener() {
             @Override
@@ -686,7 +685,7 @@ public class PerfLoggerPanel extends JPanel {
                     table.getColumnModel().getColumn(i).setPreferredWidth(width.intValue());
                 }
             }
-        } else if (selectedRow >= 0 && selectedRow < rows.size()) {
+        } else if (selectedRow >= 0 && selectedRow < rows.size() && modelRowIndex < rows.size()) {
             final int newSelectedRowIndex = table.convertRowIndexToView(modelRowIndex);
             table.setRowSelectionInterval(newSelectedRowIndex, newSelectedRowIndex);
         }
