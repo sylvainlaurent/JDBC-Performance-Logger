@@ -15,6 +15,7 @@
  */
 package ch.sla.jdbcperflogger.console.ui;
 
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -25,21 +26,27 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.beans.Beans;
 import java.util.TreeSet;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import javax.annotation.Nullable;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
@@ -59,10 +66,73 @@ public class WelcomePanel extends JPanel {
     public WelcomePanel(final IClientConnectionDelegate clientConnectionCreator) {
         final GridBagLayout gridBagLayout = new GridBagLayout();
         gridBagLayout.columnWidths = new int[] { 438, 0 };
-        gridBagLayout.rowHeights = new int[] { 46, 88, 0, 0 };
+        gridBagLayout.rowHeights = new int[] { 0, 46, 88, 0, 0 };
         gridBagLayout.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
-        gridBagLayout.rowWeights = new double[] { 0.0, 1.0, 1.0, Double.MIN_VALUE };
+        gridBagLayout.rowWeights = new double[] { 0.0, 0.0, 1.0, 1.0, Double.MIN_VALUE };
         setLayout(gridBagLayout);
+
+        final JPanel lookAndFeelPanel = new JPanel();
+        lookAndFeelPanel.setBorder(new TitledBorder(null, "Look and Feel", TitledBorder.LEADING, TitledBorder.TOP,
+                null, null));
+        final GridBagConstraints gbc_lookAndFeelPanel = new GridBagConstraints();
+        gbc_lookAndFeelPanel.insets = new Insets(0, 0, 5, 0);
+        gbc_lookAndFeelPanel.fill = GridBagConstraints.BOTH;
+        gbc_lookAndFeelPanel.gridx = 0;
+        gbc_lookAndFeelPanel.gridy = 0;
+        add(lookAndFeelPanel, gbc_lookAndFeelPanel);
+        final GridBagLayout gbl_lookAndFeelPanel = new GridBagLayout();
+        gbl_lookAndFeelPanel.columnWidths = new int[] { 263, 0, 0 };
+        gbl_lookAndFeelPanel.rowHeights = new int[] { 0, 0 };
+        gbl_lookAndFeelPanel.columnWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
+        gbl_lookAndFeelPanel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
+        lookAndFeelPanel.setLayout(gbl_lookAndFeelPanel);
+
+        final JComboBox<LookAndFeelInfo> lookAndFeelsCombobox = new JComboBox<LookAndFeelInfo>();
+        final GridBagConstraints gbc_lookAndFeelComboBox = new GridBagConstraints();
+        gbc_lookAndFeelComboBox.fill = GridBagConstraints.HORIZONTAL;
+        gbc_lookAndFeelComboBox.gridx = 0;
+        gbc_lookAndFeelComboBox.gridy = 0;
+        lookAndFeelPanel.add(lookAndFeelsCombobox, gbc_lookAndFeelComboBox);
+        if (!Beans.isDesignTime()) {
+            final LookAndFeelInfo[] lookAndFeels = UIManager.getInstalledLookAndFeels();
+            final DefaultComboBoxModel<LookAndFeelInfo> lookAndFeelsCboxModel = new DefaultComboBoxModel<LookAndFeelInfo>(
+                    lookAndFeels);
+            lookAndFeelsCboxModel.insertElementAt(null, 0);
+            lookAndFeelsCombobox.setModel(lookAndFeelsCboxModel);
+            final String initialPreferredLookAndFeel = PerfLoggerGuiMain.getPreferredLookAndFeel();
+            if (initialPreferredLookAndFeel == null) {
+                lookAndFeelsCombobox.setSelectedIndex(0);
+            } else {
+                for (int i = 0; i < lookAndFeels.length; i++) {
+                    if (lookAndFeels[i].getClassName().equals(initialPreferredLookAndFeel)) {
+                        lookAndFeelsCombobox.setSelectedIndex(1 + i);
+                        break;
+                    }
+                }
+            }
+        }
+        lookAndFeelsCombobox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(@Nullable final JList<?> list, @Nullable final Object value,
+                    final int index, final boolean isSelected, final boolean cellHasFocus) {
+                if (value == null) {
+                    return super.getListCellRendererComponent(list, "(default)", index, isSelected, cellHasFocus);
+                }
+                final LookAndFeelInfo lfInfo = (LookAndFeelInfo) value;
+                return super.getListCellRendererComponent(list, lfInfo.getName(), index, isSelected, cellHasFocus);
+            }
+        });
+        lookAndFeelsCombobox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(@Nullable final ActionEvent e) {
+                @Nullable
+                final LookAndFeelInfo selectedLf = (LookAndFeelInfo) lookAndFeelsCombobox.getSelectedItem();
+                PerfLoggerGuiMain.savePreferredLookAndFeel(selectedLf != null ? selectedLf.getClassName() : null);
+
+                JOptionPane.showMessageDialog(WelcomePanel.this,
+                        "You need to relaunch the application to apply the new look and feel.");
+            }
+        });
 
         final JPanel serverModePanel = new JPanel();
         serverModePanel.setBorder(new TitledBorder("Server mode"));
@@ -71,7 +141,7 @@ public class WelcomePanel extends JPanel {
         gbc_serverModePanel.fill = GridBagConstraints.HORIZONTAL;
         gbc_serverModePanel.insets = new Insets(0, 0, 5, 0);
         gbc_serverModePanel.gridx = 0;
-        gbc_serverModePanel.gridy = 0;
+        gbc_serverModePanel.gridy = 1;
         add(serverModePanel, gbc_serverModePanel);
         final GridBagLayout gbl_serverModePanel = new GridBagLayout();
         gbl_serverModePanel.columnWidths = new int[] { 204, 32, 0 };
@@ -101,7 +171,7 @@ public class WelcomePanel extends JPanel {
         gbc_clientModePanel.insets = new Insets(0, 0, 5, 0);
         gbc_clientModePanel.fill = GridBagConstraints.BOTH;
         gbc_clientModePanel.gridx = 0;
-        gbc_clientModePanel.gridy = 1;
+        gbc_clientModePanel.gridy = 2;
         add(clientModePanel, gbc_clientModePanel);
         final GridBagLayout gbl_clientModePanel = new GridBagLayout();
         gbl_clientModePanel.columnWidths = new int[] { 30, 74, 292, 0 };
@@ -229,7 +299,7 @@ public class WelcomePanel extends JPanel {
         final GridBagConstraints gbc_aboutPanel = new GridBagConstraints();
         gbc_aboutPanel.fill = GridBagConstraints.BOTH;
         gbc_aboutPanel.gridx = 0;
-        gbc_aboutPanel.gridy = 2;
+        gbc_aboutPanel.gridy = 3;
         add(aboutPanel, gbc_aboutPanel);
         final GridBagLayout gbl_aboutPanel = new GridBagLayout();
         gbl_aboutPanel.columnWidths = new int[] { 0, 0, 0 };

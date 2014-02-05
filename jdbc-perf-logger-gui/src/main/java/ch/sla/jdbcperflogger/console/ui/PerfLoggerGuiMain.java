@@ -16,15 +16,20 @@
 package ch.sla.jdbcperflogger.console.ui;
 
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.Frame;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
+import javax.annotation.Nullable;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,20 +43,25 @@ import ch.sla.jdbcperflogger.console.net.ClientLogReceiver;
 import ch.sla.jdbcperflogger.console.net.ServerLogReceiver;
 
 public class PerfLoggerGuiMain implements IClientConnectionDelegate {
+    private static final String LOOK_AND_FEEL_CLASS_NAME_PREF_KEY = "lookAndFeelClassName";
+
     private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerGuiMain.class);
 
     private final PerfLoggerGuiMainFrame frmJdbcPerformanceLogger;
 
     private final Map<String, PerfLoggerController> connectionsToLogController = new HashMap<>();
+    private static final Preferences prefs = Preferences.userNodeForPackage(PerfLoggerGuiMain.class);
 
     /**
      * Launch the application.
      */
     public static void main(final String[] args) {
         LOGGER.debug("PerfLoggerGuiMain starting...");
-        EventQueue.invokeLater(new Runnable() {
+        SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                installLookAndFeel();
+
                 try {
                     final PerfLoggerGuiMain window = new PerfLoggerGuiMain();
                     window.frmJdbcPerformanceLogger.setVisible(true);
@@ -59,7 +69,40 @@ public class PerfLoggerGuiMain implements IClientConnectionDelegate {
                     e.printStackTrace();
                 }
             }
+
         });
+    }
+
+    private static void installLookAndFeel() {
+        final String lfClassName = getPreferredLookAndFeel();
+        try {
+            if (lfClassName != null) {
+                UIManager.setLookAndFeel(lfClassName);
+            } else {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            }
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+                | UnsupportedLookAndFeelException e) {
+            LOGGER.warn("Error setting LookAndFeel", e);
+        }
+    }
+
+    @Nullable
+    static String getPreferredLookAndFeel() {
+        return prefs.get(LOOK_AND_FEEL_CLASS_NAME_PREF_KEY, null);
+    }
+
+    static void savePreferredLookAndFeel(final @Nullable String lfClassName) {
+        if (lfClassName == null) {
+            prefs.remove(LOOK_AND_FEEL_CLASS_NAME_PREF_KEY);
+        } else {
+            prefs.put(LOOK_AND_FEEL_CLASS_NAME_PREF_KEY, lfClassName);
+        }
+        try {
+            prefs.sync();
+        } catch (final BackingStoreException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     /**
