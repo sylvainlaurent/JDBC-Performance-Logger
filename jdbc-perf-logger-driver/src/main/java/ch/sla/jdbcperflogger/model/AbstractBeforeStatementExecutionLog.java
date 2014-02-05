@@ -28,14 +28,16 @@ public class AbstractBeforeStatementExecutionLog implements LogMessage {
     private final long timestamp;
     private final StatementType statementType;
     private final String threadName;
+    private final int timeout;
 
     public AbstractBeforeStatementExecutionLog(final UUID connectionId, final UUID logId, final long timestamp,
-            final StatementType statementType, final String threadName) {
+            final StatementType statementType, final String threadName, final int timeout) {
         connectionUuid = connectionId;
         this.logId = logId;
         this.timestamp = timestamp;
         this.statementType = statementType;
         this.threadName = threadName;
+        this.timeout = timeout;
     }
 
     public UUID getConnectionUuid() {
@@ -56,6 +58,10 @@ public class AbstractBeforeStatementExecutionLog implements LogMessage {
 
     public String getThreadName() {
         return threadName;
+    }
+
+    public int getTimeout() {
+        return timeout;
     }
 
 }

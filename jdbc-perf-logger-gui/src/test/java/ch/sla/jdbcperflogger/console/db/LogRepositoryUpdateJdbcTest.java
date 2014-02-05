@@ -49,7 +49,7 @@ public class LogRepositoryUpdateJdbcTest {
     @Test
     public void testInsertAndRead() {
         final StatementLog log = new StatementLog(UUID.randomUUID(), UUID.randomUUID(), System.currentTimeMillis(),
-                StatementType.BASE_NON_PREPARED_STMT, "myrawsql", Thread.currentThread().getName());
+                StatementType.BASE_NON_PREPARED_STMT, "myrawsql", Thread.currentThread().getName(), 123);
         repositoryUpdate.addStatementLog(log);
         repositoryUpdate.addStatementLog(log);
         repositoryRead.getStatementLog(1);

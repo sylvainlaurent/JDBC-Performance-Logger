@@ -73,18 +73,18 @@ public class PerfLogger {
     }
 
     public static void logBeforeStatement(final UUID connectionId, final UUID logId, final String sql,
-            final StatementType statementType) {
+            final StatementType statementType, final int timeout) {
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
             LOGGER_ORIGINAL_SQL.debug("Before execution of non-prepared stmt {}: {}", logId, sql);
         }
         final long now = System.currentTimeMillis();
         PerfLoggerRemoting.postLog(new StatementLog(connectionId, logId, now, statementType, sql, Thread
-                .currentThread().getName()));
+                .currentThread().getName(), timeout));
     }
 
     public static void logBeforePreparedStatement(final UUID connectionId, final UUID logId, final String rawSql,
             final PreparedStatementValuesHolder pstmtValues, final StatementType statementType,
-            final DatabaseType databaseType) {
+            final DatabaseType databaseType, final int timeout) {
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
             LOGGER_ORIGINAL_SQL.debug("Before execution of prepared stmt {}: {}", logId, rawSql);
         }
@@ -94,11 +94,11 @@ public class PerfLogger {
         }
         final long now = System.currentTimeMillis();
         PerfLoggerRemoting.postLog(new StatementLog(connectionId, logId, now, statementType, rawSql, filledSql, Thread
-                .currentThread().getName()));
+                .currentThread().getName(), timeout));
     }
 
     public static void logNonPreparedBatchedStatements(final UUID connectionId, final UUID logId,
-            final List<String> batchedExecutions, final DatabaseType databaseType) {
+            final List<String> batchedExecutions, final DatabaseType databaseType, final int timeout) {
 
         final long now = System.currentTimeMillis();
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
@@ -112,11 +112,11 @@ public class PerfLogger {
             }
         }
         PerfLoggerRemoting.postLog(new BatchedNonPreparedStatementsLog(connectionId, logId, now, batchedExecutions,
-                Thread.currentThread().getName()));
+                Thread.currentThread().getName(), timeout));
     }
 
     public static void logPreparedBatchedStatements(final UUID connectionId, final String rawSql,
-            final List<Object> batchedExecutions, final DatabaseType databaseType) {
+            final List<Object> batchedExecutions, final DatabaseType databaseType, final int timeout) {
         final long now = System.currentTimeMillis();
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
             LOGGER_ORIGINAL_SQL.debug("Before execution of {} batched prepared statements with raw sql {}",
@@ -138,7 +138,7 @@ public class PerfLogger {
             }
         }
         PerfLoggerRemoting.postLog(new BatchedPreparedStatementsLog(connectionId, UUID.randomUUID(), now, rawSql,
-                filledSqlList, Thread.currentThread().getName()));
+                filledSqlList, Thread.currentThread().getName(), timeout));
     }
 
     public static void logStatementExecuted(final UUID logId, final long durationNanos,

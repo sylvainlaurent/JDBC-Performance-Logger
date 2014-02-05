@@ -77,8 +77,8 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
 
             addStatementLog = connectionUpdate
                     .prepareStatement("insert into statement_log (logId, tstamp, statementType, rawSql, filledSql, " //
-                            + "threadName, connectionId)"//
-                            + " values(?, ?, ?, ?, ?, ?, ?)");
+                            + "threadName, connectionId, timeout)"//
+                            + " values(?, ?, ?, ?, ?, ?, ?, ?)");
             updateStatementLogWithResultSet = connectionUpdate
                     .prepareStatement("update statement_log set fetchDurationNanos=?, nbRowsIterated=? where logId=?");
             updateStatementLogAfterExecution = connectionUpdate
@@ -172,6 +172,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
             addStatementLog.setString(i++, log.getFilledSql());
             addStatementLog.setString(i++, log.getThreadName());
             addStatementLog.setObject(i++, log.getConnectionUuid());
+            addStatementLog.setInt(i++, log.getTimeout());
             addStatementLog.execute();
         } catch (final SQLException e) {
             throw new RuntimeException(e);

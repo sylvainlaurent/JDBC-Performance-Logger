@@ -109,6 +109,17 @@ public class WrappingDriverTest {
         statement.close();
     }
 
+    @Test
+    public void testTimeoutSelectNonPrepared() throws Exception {
+        final Statement statement = connection.createStatement();
+        statement.setQueryTimeout(123);
+        statement.execute("create table test (key_id int);");
+        final StatementLog statementLog = (StatementLog) lastLogMessage2;
+        assert statementLog != null;
+        assertEquals(123, statementLog.getTimeout());
+        statement.close();
+    }
+
     @SuppressWarnings("null")
     @Test
     public void testExecutePrepared() throws Exception {

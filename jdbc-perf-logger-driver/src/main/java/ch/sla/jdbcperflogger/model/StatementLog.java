@@ -28,16 +28,17 @@ public class StatementLog extends AbstractBeforeStatementExecutionLog {
     private final boolean preparedStatement;
 
     public StatementLog(final UUID connectionId, final UUID logId, final long timestamp,
-            final StatementType statementType, final String sql, final String threadName) {
-        super(connectionId, logId, timestamp, statementType, threadName);
+            final StatementType statementType, final String sql, final String threadName, final int timeout) {
+        super(connectionId, logId, timestamp, statementType, threadName, timeout);
         rawSql = sql;
         filledSql = sql;
         preparedStatement = false;
     }
 
     public StatementLog(final UUID connectionId, final UUID logId, final long timestamp,
-            final StatementType statementType, final String rawSql, final String filledSql, final String threadName) {
-        super(connectionId, logId, timestamp, statementType, threadName);
+            final StatementType statementType, final String rawSql, final String filledSql, final String threadName,
+            final int timeout) {
+        super(connectionId, logId, timestamp, statementType, threadName, timeout);
         this.rawSql = rawSql;
         this.filledSql = filledSql;
         preparedStatement = true;
