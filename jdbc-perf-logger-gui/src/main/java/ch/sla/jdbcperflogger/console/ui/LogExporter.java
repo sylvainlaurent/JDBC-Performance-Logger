@@ -88,7 +88,8 @@ public class LogExporter {
                     writer.print("/*");
                     writer.print(tstampFormat.format(timestamp));
                     writer.print(" exec=");
-                    writer.print(TimeUnit.NANOSECONDS.toMillis(resultSet.getLong(LogRepositoryConstants.EXEC_TIME_COLUMN)));
+                    writer.print(TimeUnit.NANOSECONDS.toMillis(resultSet
+                            .getLong(LogRepositoryConstants.EXEC_TIME_COLUMN)));
                     writer.print("ms ");
 
                     final int nbRows = resultSet.getInt(LogRepositoryConstants.NB_ROWS_COLUMN);
@@ -149,7 +150,7 @@ public class LogExporter {
 
             final SimpleDateFormat tstampFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
             try {
-                writer.println("TIMESTAMP\tEXEC_TIME_S\tFETCH_TIME_S\tEXEC_PLUS_FETCH_TIME_S\tFETCHED_ROWS\tSTMT_TYPE\tRAW_STATEMENT\tFILLED_STATEMENT\tTHREAD_NAME\tCONNECTION_ID\tERROR");
+                writer.println("TIMESTAMP\tEXEC_TIME_S\tFETCH_TIME_S\tEXEC_PLUS_FETCH_TIME_S\tFETCHED_ROWS\tSTMT_TYPE\tRAW_STATEMENT\tFILLED_STATEMENT\tTHREAD_NAME\tCONNECTION_ID\tTIMEOUT\tERROR");
                 while (resultSet.next()) {
                     final Timestamp timestamp = resultSet.getTimestamp(LogRepositoryConstants.TSTAMP_COLUMN);
                     writer.print(tstampFormat.format(timestamp));
@@ -194,6 +195,8 @@ public class LogExporter {
                     writer.print(resultSet.getString(LogRepositoryConstants.THREAD_NAME_COLUMN));
                     writer.print('\t');
                     writer.print(resultSet.getString(LogRepositoryConstants.CONNECTION_NUMBER_COLUMN));
+                    writer.print('\t');
+                    writer.print(resultSet.getString(LogRepositoryConstants.TIMEOUT_COLUMN));
                     writer.print('\t');
                     writer.print(resultSet.getString(LogRepositoryConstants.ERROR_COLUMN));
 
