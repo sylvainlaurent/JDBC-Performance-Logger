@@ -16,6 +16,11 @@
 
 package ch.sla.jdbcperflogger.console.ui;
 
+import static java.awt.event.InputEvent.CTRL_MASK;
+import static java.awt.event.KeyEvent.KEY_PRESSED;
+import static java.awt.event.KeyEvent.VK_BACK_SPACE;
+import static java.awt.event.KeyEvent.VK_DELETE;
+
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -387,7 +392,7 @@ public class PerfLoggerPanel extends JPanel {
             @Override
             public void keyReleased(@Nullable final KeyEvent e) {
                 assert e != null;
-                if (e.getKeyCode() == java.awt.event.KeyEvent.VK_BACK_SPACE) {
+                if (e.getKeyCode() == VK_BACK_SPACE || e.getKeyCode() == VK_DELETE) {
                     final int[] selectedRowsTableIndexes = table.getSelectedRows();
                     final long[] logIds = new long[selectedRowsTableIndexes.length];
                     for (int i = 0; i < selectedRowsTableIndexes.length; i++) {
@@ -650,8 +655,8 @@ public class PerfLoggerPanel extends JPanel {
             @Override
             public boolean dispatchKeyEvent(@Nullable final KeyEvent e) {
                 assert e != null;
-                if (e.getKeyCode() == java.awt.event.KeyEvent.VK_BACK_SPACE
-                        && e.getModifiers() == java.awt.event.InputEvent.CTRL_MASK && e.getID() == KeyEvent.KEY_PRESSED) {
+                if ((e.getKeyCode() == VK_BACK_SPACE || e.getKeyCode() == VK_DELETE) && e.getModifiers() == CTRL_MASK
+                        && e.getID() == KEY_PRESSED) {
                     perfLoggerController.onClear();
                     return true;
                 }
