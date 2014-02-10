@@ -34,8 +34,8 @@ create or replace view v_statement_log
             statement_log.fetchDurationNanos as fetch_time,
             statement_log.nbRowsIterated,
             statement_log.threadName,
-            statement_log.timeout,
-            NVL2(statement_log.exception, 1, 0),
+            case when statement_log.timeout = 0 then null else statement_log.timeout end as timeout,
+            NVL2(statement_log.exception, 1, null),
             connection_info.connectionNumber
         from statement_log join connection_info on (connection_info.connectionId=statement_log.connectionId);
 
