@@ -61,6 +61,8 @@ import javax.swing.event.UndoableEditListener;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
+import org.fife.ui.rsyntaxtextarea.TokenTypes;
 
 import ch.sla.jdbcperflogger.console.db.LogRepositoryConstants;
 import ch.sla.jdbcperflogger.console.ui.PerfLoggerController.FilterType;
@@ -525,8 +527,7 @@ public class PerfLoggerPanel extends JPanel {
 
         txtFieldRawSql = new RSyntaxTextArea();
         scrollPaneRawSql.setViewportView(txtFieldRawSql);
-        txtFieldRawSql.setCurrentLineHighlightColor(Color.WHITE);
-        txtFieldRawSql.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
+        applySqlSyntaxColoring(txtFieldRawSql);
         txtFieldRawSql.setOpaque(false);
         txtFieldRawSql.setEditable(false);
         txtFieldRawSql.setLineWrap(true);
@@ -560,8 +561,7 @@ public class PerfLoggerPanel extends JPanel {
 
         txtFieldFilledSql = new RSyntaxTextArea();
         scrollPaneFilledSql.setViewportView(txtFieldFilledSql);
-        txtFieldFilledSql.setCurrentLineHighlightColor(Color.WHITE);
-        txtFieldFilledSql.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
+        applySqlSyntaxColoring(txtFieldFilledSql);
         txtFieldFilledSql.setOpaque(false);
         txtFieldFilledSql.setEditable(false);
         txtFieldFilledSql.setLineWrap(true);
@@ -659,6 +659,15 @@ public class PerfLoggerPanel extends JPanel {
             }
         });
 
+    }
+
+    private void applySqlSyntaxColoring(final RSyntaxTextArea txtArea) {
+        txtArea.setCurrentLineHighlightColor(Color.WHITE);
+        txtArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
+        final SyntaxScheme scheme = txtArea.getSyntaxScheme();
+        scheme.getStyle(TokenTypes.LITERAL_CHAR).background = Color.CYAN;
+        scheme.getStyle(TokenTypes.LITERAL_NUMBER_DECIMAL_INT).background = Color.YELLOW;
+        // scheme.getStyle(TokenTypes.LITERAL_NUMBER_FLOAT).background = Color.YELLOW;
     }
 
     void setCloseEnable(final boolean enabled) {
