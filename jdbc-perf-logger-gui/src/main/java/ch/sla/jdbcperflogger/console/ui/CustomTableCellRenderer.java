@@ -42,6 +42,7 @@ public class CustomTableCellRenderer extends DefaultTableCellRenderer {
         if (LogRepositoryConstants.STMT_TYPE_COLUMN.equals(dataModel.getColumnName(columnModelIndex))) {
             final int modelRowIndex = table.convertRowIndexToModel(row);
             final StatementType statementType = (StatementType) dataModel.getValueAt(modelRowIndex, columnModelIndex);
+            assert statementType != null;
             switch (statementType) {
             case BASE_NON_PREPARED_STMT:
                 component.setForeground(Color.ORANGE);
@@ -72,10 +73,10 @@ public class CustomTableCellRenderer extends DefaultTableCellRenderer {
                 component.setText("TX");
                 break;
             }
-            if (statementType != null) {
-                component.setToolTipText(value + " (use STATEMENTTYPE=" + statementType.getId()
-                        + ") in the \"Advanced filter\")");
-            }
+
+            component.setToolTipText(value + " (use STATEMENTTYPE=" + statementType.getId()
+                    + ") in the \"Advanced filter\")");
+
         } else if (value != null) {
             component.setToolTipText(value.toString());
         }

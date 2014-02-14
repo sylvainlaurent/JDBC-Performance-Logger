@@ -51,7 +51,7 @@ public class ClientLogReceiver extends AbstractLogReceiver {
             LOGGER.debug("Sleeping before trying to connect again to remote {}", targetRemoteAddress);
             try {
                 Thread.sleep(TimeUnit.SECONDS.toMillis(10));
-            } catch (final InterruptedException e) {
+            } catch (final InterruptedException ignored) {
             }
 
         }

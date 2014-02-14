@@ -87,7 +87,7 @@ public class WelcomePanel extends JPanel {
         gbl_lookAndFeelPanel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
         lookAndFeelPanel.setLayout(gbl_lookAndFeelPanel);
 
-        final JComboBox<LookAndFeelInfo> lookAndFeelsCombobox = new JComboBox<LookAndFeelInfo>();
+        final JComboBox<LookAndFeelInfo> lookAndFeelsCombobox = new JComboBox<>();
         final GridBagConstraints gbc_lookAndFeelComboBox = new GridBagConstraints();
         gbc_lookAndFeelComboBox.fill = GridBagConstraints.HORIZONTAL;
         gbc_lookAndFeelComboBox.gridx = 0;
@@ -95,7 +95,7 @@ public class WelcomePanel extends JPanel {
         lookAndFeelPanel.add(lookAndFeelsCombobox, gbc_lookAndFeelComboBox);
         if (!Beans.isDesignTime()) {
             final LookAndFeelInfo[] lookAndFeels = UIManager.getInstalledLookAndFeels();
-            final DefaultComboBoxModel<LookAndFeelInfo> lookAndFeelsCboxModel = new DefaultComboBoxModel<LookAndFeelInfo>(
+            final DefaultComboBoxModel<LookAndFeelInfo> lookAndFeelsCboxModel = new DefaultComboBoxModel<>(
                     lookAndFeels);
             lookAndFeelsCboxModel.insertElementAt(null, 0);
             lookAndFeelsCombobox.setModel(lookAndFeelsCboxModel);

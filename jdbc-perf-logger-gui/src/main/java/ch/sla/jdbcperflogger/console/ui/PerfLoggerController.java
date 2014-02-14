@@ -292,36 +292,40 @@ public class PerfLoggerController {
                 connectionCreationDate = format.format(statementLog.getConnectionInfo().getCreationDate());
                 break;
             case RAW_SQL:
-                switch (statementLog.getStatementType()) {
-                case BASE_NON_PREPARED_STMT:
-                case BASE_PREPARED_STMT:
-                case PREPARED_BATCH_EXECUTION:
-                case PREPARED_QUERY_STMT:
-                case NON_PREPARED_QUERY_STMT:
-                case TRANSACTION:
-                    txt1 = statementLog.getRawSql();
-                    break;
-                case NON_PREPARED_BATCH_EXECUTION:
-                    txt1 = "Cannot display details in \"Group by\" modes";
-                    break;
+                if (statementLog.getStatementType() != null) {
+                    switch (statementLog.getStatementType()) {
+                    case BASE_NON_PREPARED_STMT:
+                    case BASE_PREPARED_STMT:
+                    case PREPARED_BATCH_EXECUTION:
+                    case PREPARED_QUERY_STMT:
+                    case NON_PREPARED_QUERY_STMT:
+                    case TRANSACTION:
+                        txt1 = statementLog.getRawSql();
+                        break;
+                    case NON_PREPARED_BATCH_EXECUTION:
+                        txt1 = "Cannot display details in \"Group by\" modes";
+                        break;
+                    }
                 }
                 break;
             case FILLED_SQL:
-                switch (statementLog.getStatementType()) {
-                case BASE_NON_PREPARED_STMT:
-                case PREPARED_BATCH_EXECUTION:
-                case NON_PREPARED_QUERY_STMT:
-                    txt1 = statementLog.getRawSql();
-                    break;
-                case BASE_PREPARED_STMT:
-                case PREPARED_QUERY_STMT:
-                case TRANSACTION:
-                    txt1 = statementLog.getRawSql();
-                    txt2 = statementLog.getFilledSql();
-                    break;
-                case NON_PREPARED_BATCH_EXECUTION:
-                    txt1 = "Cannot display details in \"Group by\" modes";
-                    break;
+                if (statementLog.getStatementType() != null) {
+                    switch (statementLog.getStatementType()) {
+                    case BASE_NON_PREPARED_STMT:
+                    case PREPARED_BATCH_EXECUTION:
+                    case NON_PREPARED_QUERY_STMT:
+                        txt1 = statementLog.getRawSql();
+                        break;
+                    case BASE_PREPARED_STMT:
+                    case PREPARED_QUERY_STMT:
+                    case TRANSACTION:
+                        txt1 = statementLog.getRawSql();
+                        txt2 = statementLog.getFilledSql();
+                        break;
+                    case NON_PREPARED_BATCH_EXECUTION:
+                        txt1 = "Cannot display details in \"Group by\" modes";
+                        break;
+                    }
                 }
                 break;
             }
@@ -406,9 +410,8 @@ public class PerfLoggerController {
     /**
      * A task that regularly polls the associated {@link LogRepositoryUpdate} to check for new statements to display. If
      * the UI must be refreshed it is later done in the EDT.
-     * 
+     *
      * @author slaurent
-     * 
      */
     private class RefreshDataTask implements Runnable {
         private volatile long lastRefreshTime;

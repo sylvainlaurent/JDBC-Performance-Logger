@@ -75,9 +75,8 @@ public abstract class AbstractLogReceiver extends Thread {
         socket.setSoTimeout(60 * 1000);
 
         final InputStream is = socket.getInputStream();
-        final ObjectInputStream ois = new ObjectInputStream(is);
 
-        try {
+        try (ObjectInputStream ois = new ObjectInputStream(is)) {
             connected = true;
             while (!disposed) {
                 Object o;
@@ -118,7 +117,7 @@ public abstract class AbstractLogReceiver extends Thread {
             }
         } finally {
             connected = false;
-            ois.close();
+
             LOGGER.debug("Closing socket " + socket);
             socket.close();
         }

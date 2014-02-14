@@ -178,7 +178,7 @@ public class SQLFormatter {
         int start = 0;
         int end = -1;
         StringBuilder clause;
-        final List<StringBuilder> clauses = new ArrayList<StringBuilder>();
+        final List<StringBuilder> clauses = new ArrayList<>();
         clauses.add(new StringBuilder());
         for (int i = 0; i < separators.length; i++) {
             end = lowerCaseSql.indexOf(" " + separators[i].toLowerCase(), start);

@@ -17,5 +17,5 @@ package ch.sla.jdbcperflogger;
 
 
 public enum DatabaseType {
-    ORACLE, GENERIC;
+    ORACLE, GENERIC
 }

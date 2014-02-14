@@ -66,11 +66,8 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
         try {
             dbName = getDbPath(name);
             connectionUpdate = createDbConnection(dbName);
-            final Statement stmt = connectionUpdate.createStatement();
-            try {
+            try (Statement stmt = connectionUpdate.createStatement()) {
                 stmt.execute("runscript from 'classpath:initdb.sql' charset 'UTF-8'");
-            } finally {
-                stmt.close();
             }
 
             cleanOldConnectionInfo(connectionUpdate);

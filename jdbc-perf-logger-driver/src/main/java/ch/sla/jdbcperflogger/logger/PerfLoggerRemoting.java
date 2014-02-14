@@ -211,7 +211,7 @@ public class PerfLoggerRemoting {
                 if (oos != null) {
                     try {
                         oos.close();
-                    } catch (final IOException e) {
+                    } catch (final IOException ignored) {
                     }
                 }
                 try {
