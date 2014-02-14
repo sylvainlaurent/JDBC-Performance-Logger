@@ -59,6 +59,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.UndoableEditEvent;
@@ -377,13 +379,7 @@ public class PerfLoggerPanel extends JPanel {
             public void valueChanged(@Nullable final ListSelectionEvent e) {
                 assert e != null;
                 if (!e.getValueIsAdjusting()) {
-                    final ListSelectionModel lsm = (ListSelectionModel) e.getSource();
-                    if (lsm.getMinSelectionIndex() >= 0) {
-                        final long logId = dataModel.getIdAtRow(table.convertRowIndexToModel(lsm.getMinSelectionIndex()));
-                        perfLoggerController.onSelectStatement(logId);
-                    } else {
-                        perfLoggerController.onSelectStatement(null);
-                    }
+                    perfLoggerController.onSelectStatement(getSelectedLogId());
                 }
             }
         });
@@ -407,8 +403,8 @@ public class PerfLoggerPanel extends JPanel {
         splitPane.setTopComponent(logListPanel);
 
         final JPanel sqlDetailPanel = new JPanel();
-        sqlDetailPanel.setBorder(new TitledBorder(null, "SQL detail", TitledBorder.LEADING, TitledBorder.TOP, null,
-                null));
+        sqlDetailPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "SQL detail",
+                TitledBorder.LEADING, TitledBorder.TOP, null, new Color(51, 51, 51)));
         splitPane.setBottomComponent(sqlDetailPanel);
         final GridBagLayout gbl_sqlDetailPanel = new GridBagLayout();
         gbl_sqlDetailPanel.columnWidths = new int[] { 842, 0 };
@@ -418,6 +414,7 @@ public class PerfLoggerPanel extends JPanel {
         sqlDetailPanel.setLayout(gbl_sqlDetailPanel);
 
         final JSplitPane splitPaneSqlDetails = new JSplitPane();
+        splitPaneSqlDetails.setBorder(null);
         splitPaneSqlDetails.setResizeWeight(0.5);
         splitPaneSqlDetails.setContinuousLayout(true);
         splitPaneSqlDetails.setOrientation(JSplitPane.VERTICAL_SPLIT);
@@ -445,63 +442,94 @@ public class PerfLoggerPanel extends JPanel {
         gbc_connectinInfoPanel.gridy = 0;
         panelRawSql.add(connectinInfoPanel, gbc_connectinInfoPanel);
         final GridBagLayout gbl_connectinInfoPanel = new GridBagLayout();
-        gbl_connectinInfoPanel.columnWidths = new int[] { 0, 0, 0, 0, 0 };
-        gbl_connectinInfoPanel.rowHeights = new int[] { 0, 0, 0 };
-        gbl_connectinInfoPanel.columnWeights = new double[] { 0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE };
-        gbl_connectinInfoPanel.rowWeights = new double[] { 0.0, 0.0, Double.MIN_VALUE };
+        gbl_connectinInfoPanel.columnWidths = new int[] { 0, 0, 0 };
+        gbl_connectinInfoPanel.rowHeights = new int[] { 0, 0 };
+        gbl_connectinInfoPanel.columnWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
+        gbl_connectinInfoPanel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
         connectinInfoPanel.setLayout(gbl_connectinInfoPanel);
 
-        final JLabel lblConnectionUrl = new JLabel("Connection URL:");
+        final JCheckBox chckbxPrettyPrint = new JCheckBox("Pretty print");
+        chckbxPrettyPrint.setSelected(false);
+        chckbxPrettyPrint.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(@Nullable final ChangeEvent e) {
+                perfLoggerController.onSwitchPrettyPrint(chckbxPrettyPrint.isSelected());
+            }
+        });
+        final GridBagConstraints gbc_chckbxPrettyPrint = new GridBagConstraints();
+        gbc_chckbxPrettyPrint.anchor = GridBagConstraints.SOUTH;
+        gbc_chckbxPrettyPrint.insets = new Insets(0, 0, 0, 5);
+        gbc_chckbxPrettyPrint.gridx = 0;
+        gbc_chckbxPrettyPrint.gridy = 0;
+        connectinInfoPanel.add(chckbxPrettyPrint, gbc_chckbxPrettyPrint);
+
+        final JPanel connectionInfoPanel = new JPanel();
+        connectionInfoPanel.setBorder(new TitledBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null,
+                null), "Connection info", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(51, 51, 51)),
+                "Connection info", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(51, 51, 51)));
+        final GridBagConstraints gbc_connectionInfoPanel = new GridBagConstraints();
+        gbc_connectionInfoPanel.anchor = GridBagConstraints.NORTH;
+        gbc_connectionInfoPanel.fill = GridBagConstraints.HORIZONTAL;
+        gbc_connectionInfoPanel.gridx = 1;
+        gbc_connectionInfoPanel.gridy = 0;
+        connectinInfoPanel.add(connectionInfoPanel, gbc_connectionInfoPanel);
+        final GridBagLayout gbl_connectionInfoPanel = new GridBagLayout();
+        gbl_connectionInfoPanel.columnWidths = new int[] { 0, 0, 0, 0, 0 };
+        gbl_connectionInfoPanel.rowHeights = new int[] { 0, 0, 0 };
+        gbl_connectionInfoPanel.columnWeights = new double[] { 0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE };
+        gbl_connectionInfoPanel.rowWeights = new double[] { 0.0, 0.0, Double.MIN_VALUE };
+        connectionInfoPanel.setLayout(gbl_connectionInfoPanel);
+
+        final JLabel lblConnectionUrl = new JLabel("URL:");
         final GridBagConstraints gbc_lblConnectionUrl = new GridBagConstraints();
-        gbc_lblConnectionUrl.insets = new Insets(5, 0, 5, 5);
         gbc_lblConnectionUrl.anchor = GridBagConstraints.EAST;
+        gbc_lblConnectionUrl.insets = new Insets(0, 0, 5, 5);
         gbc_lblConnectionUrl.gridx = 0;
         gbc_lblConnectionUrl.gridy = 0;
-        connectinInfoPanel.add(lblConnectionUrl, gbc_lblConnectionUrl);
+        connectionInfoPanel.add(lblConnectionUrl, gbc_lblConnectionUrl);
 
         connectionUrlField = new JTextField();
         final GridBagConstraints gbc_connectionUrlField = new GridBagConstraints();
-        gbc_connectionUrlField.insets = new Insets(5, 0, 5, 5);
         gbc_connectionUrlField.fill = GridBagConstraints.HORIZONTAL;
+        gbc_connectionUrlField.insets = new Insets(0, 0, 5, 5);
         gbc_connectionUrlField.gridx = 1;
         gbc_connectionUrlField.gridy = 0;
-        connectinInfoPanel.add(connectionUrlField, gbc_connectionUrlField);
+        connectionInfoPanel.add(connectionUrlField, gbc_connectionUrlField);
         connectionUrlField.setColumns(20);
 
         final JLabel lblCreated = new JLabel("Created:");
         final GridBagConstraints gbc_lblCreated = new GridBagConstraints();
         gbc_lblCreated.anchor = GridBagConstraints.EAST;
-        gbc_lblCreated.insets = new Insets(5, 0, 5, 5);
+        gbc_lblCreated.insets = new Insets(0, 0, 5, 5);
         gbc_lblCreated.gridx = 2;
         gbc_lblCreated.gridy = 0;
-        connectinInfoPanel.add(lblCreated, gbc_lblCreated);
+        connectionInfoPanel.add(lblCreated, gbc_lblCreated);
 
         connectionCreationDateField = new JTextField();
         final GridBagConstraints gbc_connectionCreationDateField = new GridBagConstraints();
-        gbc_connectionCreationDateField.insets = new Insets(5, 0, 5, 0);
         gbc_connectionCreationDateField.fill = GridBagConstraints.HORIZONTAL;
+        gbc_connectionCreationDateField.insets = new Insets(0, 0, 5, 0);
         gbc_connectionCreationDateField.gridx = 3;
         gbc_connectionCreationDateField.gridy = 0;
-        connectinInfoPanel.add(connectionCreationDateField, gbc_connectionCreationDateField);
+        connectionInfoPanel.add(connectionCreationDateField, gbc_connectionCreationDateField);
         connectionCreationDateField.setColumns(15);
 
-        final JLabel lblConectionProperties = new JLabel("Connection Properties:");
-        lblConectionProperties.setToolTipText("(Password property removed)");
+        final JLabel lblConectionProperties = new JLabel("Properties:");
         final GridBagConstraints gbc_lblConectionProperties = new GridBagConstraints();
         gbc_lblConectionProperties.anchor = GridBagConstraints.EAST;
-        gbc_lblConectionProperties.insets = new Insets(0, 5, 5, 5);
+        gbc_lblConectionProperties.insets = new Insets(0, 0, 0, 5);
         gbc_lblConectionProperties.gridx = 0;
         gbc_lblConectionProperties.gridy = 1;
-        connectinInfoPanel.add(lblConectionProperties, gbc_lblConectionProperties);
+        connectionInfoPanel.add(lblConectionProperties, gbc_lblConectionProperties);
+        lblConectionProperties.setToolTipText("(Password property removed)");
 
         connectionPropertiesField = new JTextField();
         final GridBagConstraints gbc_connectionPropertiesField = new GridBagConstraints();
-        gbc_connectionPropertiesField.insets = new Insets(0, 0, 5, 0);
-        gbc_connectionPropertiesField.gridwidth = 3;
         gbc_connectionPropertiesField.fill = GridBagConstraints.HORIZONTAL;
+        gbc_connectionPropertiesField.gridwidth = 3;
         gbc_connectionPropertiesField.gridx = 1;
         gbc_connectionPropertiesField.gridy = 1;
-        connectinInfoPanel.add(connectionPropertiesField, gbc_connectionPropertiesField);
+        connectionInfoPanel.add(connectionPropertiesField, gbc_connectionPropertiesField);
         connectionPropertiesField.setColumns(10);
 
         final JButton btnCopy1 = new JButton();
@@ -509,7 +537,7 @@ public class PerfLoggerPanel extends JPanel {
         btnCopy1.setBorder(null);
         btnCopy1.setContentAreaFilled(false);
         final GridBagConstraints gbc_btnCopy1 = new GridBagConstraints();
-        gbc_btnCopy1.insets = new Insets(0, 0, 0, 5);
+        gbc_btnCopy1.insets = new Insets(0, 5, 0, 5);
         gbc_btnCopy1.gridx = 0;
         gbc_btnCopy1.gridy = 1;
         panelRawSql.add(btnCopy1, gbc_btnCopy1);
@@ -550,7 +578,7 @@ public class PerfLoggerPanel extends JPanel {
         btnCopy2.setBorderPainted(false);
         btnCopy2.setContentAreaFilled(false);
         final GridBagConstraints gbc_btnCopy2 = new GridBagConstraints();
-        gbc_btnCopy2.insets = new Insets(0, 0, 0, 5);
+        gbc_btnCopy2.insets = new Insets(0, 5, 0, 5);
         gbc_btnCopy2.gridx = 0;
         gbc_btnCopy2.gridy = 0;
         panelFilledSql.add(btnCopy2, gbc_btnCopy2);
@@ -720,4 +748,14 @@ public class PerfLoggerPanel extends JPanel {
             dataModel.fireTableRowsUpdated(0, dataModel.getRowCount() - 1);
         }
     }
+
+    @Nullable
+    Long getSelectedLogId() {
+        final ListSelectionModel lsm = table.getSelectionModel();
+        if (lsm.getMinSelectionIndex() >= 0) {
+            return dataModel.getIdAtRow(table.convertRowIndexToModel(lsm.getMinSelectionIndex()));
+        }
+        return null;
+    }
+
 }

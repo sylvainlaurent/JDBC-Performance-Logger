@@ -20,6 +20,8 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 - Measures commit/rollback times
 - Handling of batched statements
 - Logging of SQLExceptions
+- New in 0.5.0: Displays the `queryTimeout` of each statement (no value means 0 or no timeout)
+- New in 0.6.0: optionally pretty print statements
 
 ## Requirements
 - java 6 or later for the driver

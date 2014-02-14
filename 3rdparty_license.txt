@@ -7,7 +7,7 @@ This project uses the following third-party libraries/resources :
 - Firesoft RSyntaxArea : LGPL 2.1. http://fifesoft.com/rsyntaxtextarea/
 - SLF4J : QOS.ch license, identical to MIT. http://www.slf4j.org/
 - Icons from the Tango Desktop Project : licenses under the Creative Commons License. http://en.wikipedia.org/wiki/Tango_Desktop_Project
-
+- OpenJPA's SQLFormatter : The Apache Software License, Version 2.0. http://logging.apache.org/log4j/1.2/
 
 Among those, the binary distribution redistributes the following :
 - H2Database
