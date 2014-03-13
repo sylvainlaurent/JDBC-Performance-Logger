@@ -15,8 +15,10 @@
  */
 package ch.sla.jdbcperflogger.logger;
 
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -48,9 +50,22 @@ public class PerfLoggerTest {
         filledSql = PerfLogger.fillParameters("select * from toto where param = ?", valHolder, DatabaseType.ORACLE);
         Assert.assertEquals("select * from toto where param = NULL /*DATE*/", filledSql);
 
-        valHolder.put(1, new SqlTypedValue(new SimpleDateFormat("yyyy-MM-dd").parse("2011-07-15"), Types.DATE));
+        valHolder.put(1, new SqlTypedValue(java.sql.Date.valueOf("2013-03-04"), Types.DATE));
         filledSql = PerfLogger.fillParameters("select * from toto where param = ?", valHolder, DatabaseType.ORACLE);
-        Assert.assertEquals("select * from toto where param = date'2011-07-15' /*DATE*/", filledSql);
+        Assert.assertEquals("select * from toto where param = date'2013-03-04' /*DATE*/", filledSql);
+
+        final String dateStr = "2011-07-15T13:45:56.123";
+        final Date utilDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").parse(dateStr);
+        valHolder.put(1, new SqlTypedValue(utilDate, Types.DATE));
+        filledSql = PerfLogger.fillParameters("select * from toto where param = ?", valHolder, DatabaseType.ORACLE);
+        Assert.assertEquals(
+                "select * from toto where param = cast(timestamp'2011-07-15 13:45:56.123' as DATE) /*DATE (non pure)*/",
+                filledSql);
+
+        final Timestamp tstamp = Timestamp.valueOf("2011-07-15 13:45:56.123");
+        valHolder.put(1, new SqlTypedValue(tstamp, Types.TIMESTAMP));
+        filledSql = PerfLogger.fillParameters("select * from toto where param = ?", valHolder, DatabaseType.ORACLE);
+        Assert.assertEquals("select * from toto where param = timestamp'" + tstamp + "' /*TIMESTAMP*/", filledSql);
 
         valHolder.put(1, new SqlTypedValue(new Object(), Types.CLOB));
         filledSql = PerfLogger.fillParameters("select * from toto where param = ?", valHolder, DatabaseType.ORACLE);

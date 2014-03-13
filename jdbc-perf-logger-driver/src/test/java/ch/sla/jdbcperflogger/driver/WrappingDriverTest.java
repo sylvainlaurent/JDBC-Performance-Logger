@@ -30,9 +30,9 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -57,7 +57,8 @@ import ch.sla.jdbcperflogger.model.StatementExecutedLog;
 import ch.sla.jdbcperflogger.model.StatementLog;
 
 public class WrappingDriverTest {
-    private final static DateFormat YMD_FORNAT = new SimpleDateFormat("yyyy-MM-dd");
+    private final static SimpleDateFormat YMD_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private final static SimpleDateFormat DATE_PLUS_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 
     @SuppressWarnings("null")
     private Connection connection;
@@ -183,6 +184,14 @@ public class WrappingDriverTest {
             statement.executeQuery().close();
             assertEquals("select * from test where myDate=date'2013-02-28' /*setDate*/",
                     ((StatementLog) lastLogMessage3).getFilledSql());
+
+            final Date utilDateWithTime = utilDateWithTime("2013-02-28T13:45:56.123");
+            statement.setDate(1, new java.sql.Date(utilDateWithTime.getTime()));
+            statement.executeQuery().close();
+            assertEquals(
+                    "select * from test where myDate=cast(timestamp'2013-02-28 13:45:56.123' as DATE) /*setDate (non pure)*/",
+                    ((StatementLog) lastLogMessage3).getFilledSql());
+
             statement.setObject(1, sqlDate("2013-02-28"));
             statement.executeQuery().close();
             assertEquals("select * from test where myDate=date'2013-02-28' /*setObject*/",
@@ -441,7 +450,11 @@ public class WrappingDriverTest {
     }
 
     private static java.util.Date utilDate(final String dateString) throws ParseException {
-        return YMD_FORNAT.parse(dateString);
+        return YMD_FORMAT.parse(dateString);
+    }
+
+    private static java.util.Date utilDateWithTime(final String dateString) throws ParseException {
+        return DATE_PLUS_TIME_FORMAT.parse(dateString);
     }
 
     private static java.sql.Date sqlDate(final String dateString) throws ParseException {

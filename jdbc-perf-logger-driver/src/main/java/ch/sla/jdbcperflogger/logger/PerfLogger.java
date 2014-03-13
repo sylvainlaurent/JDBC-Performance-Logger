@@ -194,21 +194,18 @@ public class PerfLogger {
                 sqlTypeStr = "TYPE=" + sqlTypedValue.sqlType;
             }
         }
-        sqlTypeStr = " /*" + sqlTypeStr + "*/";
+        String additionalComment = null;
 
+        final StringBuilder strBuilder = new StringBuilder(20);
         if (value == null) {
-            final StringBuilder strBuilder = new StringBuilder(20);
             strBuilder.append("NULL");
-            strBuilder.append(sqlTypeStr);
-            return strBuilder.toString();
-        }
-        if (sqlTypedValue.sqlType == Types.CHAR //
+        } else if (sqlTypedValue.sqlType == Types.CHAR //
                 || sqlTypedValue.sqlType == Types.VARCHAR//
                 || sqlTypedValue.sqlType == -15 // NCHAR, from java 6
                 || sqlTypedValue.sqlType == -9 // NVARCHAR, from java 6
                 || "setString".equals(setter)//
                 || "setNString".equals(setter)) {
-            return "'" + value + "'" + sqlTypeStr;
+            strBuilder.append("'" + value + "'");
         } else if (sqlTypedValue.sqlType == Types.DATE || "setDate".equals(setter) || value instanceof java.sql.Date) {
             java.sql.Date sqlDate;
             if (value instanceof java.sql.Date) {
@@ -216,7 +213,16 @@ public class PerfLogger {
             } else {
                 sqlDate = new java.sql.Date(((java.util.Date) value).getTime());
             }
-            return "date'" + sqlDate.toString() + "'" + sqlTypeStr;
+
+            // test if it's a real pure date
+            final java.sql.Date pureSqlDate = java.sql.Date.valueOf(sqlDate.toString());
+            if (sqlDate.getTime() == pureSqlDate.getTime()) {
+                // yes, pure date
+                strBuilder.append("date'" + sqlDate.toString() + "'");
+            } else {
+                strBuilder.append("cast(timestamp'" + new Timestamp(sqlDate.getTime()) + "' as DATE)");
+                additionalComment = " (non pure)";
+            }
         } else if (sqlTypedValue.sqlType == Types.TIMESTAMP || "setTimestamp".equals(setter)
                 || value instanceof java.sql.Timestamp) {
             Timestamp tstamp;
@@ -225,7 +231,7 @@ public class PerfLogger {
             } else {
                 tstamp = new Timestamp(((java.util.Date) value).getTime());
             }
-            return "timestamp'" + tstamp.toString() + "'" + sqlTypeStr;
+            strBuilder.append("timestamp'" + tstamp.toString() + "'");
         } else if (sqlTypedValue.sqlType == Types.TIME || "setTime".equals(setter) || value instanceof java.sql.Time) {
             java.sql.Time sqlTime;
             if (value instanceof java.sql.Time) {
@@ -233,19 +239,25 @@ public class PerfLogger {
             } else {
                 sqlTime = new java.sql.Time(((java.util.Date) value).getTime());
             }
-            return "time'" + sqlTime.toString() + "'" + sqlTypeStr;
+            strBuilder.append("time'" + sqlTime.toString() + "'");
         } else if (value instanceof Number) {
-            return String.valueOf(value) + sqlTypeStr;
+            strBuilder.append(value);
         } else if (value instanceof Boolean) {
             if (databaseType == DatabaseType.ORACLE) {
-                return (((Boolean) value).booleanValue() ? 1 : 0) + sqlTypeStr;
+                strBuilder.append(((Boolean) value).booleanValue() ? 1 : 0);
+            } else {
+                strBuilder.append(value);
             }
-            return String.valueOf(value) + sqlTypeStr;
         } else {
-            final StringBuilder strBuilder = new StringBuilder();
             strBuilder.append("?");
-            strBuilder.append(sqlTypeStr);
-            return strBuilder.toString();
         }
+
+        strBuilder.append(" /*");
+        strBuilder.append(sqlTypeStr);
+        if (additionalComment != null) {
+            strBuilder.append(additionalComment);
+        }
+        strBuilder.append("*/");
+        return strBuilder.toString();
     }
 }
