@@ -17,12 +17,12 @@ public class DetailedViewStatementLog {
     private final String threadName;
     private final long durationNanos;
     @Nullable
-    private final Throwable sqlException;
+    private final String sqlException;
     private final ConnectionInfo connectionInfo;
 
     public DetailedViewStatementLog(final UUID logId, final ConnectionInfo connectionInfo, final long timestamp,
-            @Nullable final StatementType statementType, final String rawSql, final String filledSql, final String threadName,
-            final long durationNanos, @Nullable final Throwable exception) {
+            @Nullable final StatementType statementType, final String rawSql, final String filledSql,
+            final String threadName, final long durationNanos, @Nullable final String exception) {
         this.logId = logId;
         this.connectionInfo = connectionInfo;
         this.timestamp = timestamp;
@@ -68,7 +68,7 @@ public class DetailedViewStatementLog {
     }
 
     @Nullable
-    public Throwable getSqlException() {
+    public String getSqlException() {
         return sqlException;
     }
 

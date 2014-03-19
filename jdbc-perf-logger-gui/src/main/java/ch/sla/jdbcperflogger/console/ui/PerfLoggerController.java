@@ -15,9 +15,7 @@
  */
 package ch.sla.jdbcperflogger.console.ui;
 
-import java.io.CharArrayWriter;
 import java.io.File;
-import java.io.PrintWriter;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -340,11 +338,9 @@ public class PerfLoggerController {
                 }
             }
 
-            final Throwable sqlException = statementLog.getSqlException();
+            final String sqlException = statementLog.getSqlException();
             if (sqlException != null) {
-                final CharArrayWriter writer = new CharArrayWriter();
-                sqlException.printStackTrace(new PrintWriter(writer));
-                txt2 += writer.toString();
+                txt2 += sqlException;
             }
         }
         perfLoggerPanel.txtFieldRawSql.setText(txt1);
@@ -410,7 +406,7 @@ public class PerfLoggerController {
     /**
      * A task that regularly polls the associated {@link LogRepositoryUpdate} to check for new statements to display. If
      * the UI must be refreshed it is later done in the EDT.
-     *
+     * 
      * @author slaurent
      */
     private class RefreshDataTask implements Runnable {

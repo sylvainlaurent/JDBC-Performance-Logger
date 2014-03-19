@@ -200,8 +200,7 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
                 + "connection_info.connectionInfo "//
                 + "from statement_log join connection_info on (statement_log.connectionId=connection_info.connectionId) "//
                 + "where statement_log.id=?";
-        try (final PreparedStatement statement = connectionRead
-                .prepareStatement(sql)) {
+        try (final PreparedStatement statement = connectionRead.prepareStatement(sql)) {
             statement.setLong(1, id);
             try (final ResultSet resultSet = statement.executeQuery()) {
                 DetailedViewStatementLog result = null;
@@ -217,7 +216,7 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
                     final long durationNanos = resultSet.getLong(i++);
                     @Nonnull
                     final String threadName = resultSet.getString(i++);
-                    final SQLException exception = (SQLException) resultSet.getObject(i++);
+                    final String exception = resultSet.getString(i++);
                     final UUID connectionId = (UUID) resultSet.getObject(i++);
                     final int connectionNumber = resultSet.getInt(i++);
                     final String connectionUrl = resultSet.getString(i++);

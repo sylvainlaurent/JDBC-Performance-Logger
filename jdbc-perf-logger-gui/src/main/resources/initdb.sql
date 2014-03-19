@@ -13,7 +13,7 @@ create table if not exists statement_log
     (id identity, connectionId UUID not null, logId UUID not null, tstamp timestamp not null, statementType tinyInt not null, 
     rawSql varchar not null, filledSql varchar not null, 
     executionDurationNanos bigInt, fetchDurationNanos bigInt, nbRowsIterated int, 
-    threadName varchar, exception other, timeout int);
+    threadName varchar, exception varchar, timeout int);
 
 create index if not exists idx_logId on statement_log(logId);
 create index if not exists idx_duration on statement_log(executionDurationNanos desc);

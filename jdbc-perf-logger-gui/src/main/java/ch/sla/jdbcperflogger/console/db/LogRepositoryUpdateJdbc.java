@@ -181,7 +181,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
     public synchronized void updateLogAfterExecution(final StatementExecutedLog log) {
         try {
             updateStatementLogAfterExecution.setLong(1, log.getExecutionTimeNanos());
-            updateStatementLogAfterExecution.setObject(2, log.getSqlException());
+            updateStatementLogAfterExecution.setString(2, log.getSqlException());
             updateStatementLogAfterExecution.setObject(3, log.getLogId());
             updateStatementLogAfterExecution.execute();
         } catch (final SQLException e) {

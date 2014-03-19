@@ -15,6 +15,8 @@
  */
 package ch.sla.jdbcperflogger.logger;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
 import java.sql.Types;
@@ -147,7 +149,17 @@ public class PerfLogger {
             LOGGER_EXECUTED.debug(TimeUnit.NANOSECONDS.toMillis(durationNanos) + "ms to execute  stmt #" + logId,
                     sqlException);
         }
-        PerfLoggerRemoting.postLog(new StatementExecutedLog(logId, durationNanos, sqlException));
+        String excString = null;
+        if (sqlException != null) {
+            excString = dumpException(sqlException);
+        }
+        PerfLoggerRemoting.postLog(new StatementExecutedLog(logId, durationNanos, excString));
+    }
+
+    private static String dumpException(final Throwable th) {
+        final StringWriter stringWriter = new StringWriter(500);
+        th.printStackTrace(new PrintWriter(stringWriter));
+        return stringWriter.toString();
     }
 
     public static void logClosedResultSet(final UUID logId, final long resultSetIterationTimeNanos,

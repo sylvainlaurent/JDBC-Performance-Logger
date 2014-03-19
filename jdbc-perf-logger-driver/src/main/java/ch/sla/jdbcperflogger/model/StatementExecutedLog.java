@@ -26,10 +26,10 @@ public class StatementExecutedLog implements LogMessage {
     private final UUID logId;
     private final long executionTimeNanos;
     @Nullable
-    private final Throwable sqlException;
+    private final String sqlException;
 
     public StatementExecutedLog(final UUID logId, final long resultSetIterationTimeNanos,
-            @Nullable final Throwable sqlException) {
+            @Nullable final String sqlException) {
         this.logId = logId;
         executionTimeNanos = resultSetIterationTimeNanos;
         this.sqlException = sqlException;
@@ -44,7 +44,7 @@ public class StatementExecutedLog implements LogMessage {
     }
 
     @Nullable
-    public Throwable getSqlException() {
+    public String getSqlException() {
         return sqlException;
     }
 }
