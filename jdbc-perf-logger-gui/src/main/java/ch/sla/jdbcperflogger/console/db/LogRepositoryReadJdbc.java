@@ -67,7 +67,7 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
         }
         sql.append(" from v_statement_log ");
         sql.append(getWhereClause(searchCriteria));
-        sql.append(" order by tstamp");
+        sql.append(" order by tstamp, id");
 
         try (PreparedStatement statement = connectionRead.prepareStatement(sql.toString());
                 ResultSet resultSet = statement.executeQuery()) {

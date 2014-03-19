@@ -31,7 +31,6 @@ class ResultSetDataModel extends AbstractTableModel {
     private List<String> columnNames = new ArrayList<>();
     private List<Class<?>> columnTypes = new ArrayList<>();
     private List<Object[]> rows = new ArrayList<>();
-    private boolean firstColumnIsID;
 
     /**
      * Must be called in EDT
@@ -49,7 +48,6 @@ class ResultSetDataModel extends AbstractTableModel {
 
         this.rows = rows;
         this.columnNames = columnNames;
-        firstColumnIsID = !columnNames.isEmpty() && "ID".equals(columnNames.get(0));
         this.columnTypes = columnTypes;
 
         if (columnsChanged) {
@@ -66,17 +64,13 @@ class ResultSetDataModel extends AbstractTableModel {
 
     @Override
     public int getColumnCount() {
-        if (firstColumnIsID) {
-            return columnNames.size() - 1;
-        } else {
-            return columnNames.size();
-        }
+        return columnNames.size();
     }
 
     @Override
     @Nullable
     public Object getValueAt(final int rowIndex, final int columnIndex) {
-        Object o = rows.get(rowIndex)[firstColumnIsID ? columnIndex + 1 : columnIndex];
+        Object o = rows.get(rowIndex)[columnIndex];
         if (o == null) {
             return null;
         }
@@ -93,12 +87,12 @@ class ResultSetDataModel extends AbstractTableModel {
 
     @Override
     public String getColumnName(final int columnIndex) {
-        return columnNames.get(firstColumnIsID ? columnIndex + 1 : columnIndex);
+        return columnNames.get(columnIndex);
     }
 
     @Override
     public Class<?> getColumnClass(final int columnIndex) {
-        return columnTypes.get(firstColumnIsID ? columnIndex + 1 : columnIndex);
+        return columnTypes.get(columnIndex);
     }
 
     public long getIdAtRow(final int rowIndex) {

@@ -2,6 +2,7 @@ package ch.sla.jdbcperflogger.console.db;
 
 public class LogRepositoryConstants {
 
+    public static final String ID_COLUMN = "ID";
     public static final String TSTAMP_COLUMN = "TSTAMP";
     public static final String STMT_TYPE_COLUMN = "STATEMENTTYPE";
     public static final String FILLED_SQL_COLUMN = "FILLEDSQL";

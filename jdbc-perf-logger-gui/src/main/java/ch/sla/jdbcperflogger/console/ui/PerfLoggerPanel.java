@@ -86,6 +86,7 @@ public class PerfLoggerPanel extends JPanel {
 
     static {
         COLUMNS_WIDTH = new HashMap<>();
+        COLUMNS_WIDTH.put(LogRepositoryConstants.ID_COLUMN, 0);
         COLUMNS_WIDTH.put(LogRepositoryConstants.TSTAMP_COLUMN, 150);
         COLUMNS_WIDTH.put(LogRepositoryConstants.FETCH_TIME_COLUMN, 50);
         COLUMNS_WIDTH.put(LogRepositoryConstants.EXEC_TIME_COLUMN, 50);
@@ -371,7 +372,8 @@ public class PerfLoggerPanel extends JPanel {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.setFillsViewportHeight(true);
         table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-        table.setAutoCreateRowSorter(true);
+        // table.setAutoCreateRowSorter(true);
+        table.setRowSorter(new CustomTableRowSorter(dataModel));
         logListPanel.setViewportView(table);
 
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
@@ -725,13 +727,19 @@ public class PerfLoggerPanel extends JPanel {
             for (int i = 0; i < dataModel.getColumnCount(); i++) {
                 final Integer width = COLUMNS_WIDTH.get(dataModel.getColumnName(i));
                 if (width != null) {
-                    table.getColumnModel().getColumn(i).setPreferredWidth(width.intValue());
+                    if (width == 0) {
+                        table.getColumnModel().getColumn(i).setMinWidth(0);
+                        table.getColumnModel().getColumn(i).setMaxWidth(0);
+                    } else {
+                        table.getColumnModel().getColumn(i).setPreferredWidth(width.intValue());
+                    }
                 }
             }
         } else if (selectedRow >= 0 && selectedRow < rows.size() && modelRowIndex < rows.size()) {
             final int newSelectedRowIndex = table.convertRowIndexToView(modelRowIndex);
             table.setRowSelectionInterval(newSelectedRowIndex, newSelectedRowIndex);
         }
+
     }
 
     void setPaused(final boolean paused) {
