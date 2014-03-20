@@ -143,6 +143,37 @@ public class WrappingDriverTest {
 
     @SuppressWarnings("null")
     @Test
+    public void testExecuteNonPrepared() throws Exception {
+        {
+            final String sql = "create table test (key_id int);";
+            final Statement statement = connection.createStatement();
+            assertEquals(null, lastLogMessage1);
+            statement.execute(sql);
+            assertEquals(sql, ((StatementLog) lastLogMessage2).getRawSql());
+            statement.close();
+        }
+        {
+            final String sql = "insert into test (key_id) values (123)";
+            final Statement statement = connection.createStatement();
+            final int nb = statement.executeUpdate(sql);
+            Assert.assertEquals(1, nb);
+            assertEquals(sql, ((StatementLog) lastLogMessage2).getRawSql());
+            assertEquals(StatementType.BASE_NON_PREPARED_STMT, ((StatementLog) lastLogMessage2).getStatementType());
+            assertEquals(1L, ((StatementExecutedLog) lastLogMessage1).getUpdateCount().longValue());
+            statement.close();
+        }
+        {
+            final String sql = "update test set key_id=453 where key_id=876";
+            final Statement statement = connection.createStatement();
+            final int nb = statement.executeUpdate(sql);
+            Assert.assertEquals(0, nb);
+            assertEquals(0L, ((StatementExecutedLog) lastLogMessage1).getUpdateCount().longValue());
+            statement.close();
+        }
+    }
+
+    @SuppressWarnings("null")
+    @Test
     public void testExecutePrepared() throws Exception {
         {
             final String sql = "create table test (key_id int);";
@@ -162,6 +193,16 @@ public class WrappingDriverTest {
             assertEquals(StatementType.BASE_PREPARED_STMT, ((StatementLog) lastLogMessage2).getStatementType());
             assertEquals("insert into test (key_id) values (123 /*setInt*/)",
                     ((StatementLog) lastLogMessage2).getFilledSql());
+            assertEquals(1L, ((StatementExecutedLog) lastLogMessage1).getUpdateCount().longValue());
+            statement.close();
+        }
+        {
+            final String sql = "update test set key_id=453 where key_id=?";
+            final PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setInt(1, 87687);
+            final int nb = statement.executeUpdate();
+            Assert.assertEquals(0, nb);
+            assertEquals(0L, ((StatementExecutedLog) lastLogMessage1).getUpdateCount().longValue());
             statement.close();
         }
     }

@@ -95,7 +95,7 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
             throw exc;
         } finally {
             final long end = System.nanoTime();
-            PerfLogger.logStatementExecuted(logId, end - start, exc);
+            PerfLogger.logStatementExecuted(logId, end - start, null, exc);
         }
 
     }
@@ -106,15 +106,23 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
         PerfLogger.logBeforeStatement(connectionId, logId, (String) args[0], StatementType.BASE_NON_PREPARED_STMT,
                 wrappedStatement.getQueryTimeout(), wrappedStatement.getConnection().getAutoCommit());
         Throwable exc = null;
+        Long updateCount = null;
         final long start = System.nanoTime();
         try {
-            return Utils.invokeUnwrapException(wrappedStatement, method, args);
+            final Object result = Utils.invokeUnwrapException(wrappedStatement, method, args);
+            if (result instanceof Integer) {
+                updateCount = ((Integer) result).longValue();
+            } else if (result instanceof Long) {
+                // for java 8
+                updateCount = (Long) result;
+            }
+            return result;
         } catch (final Throwable e) {
             exc = e;
             throw exc;
         } finally {
             final long end = System.nanoTime();
-            PerfLogger.logStatementExecuted(logId, end - start, exc);
+            PerfLogger.logStatementExecuted(logId, end - start, updateCount, exc);
         }
     }
 
@@ -132,7 +140,7 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
             throw exc;
         } finally {
             final long end = System.nanoTime();
-            PerfLogger.logStatementExecuted(logId, end - start, exc);
+            PerfLogger.logStatementExecuted(logId, end - start, null, exc);
             batchedNonPreparedStmtExecutions.clear();
         }
 

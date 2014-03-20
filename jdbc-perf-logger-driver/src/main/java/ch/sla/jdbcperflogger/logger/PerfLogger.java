@@ -146,7 +146,7 @@ public class PerfLogger {
     }
 
     public static void logStatementExecuted(final UUID logId, final long durationNanos,
-            @Nullable final Throwable sqlException) {
+            @Nullable final Long updateCount, @Nullable final Throwable sqlException) {
         if (LOGGER_EXECUTED.isDebugEnabled()) {
             LOGGER_EXECUTED.debug(TimeUnit.NANOSECONDS.toMillis(durationNanos) + "ms to execute  stmt #" + logId,
                     sqlException);
@@ -155,7 +155,7 @@ public class PerfLogger {
         if (sqlException != null) {
             excString = dumpException(sqlException);
         }
-        PerfLoggerRemoting.postLog(new StatementExecutedLog(logId, durationNanos, excString));
+        PerfLoggerRemoting.postLog(new StatementExecutedLog(logId, durationNanos, updateCount, excString));
     }
 
     private static String dumpException(final Throwable th) {

@@ -23,6 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -79,7 +80,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
             updateStatementLogWithResultSet = connectionUpdate
                     .prepareStatement("update statement_log set fetchDurationNanos=?, nbRowsIterated=? where logId=?");
             updateStatementLogAfterExecution = connectionUpdate
-                    .prepareStatement("update statement_log set executionDurationNanos=?, exception=? where logId=?");
+                    .prepareStatement("update statement_log set executionDurationNanos=?, nbRowsIterated=?, exception=? where logId=?");
 
             addBatchedStatementLog = connectionUpdate
                     .prepareStatement("insert into batched_statement_log (logId, batched_stmt_order, filledSql)"
@@ -181,9 +182,16 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
     @Override
     public synchronized void updateLogAfterExecution(final StatementExecutedLog log) {
         try {
-            updateStatementLogAfterExecution.setLong(1, log.getExecutionTimeNanos());
-            updateStatementLogAfterExecution.setString(2, log.getSqlException());
-            updateStatementLogAfterExecution.setObject(3, log.getLogId());
+            int i = 1;
+            updateStatementLogAfterExecution.setLong(i++, log.getExecutionTimeNanos());
+            final Long updateCount = log.getUpdateCount();
+            if (updateCount != null) {
+                updateStatementLogAfterExecution.setLong(i++, updateCount);
+            } else {
+                updateStatementLogAfterExecution.setNull(i++, Types.BIGINT);
+            }
+            updateStatementLogAfterExecution.setString(i++, log.getSqlException());
+            updateStatementLogAfterExecution.setObject(i++, log.getLogId());
             updateStatementLogAfterExecution.execute();
         } catch (final SQLException e) {
             throw new RuntimeException(e);
@@ -194,9 +202,10 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
     @Override
     public synchronized void updateLogWithResultSetLog(final ResultSetLog log) {
         try {
-            updateStatementLogWithResultSet.setLong(1, log.getResultSetIterationTimeNanos());
-            updateStatementLogWithResultSet.setInt(2, log.getNbRowsIterated());
-            updateStatementLogWithResultSet.setObject(3, log.getLogId());
+            int i = 1;
+            updateStatementLogWithResultSet.setLong(i++, log.getResultSetIterationTimeNanos());
+            updateStatementLogWithResultSet.setInt(i++, log.getNbRowsIterated());
+            updateStatementLogWithResultSet.setObject(i++, log.getLogId());
             updateStatementLogWithResultSet.execute();
         } catch (final SQLException e) {
             throw new RuntimeException(e);
