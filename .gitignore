@@ -7,9 +7,9 @@ org.eclipse.core.resources.prefs
 org.eclipse.m2e.core.prefs
 org.eclipse.wst.validation.prefs
 org.sonar.ide.eclipse.core.prefs
+pom.xml.*
 target
 /.git
 /logdb
-/pom.xml.*
 /release.properties
 /PerfLoggerGuiMain*.launch
