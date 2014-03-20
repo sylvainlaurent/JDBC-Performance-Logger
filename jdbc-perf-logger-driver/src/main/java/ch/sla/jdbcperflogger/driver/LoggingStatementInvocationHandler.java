@@ -82,7 +82,7 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
         final UUID logId = UUID.randomUUID();
         final long start = System.nanoTime();
         PerfLogger.logBeforeStatement(connectionId, logId, (String) args[0], StatementType.NON_PREPARED_QUERY_STMT,
-                wrappedStatement.getQueryTimeout());
+                wrappedStatement.getQueryTimeout(), wrappedStatement.getConnection().getAutoCommit());
         Throwable exc = null;
         try {
             final ResultSet resultSet = (ResultSet) Utils.invokeUnwrapExceptionReturnNonNull(wrappedStatement, method,
@@ -104,7 +104,7 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
     protected final Object internalExecute(final Method method, final Object[] args) throws Throwable {
         final UUID logId = UUID.randomUUID();
         PerfLogger.logBeforeStatement(connectionId, logId, (String) args[0], StatementType.BASE_NON_PREPARED_STMT,
-                wrappedStatement.getQueryTimeout());
+                wrappedStatement.getQueryTimeout(), wrappedStatement.getConnection().getAutoCommit());
         Throwable exc = null;
         final long start = System.nanoTime();
         try {
@@ -122,7 +122,7 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
     protected Object internalExecuteBatch(final Method method, @Nullable final Object[] args) throws Throwable {
         final UUID logId = UUID.randomUUID();
         PerfLogger.logNonPreparedBatchedStatements(connectionId, logId, batchedNonPreparedStmtExecutions, databaseType,
-                wrappedStatement.getQueryTimeout());
+                wrappedStatement.getQueryTimeout(), wrappedStatement.getConnection().getAutoCommit());
         Throwable exc = null;
         final long start = System.nanoTime();
         try {

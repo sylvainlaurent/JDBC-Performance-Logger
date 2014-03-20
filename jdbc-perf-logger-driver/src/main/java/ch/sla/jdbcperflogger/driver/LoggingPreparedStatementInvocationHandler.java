@@ -92,7 +92,8 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
     protected ResultSet internalExecutePreparedQuery(final Method method) throws Throwable {
         final UUID logId = UUID.randomUUID();
         PerfLogger.logBeforePreparedStatement(connectionId, logId, rawSql, paramValues,
-                StatementType.PREPARED_QUERY_STMT, databaseType, wrappedStatement.getQueryTimeout());
+                StatementType.PREPARED_QUERY_STMT, databaseType, wrappedStatement.getQueryTimeout(), wrappedStatement
+                        .getConnection().getAutoCommit());
         final long start = System.nanoTime();
         Throwable exc = null;
         try {
@@ -116,7 +117,8 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
         final UUID logId = UUID.randomUUID();
         final long start = System.nanoTime();
         PerfLogger.logBeforePreparedStatement(connectionId, logId, rawSql, paramValues,
-                StatementType.BASE_PREPARED_STMT, databaseType, wrappedStatement.getQueryTimeout());
+                StatementType.BASE_PREPARED_STMT, databaseType, wrappedStatement.getQueryTimeout(), wrappedStatement
+                        .getConnection().getAutoCommit());
         Throwable exc = null;
         try {
             return Utils.invokeUnwrapException(wrappedStatement, method, args);
@@ -134,7 +136,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
     protected Object internalExecuteBatch(final Method method, @Nullable final Object[] args) throws Throwable {
         final UUID logId = UUID.randomUUID();
         PerfLogger.logPreparedBatchedStatements(connectionId, rawSql, batchedPreparedOrNonPreparedStmtExecutions,
-                databaseType, wrappedStatement.getQueryTimeout());
+                databaseType, wrappedStatement.getQueryTimeout(), wrappedStatement.getConnection().getAutoCommit());
         final long start = System.nanoTime();
         Throwable exc = null;
         try {

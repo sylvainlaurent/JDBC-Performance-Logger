@@ -14,6 +14,7 @@ public class LogRepositoryConstants {
     public static final String THREAD_NAME_COLUMN = "threadName";
     public static final String CONNECTION_NUMBER_COLUMN = "connectionNumber";
     public static final String TIMEOUT_COLUMN = "TIMEOUT";
+    public static final String AUTOCOMMIT_COLUMN = "AUTOCOMMIT";
     public static final String ERROR_COLUMN = "ERROR";
     public static final String EXEC_COUNT_COLUMN = "EXEC_COUNT";
     public static final String TOTAL_EXEC_TIME_COLUMN = "TOTAL_EXEC_TIME";

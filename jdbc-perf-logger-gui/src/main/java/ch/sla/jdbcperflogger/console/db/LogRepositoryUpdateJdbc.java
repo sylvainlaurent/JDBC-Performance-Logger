@@ -74,8 +74,8 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
 
             addStatementLog = connectionUpdate
                     .prepareStatement("insert into statement_log (logId, tstamp, statementType, rawSql, filledSql, " //
-                            + "threadName, connectionId, timeout)"//
-                            + " values(?, ?, ?, ?, ?, ?, ?, ?)");
+                            + "threadName, connectionId, timeout, autoCommit)"//
+                            + " values(?, ?, ?, ?, ?, ?, ?, ?, ?)");
             updateStatementLogWithResultSet = connectionUpdate
                     .prepareStatement("update statement_log set fetchDurationNanos=?, nbRowsIterated=? where logId=?");
             updateStatementLogAfterExecution = connectionUpdate
@@ -170,6 +170,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
             addStatementLog.setString(i++, log.getThreadName());
             addStatementLog.setObject(i++, log.getConnectionUuid());
             addStatementLog.setInt(i++, log.getTimeout());
+            addStatementLog.setBoolean(i++, log.isAutoCommit());
             addStatementLog.execute();
         } catch (final SQLException e) {
             throw new RuntimeException(e);
@@ -213,6 +214,9 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
             addStatementLog.setString(i++, log.getRawSql());
             addStatementLog.setString(i++, "(" + log.getSqlList().size() + " batched statements, click for details)");
             addStatementLog.setString(i++, log.getThreadName());
+            addStatementLog.setObject(i++, log.getConnectionUuid());
+            addStatementLog.setInt(i++, log.getTimeout());
+            addStatementLog.setBoolean(i++, log.isAutoCommit());
             addStatementLog.execute();
 
             addBatchedStatementLog.setObject(1, log.getLogId());
@@ -238,6 +242,9 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
             addStatementLog.setString(i++, "(" + log.getSqlList().size() + " batched statements, click for details)");
             addStatementLog.setString(i++, "(click for details)");
             addStatementLog.setString(i++, log.getThreadName());
+            addStatementLog.setObject(i++, log.getConnectionUuid());
+            addStatementLog.setInt(i++, log.getTimeout());
+            addStatementLog.setBoolean(i++, log.isAutoCommit());
             addStatementLog.execute();
 
             addBatchedStatementLog.setObject(1, log.getLogId());

@@ -98,6 +98,7 @@ public class PerfLoggerPanel extends JPanel {
         COLUMNS_WIDTH.put(LogRepositoryConstants.EXEC_COUNT_COLUMN, 100);
         COLUMNS_WIDTH.put(LogRepositoryConstants.TOTAL_EXEC_TIME_COLUMN, 100);
         COLUMNS_WIDTH.put(LogRepositoryConstants.TIMEOUT_COLUMN, 70);
+        COLUMNS_WIDTH.put(LogRepositoryConstants.AUTOCOMMIT_COLUMN, 40);
         COLUMNS_WIDTH.put(LogRepositoryConstants.ERROR_COLUMN, 0);
     }
 

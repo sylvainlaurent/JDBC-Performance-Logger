@@ -16,6 +16,7 @@
 package ch.sla.jdbcperflogger.driver;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.PrintWriter;
@@ -120,6 +121,23 @@ public class WrappingDriverTest {
         final StatementLog statementLog = (StatementLog) lastLogMessage2;
         assert statementLog != null;
         assertEquals(123, statementLog.getTimeout());
+        statement.close();
+    }
+
+    @Test
+    public void testAutocommit() throws Exception {
+        final Statement statement = connection.createStatement();
+        statement.execute("create table test (key_id int);");
+        StatementLog statementLog = (StatementLog) lastLogMessage2;
+        assert statementLog != null;
+        assertTrue(statementLog.isAutoCommit());
+
+        connection.setAutoCommit(false);
+        statement.execute("create table test2 (key_id int);");
+        statementLog = (StatementLog) lastLogMessage2;
+        assert statementLog != null;
+        assertFalse(statementLog.isAutoCommit());
+
         statement.close();
     }
 
@@ -430,6 +448,7 @@ public class WrappingDriverTest {
             statement.execute("insert into test (key_id) values(300)");
             statement.close();
         }
+        connection.setAutoCommit(false);
         final PreparedStatement statement = connection.prepareStatement("select * from test where key_id=?");
         for (int i = 0; i < 10000; i++) {
             statement.setInt(1, i);

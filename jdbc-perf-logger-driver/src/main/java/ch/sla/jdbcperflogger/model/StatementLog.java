@@ -28,8 +28,9 @@ public class StatementLog extends AbstractBeforeStatementExecutionLog {
     private final boolean preparedStatement;
 
     public StatementLog(final UUID connectionId, final UUID logId, final long timestamp,
-            final StatementType statementType, final String sql, final String threadName, final int timeout) {
-        super(connectionId, logId, timestamp, statementType, threadName, timeout);
+            final StatementType statementType, final String sql, final String threadName, final int timeout,
+            final boolean autoCommit) {
+        super(connectionId, logId, timestamp, statementType, threadName, timeout, autoCommit);
         rawSql = sql;
         filledSql = sql;
         preparedStatement = false;
@@ -37,8 +38,8 @@ public class StatementLog extends AbstractBeforeStatementExecutionLog {
 
     public StatementLog(final UUID connectionId, final UUID logId, final long timestamp,
             final StatementType statementType, final String rawSql, final String filledSql, final String threadName,
-            final int timeout) {
-        super(connectionId, logId, timestamp, statementType, threadName, timeout);
+            final int timeout, final boolean autoCommit) {
+        super(connectionId, logId, timestamp, statementType, threadName, timeout, autoCommit);
         this.rawSql = rawSql;
         this.filledSql = filledSql;
         preparedStatement = true;

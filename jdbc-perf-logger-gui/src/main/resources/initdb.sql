@@ -13,7 +13,7 @@ create table if not exists statement_log
     (id identity, connectionId UUID not null, logId UUID not null, tstamp timestamp not null, statementType tinyInt not null, 
     rawSql varchar not null, filledSql varchar not null, 
     executionDurationNanos bigInt, fetchDurationNanos bigInt, nbRowsIterated int, 
-    threadName varchar, exception varchar, timeout int);
+    threadName varchar, exception varchar, timeout int, autoCommit boolean);
 
 create index if not exists idx_logId on statement_log(logId);
 create index if not exists idx_duration on statement_log(executionDurationNanos desc);
@@ -27,7 +27,7 @@ create table if not exists batched_statement_log
 create index if not exists idx_batched_logId on batched_statement_log(logId);
 
 create or replace view v_statement_log
-    (id, tstamp, statementType, rawSql, filledSql, exec_plus_fetch_time, execution_time, fetch_time, nbRowsIterated, threadName, timeout, error, connectionNumber)
+    (id, tstamp, statementType, rawSql, filledSql, exec_plus_fetch_time, execution_time, fetch_time, nbRowsIterated, threadName, timeout, autoCommit, error, connectionNumber)
   as select statement_log.id, statement_log.tstamp, statement_log.statementType, statement_log.rawSql, statement_log.filledSql,
             statement_log.executionDurationNanos+coalesce(statement_log.fetchDurationNanos,0) as exec_plus_fetch_time,
             statement_log.executionDurationNanos as execution_time, 
@@ -35,7 +35,8 @@ create or replace view v_statement_log
             statement_log.nbRowsIterated,
             statement_log.threadName,
             case when statement_log.timeout = 0 then null else statement_log.timeout end as timeout,
-            NVL2(statement_log.exception, 1, null),
+            case when statement_log.autoCommit then 'Y' else null end as autoCommit,
+            NVL2(statement_log.exception, 1, null) as exception,
             connection_info.connectionNumber
         from statement_log join connection_info on (connection_info.connectionId=statement_log.connectionId);
 
