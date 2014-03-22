@@ -78,15 +78,9 @@ public class LogExporter {
 
         @Override
         public void analyze(final ResultSet resultSet) throws SQLException {
-            final PrintWriter writer;
-            try {
-                writer = new PrintWriter(exportFile);
-            } catch (final FileNotFoundException e) {
-                throw new RuntimeException(e);
-            }
+            try (PrintWriter writer = new PrintWriter(exportFile)) {
 
-            final SimpleDateFormat tstampFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-            try {
+                final SimpleDateFormat tstampFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
                 while (resultSet.next()) {
                     final Timestamp timestamp = resultSet.getTimestamp(LogRepositoryConstants.TSTAMP_COLUMN);
@@ -130,11 +124,11 @@ public class LogExporter {
                     writer.println();
                 }
 
-            } finally {
-                writer.close();
+            } catch (final FileNotFoundException e) {
+                throw new RuntimeException(e);
             }
-        }
 
+        }
     }
 
     private class CsvLogExporter implements ResultSetAnalyzer {

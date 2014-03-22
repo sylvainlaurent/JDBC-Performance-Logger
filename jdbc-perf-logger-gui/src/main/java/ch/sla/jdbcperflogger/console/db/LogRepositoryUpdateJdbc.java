@@ -48,12 +48,12 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
     // TODO ajouter colonne clientId (processId)
     public static final int SCHEMA_VERSION = 7;
 
-    private static final int NB_ROWS_MAX = Integer.parseInt(System.getProperty("maxLoggedStatements", "20000"));
+    static final int NB_ROWS_MAX = Integer.parseInt(System.getProperty("maxLoggedStatements", "20000"));
     private static final long CLEAN_UP_PERIOD_MS = TimeUnit.SECONDS.toMillis(30);
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogRepositoryUpdateJdbc.class);
-
-    private final Connection connectionUpdate;
+    // visible for testing
+    final Connection connectionUpdate;
     private final PreparedStatement addStatementLog;
     private final PreparedStatement updateStatementLogWithResultSet;
     private final PreparedStatement updateStatementLogAfterExecution;
@@ -112,7 +112,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
         LOGGER.debug("Opening H2 connection for log repository " + path);
         try {
             @Nonnull
-            final Connection conn = DriverManager.getConnection("jdbc:h2:mem:" + path + ";DB_CLOSE_DELAY=1");
+            final Connection conn = DriverManager.getConnection("jdbc:h2:mem:" + path);
             LOGGER.debug("connection commit mode auto={}", conn.getAutoCommit());
             conn.setAutoCommit(true);
             checkSchemaVersion(conn);
@@ -152,11 +152,11 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
     }
 
     private void cleanOldConnectionInfo(final Connection conn) throws SQLException {
-        final Statement statement = conn.createStatement();
-        final int nbRowsDeleted = statement.executeUpdate("delete from connection_info where not exists "
-                + "(select 1 from statement_log where statement_log.connectionId=connection_info.connectionId)");
-        LOGGER.debug("Deleted {} rows in connection_info", nbRowsDeleted);
-        statement.close();
+        try (Statement statement = conn.createStatement()) {
+            final int nbRowsDeleted = statement.executeUpdate("delete from connection_info where not exists "
+                    + "(select 1 from statement_log where statement_log.connectionId=connection_info.connectionId)");
+            LOGGER.debug("Deleted {} rows in connection_info", nbRowsDeleted);
+        }
     }
 
     @Override
@@ -172,7 +172,8 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
             addStatementLog.setObject(i++, log.getConnectionUuid());
             addStatementLog.setInt(i++, log.getTimeout());
             addStatementLog.setBoolean(i++, log.isAutoCommit());
-            addStatementLog.execute();
+            final int insertCount = addStatementLog.executeUpdate();
+            assert insertCount == 1;
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }
@@ -272,10 +273,9 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
 
     @Override
     public synchronized void addConnection(final ConnectionInfo connectionInfo) {
-        try {
-            final PreparedStatement stmt = connectionUpdate
-                    .prepareStatement("merge into connection_info (connectionId, connectionNumber, url, creationDate, connectionInfo)"//
-                            + " key(connectionId) values (?,?,?,?,?)");
+        try (PreparedStatement stmt = connectionUpdate
+                .prepareStatement("merge into connection_info (connectionId, connectionNumber, url, creationDate, connectionInfo)"//
+                        + " key(connectionId) values (?,?,?,?,?)")) {
             int i = 1;
             stmt.setObject(i++, connectionInfo.getUuid());
             stmt.setInt(i++, connectionInfo.getConnectionNumber());
@@ -284,7 +284,6 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
             stmt.setObject(i++, connectionInfo.getConnectionProperties());
 
             stmt.execute();
-            stmt.close();
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }
@@ -315,11 +314,9 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
 
     @Override
     public void clear() {
-        try {
-            final Statement statement = connectionUpdate.createStatement();
+        try (Statement statement = connectionUpdate.createStatement()) {
             statement.execute("truncate table batched_statement_log");
             statement.execute("truncate table statement_log");
-            statement.close();
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }
@@ -328,9 +325,8 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
 
     @Override
     public void deleteStatementLog(final long... logIds) {
-        try {
-            final PreparedStatement statement = connectionUpdate
-                    .prepareStatement("delete from statement_log where statement_log.id=?");
+        try (PreparedStatement statement = connectionUpdate
+                .prepareStatement("delete from statement_log where statement_log.id=?")) {
 
             for (int i = 0; i < logIds.length; i++) {
                 final long logId = logIds[i];
@@ -341,7 +337,6 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
                 }
             }
             statement.executeBatch();
-            statement.close();
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }
@@ -349,47 +344,41 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
     }
 
     public void deleteOldRowsIfTooMany() {
-        try {
-            // first select the oldest timestamp to keep, then use it in the delete clause
-            // using 2 queries is actually much faster with H2 than a single delete with a subquery
-            final long startTime = System.currentTimeMillis();
-            LOGGER.debug("searching for most recent timestamp of log statements to delete");
+        // first select the oldest timestamp to keep, then use it in the delete clause
+        // using 2 queries is actually much faster with H2 than a single delete with a subquery
+        final long startTime = System.currentTimeMillis();
+        LOGGER.debug("searching for most recent timestamp of log statements to delete");
 
-            final Connection connection = createDbConnection(dbName);
+        try (Connection connection = createDbConnection(dbName)) {
 
-            final PreparedStatement selectTstampStmt = connection
+            try (PreparedStatement selectTstampStmt = connection
                     .prepareStatement("select tstamp from statement_log order by tstamp desc limit 1 offset "
                             + NB_ROWS_MAX);
-            final ResultSet tstampResultSet = selectTstampStmt.executeQuery();
-            if (tstampResultSet.next()) {
-                final Timestamp timestamp = tstampResultSet.getTimestamp(1);
-                if (timestamp != null) {
+                    ResultSet tstampResultSet = selectTstampStmt.executeQuery()) {
+                if (tstampResultSet.next()) {
+                    final Timestamp timestamp = tstampResultSet.getTimestamp(1);
                     int nbRowsDeleted;
                     {
                         LOGGER.debug("Will delete all log statements earlier than {}", timestamp);
-                        final PreparedStatement deleteStmt = connection
-                                .prepareStatement("delete from statement_log where tstamp <= ?");
-                        deleteStmt.setTimestamp(1, timestamp);
-                        nbRowsDeleted = deleteStmt.executeUpdate();
-                        LOGGER.debug("Deleted {} old statements", nbRowsDeleted);
-                        deleteStmt.close();
+                        try (PreparedStatement deleteStmt = connection
+                                .prepareStatement("delete from statement_log where tstamp <= ?")) {
+                            deleteStmt.setTimestamp(1, timestamp);
+                            nbRowsDeleted = deleteStmt.executeUpdate();
+                            LOGGER.debug("Deleted {} old statements", nbRowsDeleted);
+                        }
                     }
                     if (nbRowsDeleted > 0) {
-                        final Statement deleteStmt = connection.createStatement();
-                        nbRowsDeleted = deleteStmt
-                                .executeUpdate("delete from batched_statement_log where logId not in "//
-                                        + "(select logId from statement_log)");
-                        // nbRowsDeleted = deleteStmt2.executeUpdate();
-                        LOGGER.debug("Deleted {} old batched_statements", nbRowsDeleted);
-                        deleteStmt.close();
-
-                        lastModificationTime = System.currentTimeMillis();
+                        try (Statement deleteStmt = connection.createStatement()) {
+                            nbRowsDeleted = deleteStmt
+                                    .executeUpdate("delete from batched_statement_log where logId not in "//
+                                            + "(select logId from statement_log)");
+                            // nbRowsDeleted = deleteStmt2.executeUpdate();
+                            LOGGER.debug("Deleted {} old batched_statements", nbRowsDeleted);
+                            lastModificationTime = System.currentTimeMillis();
+                        }
                     }
                 }
             }
-            tstampResultSet.close();
-            selectTstampStmt.close();
-            connection.close();
             LOGGER.debug("Peformed deleteOldRowsIfTooMany in {}ms", System.currentTimeMillis() - startTime);
         } catch (final SQLException e) {
             throw new RuntimeException(e);
@@ -402,23 +391,23 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
     }
 
     private static void checkSchemaVersion(final Connection conn) throws SQLException {
-        final Statement statement = conn.createStatement();
-        statement.execute("create table if not exists schema_version (version int not null)");
-
-        int version = -1;
-        final ResultSet rset = statement.executeQuery("select version from schema_version");
-        if (rset.next()) {
-            version = rset.getInt(1);
-        }
-        rset.close();
-
-        if (version != SCHEMA_VERSION) {
-            LOGGER.warn("Schema version changed, dropping all objects and recreating tables");
-            statement.execute("drop all objects");
+        try (Statement statement = conn.createStatement()) {
             statement.execute("create table if not exists schema_version (version int not null)");
-            statement.execute("merge into schema_version key(version) values (" + SCHEMA_VERSION + ")");
+
+            int version = -1;
+            try (ResultSet rset = statement.executeQuery("select version from schema_version")) {
+                if (rset.next()) {
+                    version = rset.getInt(1);
+                }
+            }
+
+            if (version != SCHEMA_VERSION) {
+                LOGGER.warn("Schema version changed, dropping all objects and recreating tables");
+                statement.execute("drop all objects");
+                statement.execute("create table if not exists schema_version (version int not null)");
+                statement.execute("merge into schema_version key(version) values (" + SCHEMA_VERSION + ")");
+            }
         }
-        statement.close();
     }
 
     private class CleanupTask extends TimerTask {

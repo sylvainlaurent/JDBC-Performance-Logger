@@ -15,14 +15,13 @@ public class DetailedViewStatementLog {
     private final String rawSql;
     private final String filledSql;
     private final String threadName;
-    private final long durationNanos;
     @Nullable
     private final String sqlException;
     private final ConnectionInfo connectionInfo;
 
     public DetailedViewStatementLog(final UUID logId, final ConnectionInfo connectionInfo, final long timestamp,
             @Nullable final StatementType statementType, final String rawSql, final String filledSql,
-            final String threadName, final long durationNanos, @Nullable final String exception) {
+            final String threadName, @Nullable final String exception) {
         this.logId = logId;
         this.connectionInfo = connectionInfo;
         this.timestamp = timestamp;
@@ -30,7 +29,6 @@ public class DetailedViewStatementLog {
         this.rawSql = rawSql;
         this.filledSql = filledSql;
         this.threadName = threadName;
-        this.durationNanos = durationNanos;
         sqlException = exception;
     }
 
@@ -61,10 +59,6 @@ public class DetailedViewStatementLog {
 
     public String getThreadName() {
         return threadName;
-    }
-
-    public long getDurationNanos() {
-        return durationNanos;
     }
 
     @Nullable

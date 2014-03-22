@@ -69,10 +69,11 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
         sql.append(getWhereClause(searchCriteria));
         sql.append(" order by tstamp, id");
 
-        try (PreparedStatement statement = connectionRead.prepareStatement(sql.toString());
-                ResultSet resultSet = statement.executeQuery()) {
+        try (PreparedStatement statement = connectionRead.prepareStatement(sql.toString())) {
             applyParametersForWhereClause(searchCriteria, statement);
-            analyzer.analyze(resultSet);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                analyzer.analyze(resultSet);
+            }
 
         } catch (final SQLException e) {
             throw new RuntimeException(e);
@@ -104,10 +105,11 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
         }
         sql.append(" order by total_exec_time desc");
 
-        try (PreparedStatement statement = connectionRead.prepareStatement(sql.toString());
-                ResultSet resultSet = statement.executeQuery()) {
+        try (PreparedStatement statement = connectionRead.prepareStatement(sql.toString())) {
             applyParametersForWhereClause(searchCriteria, statement);
-            analyzer.analyze(resultSet);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                analyzer.analyze(resultSet);
+            }
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }
@@ -136,10 +138,11 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
         }
         sql.append(" order by total_exec_time desc");
 
-        try (PreparedStatement statement = connectionRead.prepareStatement(sql.toString());
-                ResultSet resultSet = statement.executeQuery()) {
+        try (PreparedStatement statement = connectionRead.prepareStatement(sql.toString())) {
             applyParametersForWhereClause(searchCriteria, statement);
-            analyzer.analyze(resultSet);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                analyzer.analyze(resultSet);
+            }
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }
@@ -194,12 +197,13 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
     public DetailedViewStatementLog getStatementLog(final long id) {
         final String sql = "select statement_log.logId, statement_log.tstamp, statement_log.statementType, "//
                 + "statement_log.rawSql, statement_log.filledSql, " //
-                + "statement_log.executionDurationNanos, statement_log.threadName, statement_log.exception, "//
+                + "statement_log.threadName, statement_log.exception, "//
                 + "statement_log.connectionId,"//
                 + "connection_info.connectionNumber, connection_info.url, connection_info.creationDate,"//
                 + "connection_info.connectionInfo "//
                 + "from statement_log join connection_info on (statement_log.connectionId=connection_info.connectionId) "//
                 + "where statement_log.id=?";
+
         try (final PreparedStatement statement = connectionRead.prepareStatement(sql)) {
             statement.setLong(1, id);
             try (final ResultSet resultSet = statement.executeQuery()) {
@@ -213,7 +217,6 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
                     final String rawSql = resultSet.getString(i++);
                     @Nonnull
                     final String filledSql = resultSet.getString(i++);
-                    final long durationNanos = resultSet.getLong(i++);
                     @Nonnull
                     final String threadName = resultSet.getString(i++);
                     final String exception = resultSet.getString(i++);
@@ -227,7 +230,7 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
                             connectionUrl, creationDate, connectionProperties);
 
                     result = new DetailedViewStatementLog(logId, connectionInfo, tstamp.getTime(), statementType,
-                            rawSql, filledSql, threadName, durationNanos, exception);
+                            rawSql, filledSql, threadName, exception);
                 }
                 return result;
             }
@@ -240,11 +243,10 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
     public int countStatements() {
         try {
             try (PreparedStatement statement = connectionRead.prepareStatement("select count(1) from statement_log")) {
-                final ResultSet resultSet = statement.executeQuery();
-                resultSet.next();
-                final int result = resultSet.getInt(1);
-                resultSet.close();
-                return result;
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    resultSet.next();
+                    return resultSet.getInt(1);
+                }
             }
         } catch (final SQLException e) {
             throw new RuntimeException(e);
@@ -255,11 +257,10 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
     public long getTotalExecAndFetchTimeNanos() {
         try (PreparedStatement statement = connectionRead
                 .prepareStatement("select sum(exec_plus_fetch_time) from v_statement_log")) {
-            final ResultSet resultSet = statement.executeQuery();
-            resultSet.next();
-            final long result = resultSet.getLong(1);
-            resultSet.close();
-            return result;
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getLong(1);
+            }
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }
@@ -272,11 +273,10 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
 
         try (PreparedStatement statement = connectionRead.prepareStatement(sql)) {
             applyParametersForWhereClause(searchCriteria, statement);
-            final ResultSet resultSet = statement.executeQuery();
-            resultSet.next();
-            final long result = resultSet.getLong(1);
-            resultSet.close();
-            return result;
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getLong(1);
+            }
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }
