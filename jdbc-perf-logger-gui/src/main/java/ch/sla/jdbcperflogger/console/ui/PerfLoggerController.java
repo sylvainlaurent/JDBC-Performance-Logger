@@ -315,7 +315,7 @@ public class PerfLoggerController {
 
             final String sqlException = statementLog.getSqlException();
             if (sqlException != null) {
-                txt2 += sqlException;
+                txt2 += "\n" + sqlException;
             }
         }
         perfLoggerPanel.txtFieldRawSql.setText(txt1);
