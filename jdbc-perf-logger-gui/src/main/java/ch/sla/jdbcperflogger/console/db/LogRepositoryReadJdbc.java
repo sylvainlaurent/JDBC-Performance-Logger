@@ -200,7 +200,7 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
                 + "statement_log.threadName, statement_log.exception, "//
                 + "statement_log.connectionId,"//
                 + "connection_info.connectionNumber, connection_info.url, connection_info.creationDate,"//
-                + "connection_info.connectionInfo "//
+                + "connection_info.connectionProperties "//
                 + "from statement_log join connection_info on (statement_log.connectionId=connection_info.connectionId) "//
                 + "where statement_log.id=?";
 

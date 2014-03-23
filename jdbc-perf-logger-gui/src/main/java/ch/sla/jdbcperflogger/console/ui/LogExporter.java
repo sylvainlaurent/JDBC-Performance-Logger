@@ -47,7 +47,7 @@ public class LogExporter {
         return new CsvLogExporter(exportFile);
     }
 
-    String getBatchedExecutions(final DetailedViewStatementLog statementLog, @Nullable final SQLFormatter formatter) {
+    String getBatchedExecutions(final DetailedViewStatementLog statementLog) {
         final StringBuilder strBuilder = new StringBuilder();
         logRepository.getBatchStatementExecutions(statementLog.getLogId(), new ResultSetAnalyzer() {
             @Override
@@ -57,11 +57,7 @@ public class LogExporter {
                     strBuilder.append(resultSet.getInt(1));
                     strBuilder.append(" */ ");
                     final String sql = resultSet.getString(2) + ";";
-                    if (formatter != null) {
-                        strBuilder.append(formatter.prettyPrint(sql));
-                    } else {
-                        strBuilder.append(sql);
-                    }
+                    strBuilder.append(sql);
                     strBuilder.append("\n");
                 }
             }
@@ -110,7 +106,7 @@ public class LogExporter {
                         final DetailedViewStatementLog statementLog = logRepository.getStatementLog(resultSet
                                 .getLong("ID"));
                         if (statementLog != null) {
-                            writer.println(getBatchedExecutions(statementLog, null));
+                            writer.println(getBatchedExecutions(statementLog));
                         }
                         break;
                     default:

@@ -53,14 +53,13 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.UndoableEditEvent;
@@ -416,124 +415,23 @@ public class PerfLoggerPanel extends JPanel {
         gbl_sqlDetailPanel.rowWeights = new double[] { 1.0, Double.MIN_VALUE };
         sqlDetailPanel.setLayout(gbl_sqlDetailPanel);
 
-        final JSplitPane splitPaneSqlDetails = new JSplitPane();
-        splitPaneSqlDetails.setBorder(null);
-        splitPaneSqlDetails.setResizeWeight(0.5);
-        splitPaneSqlDetails.setContinuousLayout(true);
-        splitPaneSqlDetails.setOrientation(JSplitPane.VERTICAL_SPLIT);
-        final GridBagConstraints gbc_splitPaneSqlDetails = new GridBagConstraints();
-        gbc_splitPaneSqlDetails.fill = GridBagConstraints.BOTH;
-        gbc_splitPaneSqlDetails.gridx = 0;
-        gbc_splitPaneSqlDetails.gridy = 0;
-        sqlDetailPanel.add(splitPaneSqlDetails, gbc_splitPaneSqlDetails);
+        final JTabbedPane tabbedPanelsqlDetails = new JTabbedPane();
+        // tabbedPanelsqlDetails.setTabPlacement(SwingConstants.LEFT);
+        tabbedPanelsqlDetails.setBorder(null);
+        final GridBagConstraints gbc_tabbedPanelsqlDetails = new GridBagConstraints();
+        gbc_tabbedPanelsqlDetails.fill = GridBagConstraints.BOTH;
+        gbc_tabbedPanelsqlDetails.gridx = 0;
+        gbc_tabbedPanelsqlDetails.gridy = 0;
+        sqlDetailPanel.add(tabbedPanelsqlDetails, gbc_tabbedPanelsqlDetails);
 
         final JPanel panelRawSql = new JPanel();
-        splitPaneSqlDetails.setLeftComponent(panelRawSql);
+        tabbedPanelsqlDetails.addTab("Raw SQL", panelRawSql);
         final GridBagLayout gbl_panelRawSql = new GridBagLayout();
         gbl_panelRawSql.columnWidths = new int[] { 0, 0, 0 };
-        gbl_panelRawSql.rowHeights = new int[] { 0, 0, 0 };
+        gbl_panelRawSql.rowHeights = new int[] { 0, 0 };
         gbl_panelRawSql.columnWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
-        gbl_panelRawSql.rowWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
+        gbl_panelRawSql.rowWeights = new double[] { 1.0, Double.MIN_VALUE };
         panelRawSql.setLayout(gbl_panelRawSql);
-
-        final JPanel connectinInfoPanel = new JPanel();
-        final GridBagConstraints gbc_connectinInfoPanel = new GridBagConstraints();
-        gbc_connectinInfoPanel.gridwidth = 2;
-        gbc_connectinInfoPanel.insets = new Insets(0, 0, 5, 0);
-        gbc_connectinInfoPanel.fill = GridBagConstraints.BOTH;
-        gbc_connectinInfoPanel.gridx = 0;
-        gbc_connectinInfoPanel.gridy = 0;
-        panelRawSql.add(connectinInfoPanel, gbc_connectinInfoPanel);
-        final GridBagLayout gbl_connectinInfoPanel = new GridBagLayout();
-        gbl_connectinInfoPanel.columnWidths = new int[] { 0, 0, 0 };
-        gbl_connectinInfoPanel.rowHeights = new int[] { 0, 0 };
-        gbl_connectinInfoPanel.columnWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
-        gbl_connectinInfoPanel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
-        connectinInfoPanel.setLayout(gbl_connectinInfoPanel);
-
-        final JCheckBox chckbxPrettyPrint = new JCheckBox("Pretty print");
-        chckbxPrettyPrint.setSelected(false);
-        chckbxPrettyPrint.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(@Nullable final ChangeEvent e) {
-                perfLoggerController.onSwitchPrettyPrint(chckbxPrettyPrint.isSelected());
-            }
-        });
-        final GridBagConstraints gbc_chckbxPrettyPrint = new GridBagConstraints();
-        gbc_chckbxPrettyPrint.anchor = GridBagConstraints.SOUTH;
-        gbc_chckbxPrettyPrint.insets = new Insets(0, 0, 0, 5);
-        gbc_chckbxPrettyPrint.gridx = 0;
-        gbc_chckbxPrettyPrint.gridy = 0;
-        connectinInfoPanel.add(chckbxPrettyPrint, gbc_chckbxPrettyPrint);
-
-        final JPanel connectionInfoPanel = new JPanel();
-        connectionInfoPanel.setBorder(new TitledBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null,
-                null), "Connection info", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(51, 51, 51)),
-                "Connection info", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(51, 51, 51)));
-        final GridBagConstraints gbc_connectionInfoPanel = new GridBagConstraints();
-        gbc_connectionInfoPanel.anchor = GridBagConstraints.NORTH;
-        gbc_connectionInfoPanel.fill = GridBagConstraints.HORIZONTAL;
-        gbc_connectionInfoPanel.gridx = 1;
-        gbc_connectionInfoPanel.gridy = 0;
-        connectinInfoPanel.add(connectionInfoPanel, gbc_connectionInfoPanel);
-        final GridBagLayout gbl_connectionInfoPanel = new GridBagLayout();
-        gbl_connectionInfoPanel.columnWidths = new int[] { 0, 0, 0, 0, 0 };
-        gbl_connectionInfoPanel.rowHeights = new int[] { 0, 0, 0 };
-        gbl_connectionInfoPanel.columnWeights = new double[] { 0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE };
-        gbl_connectionInfoPanel.rowWeights = new double[] { 0.0, 0.0, Double.MIN_VALUE };
-        connectionInfoPanel.setLayout(gbl_connectionInfoPanel);
-
-        final JLabel lblConnectionUrl = new JLabel("URL:");
-        final GridBagConstraints gbc_lblConnectionUrl = new GridBagConstraints();
-        gbc_lblConnectionUrl.anchor = GridBagConstraints.EAST;
-        gbc_lblConnectionUrl.insets = new Insets(0, 0, 5, 5);
-        gbc_lblConnectionUrl.gridx = 0;
-        gbc_lblConnectionUrl.gridy = 0;
-        connectionInfoPanel.add(lblConnectionUrl, gbc_lblConnectionUrl);
-
-        connectionUrlField = new JTextField();
-        final GridBagConstraints gbc_connectionUrlField = new GridBagConstraints();
-        gbc_connectionUrlField.fill = GridBagConstraints.HORIZONTAL;
-        gbc_connectionUrlField.insets = new Insets(0, 0, 5, 5);
-        gbc_connectionUrlField.gridx = 1;
-        gbc_connectionUrlField.gridy = 0;
-        connectionInfoPanel.add(connectionUrlField, gbc_connectionUrlField);
-        connectionUrlField.setColumns(20);
-
-        final JLabel lblCreated = new JLabel("Created:");
-        final GridBagConstraints gbc_lblCreated = new GridBagConstraints();
-        gbc_lblCreated.anchor = GridBagConstraints.EAST;
-        gbc_lblCreated.insets = new Insets(0, 0, 5, 5);
-        gbc_lblCreated.gridx = 2;
-        gbc_lblCreated.gridy = 0;
-        connectionInfoPanel.add(lblCreated, gbc_lblCreated);
-
-        connectionCreationDateField = new JTextField();
-        final GridBagConstraints gbc_connectionCreationDateField = new GridBagConstraints();
-        gbc_connectionCreationDateField.fill = GridBagConstraints.HORIZONTAL;
-        gbc_connectionCreationDateField.insets = new Insets(0, 0, 5, 0);
-        gbc_connectionCreationDateField.gridx = 3;
-        gbc_connectionCreationDateField.gridy = 0;
-        connectionInfoPanel.add(connectionCreationDateField, gbc_connectionCreationDateField);
-        connectionCreationDateField.setColumns(15);
-
-        final JLabel lblConectionProperties = new JLabel("Properties:");
-        final GridBagConstraints gbc_lblConectionProperties = new GridBagConstraints();
-        gbc_lblConectionProperties.anchor = GridBagConstraints.EAST;
-        gbc_lblConectionProperties.insets = new Insets(0, 0, 0, 5);
-        gbc_lblConectionProperties.gridx = 0;
-        gbc_lblConectionProperties.gridy = 1;
-        connectionInfoPanel.add(lblConectionProperties, gbc_lblConectionProperties);
-        lblConectionProperties.setToolTipText("(Password property removed)");
-
-        connectionPropertiesField = new JTextField();
-        final GridBagConstraints gbc_connectionPropertiesField = new GridBagConstraints();
-        gbc_connectionPropertiesField.fill = GridBagConstraints.HORIZONTAL;
-        gbc_connectionPropertiesField.gridwidth = 3;
-        gbc_connectionPropertiesField.gridx = 1;
-        gbc_connectionPropertiesField.gridy = 1;
-        connectionInfoPanel.add(connectionPropertiesField, gbc_connectionPropertiesField);
-        connectionPropertiesField.setColumns(10);
 
         final JButton btnCopy1 = new JButton();
         btnCopy1.setBorderPainted(false);
@@ -542,7 +440,7 @@ public class PerfLoggerPanel extends JPanel {
         final GridBagConstraints gbc_btnCopy1 = new GridBagConstraints();
         gbc_btnCopy1.insets = new Insets(0, 5, 0, 5);
         gbc_btnCopy1.gridx = 0;
-        gbc_btnCopy1.gridy = 1;
+        gbc_btnCopy1.gridy = 0;
         panelRawSql.add(btnCopy1, gbc_btnCopy1);
         btnCopy1.setIcon(new ImageIcon(PerfLoggerPanel.class.getResource("/icons/32px-Edit-copy_purple.png")));
         btnCopy1.setToolTipText("Copy the SQL statement unmodified (potentiall with '?' for bind variables");
@@ -558,7 +456,7 @@ public class PerfLoggerPanel extends JPanel {
         final GridBagConstraints gbc_scrollPaneRawSql = new GridBagConstraints();
         gbc_scrollPaneRawSql.fill = GridBagConstraints.BOTH;
         gbc_scrollPaneRawSql.gridx = 1;
-        gbc_scrollPaneRawSql.gridy = 1;
+        gbc_scrollPaneRawSql.gridy = 0;
         panelRawSql.add(scrollPaneRawSql, gbc_scrollPaneRawSql);
 
         txtFieldRawSql = new RSyntaxTextArea();
@@ -569,7 +467,7 @@ public class PerfLoggerPanel extends JPanel {
         txtFieldRawSql.setLineWrap(true);
 
         final JPanel panelFilledSql = new JPanel();
-        splitPaneSqlDetails.setRightComponent(panelFilledSql);
+        tabbedPanelsqlDetails.addTab("FilledSQL", panelFilledSql);
         final GridBagLayout gbl_panelFilledSql = new GridBagLayout();
         gbl_panelFilledSql.columnWidths = new int[] { 0, 0, 0 };
         gbl_panelFilledSql.rowHeights = new int[] { 0, 0 };
@@ -601,6 +499,72 @@ public class PerfLoggerPanel extends JPanel {
         txtFieldFilledSql.setOpaque(false);
         txtFieldFilledSql.setEditable(false);
         txtFieldFilledSql.setLineWrap(true);
+
+        final JPanel panelConnectionInfo = new JPanel();
+        tabbedPanelsqlDetails.addTab("Connection", null, panelConnectionInfo, null);
+        panelConnectionInfo.setBorder(new TitledBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null,
+                null), "Connection info", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(51, 51, 51)),
+                "Connection info", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(51, 51, 51)));
+        final GridBagLayout gbl_panelConnectionInfo = new GridBagLayout();
+        gbl_panelConnectionInfo.columnWidths = new int[] { 0, 0, 0, 0, 0 };
+        gbl_panelConnectionInfo.rowHeights = new int[] { 0, 0, 0, 0 };
+        gbl_panelConnectionInfo.columnWeights = new double[] { 0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE };
+        gbl_panelConnectionInfo.rowWeights = new double[] { 0.0, 0.0, 0.0, Double.MIN_VALUE };
+        panelConnectionInfo.setLayout(gbl_panelConnectionInfo);
+
+        final JLabel lblConnectionUrl = new JLabel("URL:");
+        final GridBagConstraints gbc_lblConnectionUrl = new GridBagConstraints();
+        gbc_lblConnectionUrl.anchor = GridBagConstraints.EAST;
+        gbc_lblConnectionUrl.insets = new Insets(0, 0, 5, 5);
+        gbc_lblConnectionUrl.gridx = 0;
+        gbc_lblConnectionUrl.gridy = 0;
+        panelConnectionInfo.add(lblConnectionUrl, gbc_lblConnectionUrl);
+
+        connectionUrlField = new JTextField();
+        final GridBagConstraints gbc_connectionUrlField = new GridBagConstraints();
+        gbc_connectionUrlField.fill = GridBagConstraints.HORIZONTAL;
+        gbc_connectionUrlField.insets = new Insets(0, 0, 5, 5);
+        gbc_connectionUrlField.gridx = 1;
+        gbc_connectionUrlField.gridy = 0;
+        panelConnectionInfo.add(connectionUrlField, gbc_connectionUrlField);
+        connectionUrlField.setColumns(20);
+
+        final JLabel lblCreated = new JLabel("Created:");
+        final GridBagConstraints gbc_lblCreated = new GridBagConstraints();
+        gbc_lblCreated.anchor = GridBagConstraints.EAST;
+        gbc_lblCreated.insets = new Insets(0, 0, 5, 5);
+        gbc_lblCreated.gridx = 2;
+        gbc_lblCreated.gridy = 0;
+        panelConnectionInfo.add(lblCreated, gbc_lblCreated);
+
+        connectionCreationDateField = new JTextField();
+        final GridBagConstraints gbc_connectionCreationDateField = new GridBagConstraints();
+        gbc_connectionCreationDateField.fill = GridBagConstraints.HORIZONTAL;
+        gbc_connectionCreationDateField.insets = new Insets(0, 0, 5, 0);
+        gbc_connectionCreationDateField.gridx = 3;
+        gbc_connectionCreationDateField.gridy = 0;
+        panelConnectionInfo.add(connectionCreationDateField, gbc_connectionCreationDateField);
+        connectionCreationDateField.setColumns(15);
+
+        final JLabel lblConectionProperties = new JLabel("Properties:");
+        final GridBagConstraints gbc_lblConectionProperties = new GridBagConstraints();
+        gbc_lblConectionProperties.anchor = GridBagConstraints.EAST;
+        gbc_lblConectionProperties.insets = new Insets(0, 0, 5, 5);
+        gbc_lblConectionProperties.gridx = 0;
+        gbc_lblConectionProperties.gridy = 1;
+        panelConnectionInfo.add(lblConectionProperties, gbc_lblConectionProperties);
+        lblConectionProperties.setToolTipText("(Password property removed)");
+
+        connectionPropertiesField = new JTextField();
+        final GridBagConstraints gbc_connectionPropertiesField = new GridBagConstraints();
+        gbc_connectionPropertiesField.insets = new Insets(0, 0, 5, 0);
+        gbc_connectionPropertiesField.fill = GridBagConstraints.HORIZONTAL;
+        gbc_connectionPropertiesField.gridwidth = 3;
+        gbc_connectionPropertiesField.gridx = 1;
+        gbc_connectionPropertiesField.gridy = 1;
+        panelConnectionInfo.add(connectionPropertiesField, gbc_connectionPropertiesField);
+        connectionPropertiesField.setColumns(10);
+
         btnCopy2.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(@Nullable final ActionEvent e) {

@@ -274,7 +274,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
     @Override
     public synchronized void addConnection(final ConnectionInfo connectionInfo) {
         try (PreparedStatement stmt = connectionUpdate
-                .prepareStatement("merge into connection_info (connectionId, connectionNumber, url, creationDate, connectionInfo)"//
+                .prepareStatement("merge into connection_info (connectionId, connectionNumber, url, creationDate, connectionProperties)"//
                         + " key(connectionId) values (?,?,?,?,?)")) {
             int i = 1;
             stmt.setObject(i++, connectionInfo.getUuid());

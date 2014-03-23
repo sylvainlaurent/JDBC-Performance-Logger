@@ -21,7 +21,6 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 - Handling of batched statements
 - Logging of SQLExceptions
 - Displays the `queryTimeout` of each statement (no value means 0 or no timeout) (since 0.5.0)
-- Optionally pretty print statements (since 0.6.0)
 - Displays the `autoCommit` status of each statement (since 0.6.0)
 
 ## Requirements

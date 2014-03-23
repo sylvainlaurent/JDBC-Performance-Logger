@@ -50,8 +50,6 @@ public class PerfLoggerController {
     private final IClientConnectionDelegate clientConnectionDelegate;
     private final LogExporter logExporter;
     private final PerfLoggerPanel perfLoggerPanel;
-    @Nullable
-    private SQLFormatter sqlFormatter = null;
 
     private abstract class SelectLogRunner {
         abstract void doSelect(ResultSetAnalyzer resultSetAnalyzer);
@@ -220,15 +218,6 @@ public class PerfLoggerController {
         exportSql();
     }
 
-    void onSwitchPrettyPrint(final boolean selected) {
-        if (selected) {
-            sqlFormatter = createSqlFormatter();
-        } else {
-            sqlFormatter = null;
-        }
-        statementSelected(perfLoggerPanel.getSelectedLogId());
-    }
-
     /**
      * To be executed in EDT
      */
@@ -258,8 +247,6 @@ public class PerfLoggerController {
         long deltaTimestampBaseMillis = 0;
 
         if (statementLog != null) {
-            boolean txt1Prettified = false;
-            boolean txt2Prettified = false;
 
             switch (groupBy) {
             case NONE:
@@ -267,12 +254,10 @@ public class PerfLoggerController {
                 if (statementLog.getStatementType() != null) {
                     switch (statementLog.getStatementType()) {
                     case NON_PREPARED_BATCH_EXECUTION:
-                        txt1 = logExporter.getBatchedExecutions(statementLog, sqlFormatter);
-                        txt1Prettified = true;
+                        txt1 = logExporter.getBatchedExecutions(statementLog);
                         break;
                     case PREPARED_BATCH_EXECUTION:
-                        txt2 = logExporter.getBatchedExecutions(statementLog, sqlFormatter);
-                        txt2Prettified = true;
+                        txt2 = logExporter.getBatchedExecutions(statementLog);
                         break;
                     case BASE_PREPARED_STMT:
                     case PREPARED_QUERY_STMT:
@@ -326,16 +311,6 @@ public class PerfLoggerController {
                     }
                 }
                 break;
-            }
-
-            final SQLFormatter sqlFormatterLocal = sqlFormatter;
-            if (sqlFormatterLocal != null) {
-                if (!txt1Prettified) {
-                    txt1 = sqlFormatterLocal.prettyPrint(txt1).toString();
-                }
-                if (!txt2Prettified) {
-                    txt2 = sqlFormatterLocal.prettyPrint(txt2).toString();
-                }
             }
 
             final String sqlException = statementLog.getSqlException();
@@ -395,12 +370,6 @@ public class PerfLoggerController {
         searchCriteria.setRemoveTransactionCompletions(excludeCommits);
         searchCriteria.setSqlPassThroughFilter(sqlPassthroughFilter);
         return searchCriteria;
-    }
-
-    private SQLFormatter createSqlFormatter() {
-        final SQLFormatter formatter = new SQLFormatter();
-        formatter.setLineLength(120);
-        return formatter;
     }
 
     /**
