@@ -143,8 +143,9 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
     @Nullable
     protected Object internalExecuteBatch(final Method method, @Nullable final Object[] args) throws Throwable {
         final UUID logId = UUID.randomUUID();
-        PerfLogger.logPreparedBatchedStatements(connectionId, rawSql, batchedPreparedOrNonPreparedStmtExecutions,
-                databaseType, wrappedStatement.getQueryTimeout(), wrappedStatement.getConnection().getAutoCommit());
+        PerfLogger.logPreparedBatchedStatements(connectionId, logId, rawSql,
+                batchedPreparedOrNonPreparedStmtExecutions, databaseType, wrappedStatement.getQueryTimeout(),
+                wrappedStatement.getConnection().getAutoCommit());
         final long start = System.nanoTime();
         Throwable exc = null;
         try {

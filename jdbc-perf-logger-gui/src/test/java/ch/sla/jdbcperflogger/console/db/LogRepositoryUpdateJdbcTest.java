@@ -35,6 +35,7 @@ import org.junit.Test;
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.TxCompletionType;
 import ch.sla.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
+import ch.sla.jdbcperflogger.model.BatchedPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.ConnectionInfo;
 import ch.sla.jdbcperflogger.model.ResultSetLog;
 import ch.sla.jdbcperflogger.model.StatementExecutedLog;
@@ -180,6 +181,48 @@ public class LogRepositoryUpdateJdbcTest {
         repositoryUpdate.addBatchedNonPreparedStatementsLog(batchedLogs);
         assertEquals(2, countRowsInTable("statement_log"));
         assertEquals(3, countRowsInTable("batched_statement_log"));
+    }
+
+    @Test
+    public void testaddBatchedPreparedStatementsLog() {
+        final StatementLog log = insert1Log();
+
+        final List<String> sqlList = Arrays.asList("st1", "st2", "st3");
+        final BatchedPreparedStatementsLog batchedLogs = new BatchedPreparedStatementsLog(log.getConnectionUuid(),
+                randomUUID(), System.currentTimeMillis(), "myRaw stmt", sqlList, "myThread", 13, true);
+        repositoryUpdate.addBatchedPreparedStatementsLog(batchedLogs);
+        assertEquals(2, countRowsInTable("statement_log"));
+        assertEquals(3, countRowsInTable("batched_statement_log"));
+
+        final StatementExecutedLog statementExecutedLog = new StatementExecutedLog(batchedLogs.getLogId(), 123, null,
+                "myexception");
+        repositoryUpdate.updateLogAfterExecution(statementExecutedLog);
+
+        repositoryRead.getStatements(new LogSearchCriteria(), new ResultSetAnalyzer() {
+
+            @Override
+            public void analyze(final ResultSet resultSet) throws SQLException {
+                resultSet.next();
+                resultSet.next();
+                assertEquals(2, resultSet.getLong(ID_COLUMN));
+                assertEquals(batchedLogs.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
+                assertEquals(batchedLogs.isAutoCommit(), resultSet.getBoolean(LogRepositoryConstants.AUTOCOMMIT_COLUMN));
+                assertEquals(0, resultSet.getInt(LogRepositoryConstants.FETCH_TIME_COLUMN));
+                assertEquals(statementExecutedLog.getExecutionTimeNanos(),
+                        resultSet.getInt(LogRepositoryConstants.EXEC_TIME_COLUMN));
+                assertEquals(statementExecutedLog.getExecutionTimeNanos(),
+                        resultSet.getInt(LogRepositoryConstants.EXEC_PLUS_FETCH_TIME_COLUMN));
+                assertEquals(0, resultSet.getInt(LogRepositoryConstants.NB_ROWS_COLUMN));
+                assertEquals(batchedLogs.getThreadName(),
+                        resultSet.getString(LogRepositoryConstants.THREAD_NAME_COLUMN));
+                assertEquals(batchedLogs.getTimeout(), resultSet.getInt(LogRepositoryConstants.TIMEOUT_COLUMN));
+                assertEquals(batchedLogs.getTimestamp(), resultSet.getTimestamp(LogRepositoryConstants.TSTAMP_COLUMN)
+                        .getTime());
+                assertEquals(batchedLogs.getStatementType().getId(),
+                        resultSet.getInt(LogRepositoryConstants.STMT_TYPE_COLUMN));
+                assertTrue(resultSet.getBoolean(LogRepositoryConstants.ERROR_COLUMN));
+            }
+        }, false);
     }
 
     @Test

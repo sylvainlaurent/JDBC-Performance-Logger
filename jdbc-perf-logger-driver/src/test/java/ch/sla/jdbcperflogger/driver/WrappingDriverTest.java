@@ -149,6 +149,8 @@ public class WrappingDriverTest {
             final Statement statement = connection.createStatement();
             assertEquals(null, lastLogMessage1);
             statement.execute(sql);
+            assertEquals(((StatementExecutedLog) lastLogMessage1).getLogId(),
+                    ((StatementLog) lastLogMessage2).getLogId());
             assertEquals(sql, ((StatementLog) lastLogMessage2).getRawSql());
             statement.close();
         }
@@ -157,6 +159,8 @@ public class WrappingDriverTest {
             final Statement statement = connection.createStatement();
             final int nb = statement.executeUpdate(sql);
             Assert.assertEquals(1, nb);
+            assertEquals(((StatementExecutedLog) lastLogMessage1).getLogId(),
+                    ((StatementLog) lastLogMessage2).getLogId());
             assertEquals(sql, ((StatementLog) lastLogMessage2).getRawSql());
             assertEquals(StatementType.BASE_NON_PREPARED_STMT, ((StatementLog) lastLogMessage2).getStatementType());
             assertEquals(1L, ((StatementExecutedLog) lastLogMessage1).getUpdateCount().longValue());
@@ -180,6 +184,8 @@ public class WrappingDriverTest {
             final PreparedStatement statement = connection.prepareStatement(sql);
             assertEquals(null, lastLogMessage1);
             statement.execute();
+            assertEquals(((StatementExecutedLog) lastLogMessage1).getLogId(),
+                    ((StatementLog) lastLogMessage2).getLogId());
             assertEquals(sql, ((StatementLog) lastLogMessage2).getRawSql());
             statement.close();
         }
@@ -189,6 +195,8 @@ public class WrappingDriverTest {
             statement.setInt(1, 123);
             final int nb = statement.executeUpdate();
             Assert.assertEquals(1, nb);
+            assertEquals(((StatementExecutedLog) lastLogMessage1).getLogId(),
+                    ((StatementLog) lastLogMessage2).getLogId());
             assertEquals(sql, ((StatementLog) lastLogMessage2).getRawSql());
             assertEquals(StatementType.BASE_PREPARED_STMT, ((StatementLog) lastLogMessage2).getStatementType());
             assertEquals("insert into test (key_id) values (123 /*setInt*/)",
@@ -220,6 +228,11 @@ public class WrappingDriverTest {
             final PreparedStatement statement = connection.prepareStatement("select * from test where key_id=?");
             statement.setInt(1, 1);
             statement.executeQuery().close();
+
+            assertEquals(((StatementExecutedLog) lastLogMessage2).getLogId(),
+                    ((StatementLog) lastLogMessage3).getLogId());
+            assertEquals(((ResultSetLog) lastLogMessage1).getLogId(), ((StatementLog) lastLogMessage3).getLogId());
+
             assertEquals("select * from test where key_id=1 /*setInt*/",
                     ((StatementLog) lastLogMessage3).getFilledSql());
             statement.setInt(1, 2);
@@ -335,6 +348,8 @@ public class WrappingDriverTest {
                 statement.addBatch("insert into test (key_id) values (" + i + ")");
             }
             statement.executeBatch();
+            assertEquals(((StatementExecutedLog) lastLogMessage1).getLogId(),
+                    ((BatchedNonPreparedStatementsLog) lastLogMessage2).getLogId());
             final List<String> sqlList = ((BatchedNonPreparedStatementsLog) lastLogMessage2).getSqlList();
             assertEquals(100, sqlList.size());
             assertEquals("insert into test (key_id) values (0)", sqlList.get(0));
@@ -379,6 +394,10 @@ public class WrappingDriverTest {
                 statement.addBatch();
             }
             statement.executeBatch();
+
+            assertEquals(((StatementExecutedLog) lastLogMessage1).getLogId(),
+                    ((BatchedPreparedStatementsLog) lastLogMessage2).getLogId());
+            assertTrue(((StatementExecutedLog) lastLogMessage1).getExecutionTimeNanos() > 0);
             final List<String> sqlList = ((BatchedPreparedStatementsLog) lastLogMessage2).getSqlList();
             assertEquals(100, sqlList.size());
             assertEquals("insert into test (key_id) values (0 /*setInt*/)", sqlList.get(0));

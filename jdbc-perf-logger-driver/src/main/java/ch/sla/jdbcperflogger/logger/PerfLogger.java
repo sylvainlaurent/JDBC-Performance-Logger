@@ -118,7 +118,7 @@ public class PerfLogger {
                 Thread.currentThread().getName(), timeout, autoCommit));
     }
 
-    public static void logPreparedBatchedStatements(final UUID connectionId, final String rawSql,
+    public static void logPreparedBatchedStatements(final UUID connectionId, final UUID logId, final String rawSql,
             final List<Object> batchedExecutions, final DatabaseType databaseType, final int timeout,
             final boolean autoCommit) {
         final long now = System.currentTimeMillis();
@@ -141,8 +141,8 @@ public class PerfLogger {
                 LOGGER_BATCHED_STATEMENTS_DETAIL.debug("#{}: {}", i, filledSql);
             }
         }
-        PerfLoggerRemoting.postLog(new BatchedPreparedStatementsLog(connectionId, UUID.randomUUID(), now, rawSql,
-                filledSqlList, Thread.currentThread().getName(), timeout, autoCommit));
+        PerfLoggerRemoting.postLog(new BatchedPreparedStatementsLog(connectionId, logId, now, rawSql, filledSqlList,
+                Thread.currentThread().getName(), timeout, autoCommit));
     }
 
     public static void logStatementExecuted(final UUID logId, final long durationNanos,
