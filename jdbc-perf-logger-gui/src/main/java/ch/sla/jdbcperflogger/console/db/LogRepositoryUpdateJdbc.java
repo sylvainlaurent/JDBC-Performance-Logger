@@ -161,6 +161,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
 
     @Override
     public synchronized void addStatementLog(final StatementLog log) {
+        LOGGER.debug("addStatementLog:{}", log);
         try {
             int i = 1;
             addStatementLog.setObject(i++, log.getLogId());
@@ -182,6 +183,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
 
     @Override
     public synchronized void updateLogAfterExecution(final StatementExecutedLog log) {
+        LOGGER.debug("updateLogAfterExecution:{}", log);
         try {
             int i = 1;
             updateStatementLogAfterExecution.setLong(i++, log.getExecutionTimeNanos());
@@ -193,7 +195,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
             }
             updateStatementLogAfterExecution.setString(i++, log.getSqlException());
             updateStatementLogAfterExecution.setObject(i++, log.getLogId());
-            updateStatementLogAfterExecution.execute();
+            updateStatementLogAfterExecution.executeUpdate();
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }
@@ -202,6 +204,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
 
     @Override
     public synchronized void updateLogWithResultSetLog(final ResultSetLog log) {
+        LOGGER.debug("updateLogWithResultSetLog:{}", log);
         try {
             int i = 1;
             updateStatementLogWithResultSet.setLong(i++, log.getResultSetIterationTimeNanos());
@@ -216,6 +219,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
 
     @Override
     public synchronized void addBatchedPreparedStatementsLog(final BatchedPreparedStatementsLog log) {
+        LOGGER.debug("addBatchedPreparedStatementsLog:{}", log);
         try {
             int i = 1;
             addStatementLog.setObject(i++, log.getLogId());
@@ -227,7 +231,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
             addStatementLog.setObject(i++, log.getConnectionUuid());
             addStatementLog.setInt(i++, log.getTimeout());
             addStatementLog.setBoolean(i++, log.isAutoCommit());
-            addStatementLog.execute();
+            addStatementLog.executeUpdate();
 
             addBatchedStatementLog.setObject(1, log.getLogId());
             for (int j = 0; j < log.getSqlList().size(); j++) {
@@ -244,6 +248,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
 
     @Override
     public synchronized void addBatchedNonPreparedStatementsLog(final BatchedNonPreparedStatementsLog log) {
+        LOGGER.debug("addBatchedNonPreparedStatementsLog:{}", log);
         try {
             int i = 1;
             addStatementLog.setObject(i++, log.getLogId());
@@ -255,7 +260,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
             addStatementLog.setObject(i++, log.getConnectionUuid());
             addStatementLog.setInt(i++, log.getTimeout());
             addStatementLog.setBoolean(i++, log.isAutoCommit());
-            addStatementLog.execute();
+            addStatementLog.executeUpdate();
 
             addBatchedStatementLog.setObject(1, log.getLogId());
             for (int j = 0; j < log.getSqlList().size(); j++) {
@@ -273,6 +278,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
 
     @Override
     public synchronized void addConnection(final ConnectionInfo connectionInfo) {
+        LOGGER.debug("addConnection:{}", connectionInfo);
         try (PreparedStatement stmt = connectionUpdate
                 .prepareStatement("merge into connection_info (connectionId, connectionNumber, url, creationDate, connectionProperties)"//
                         + " key(connectionId) values (?,?,?,?,?)")) {
@@ -291,6 +297,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
 
     @Override
     public synchronized void addTxCompletionLog(final TxCompleteLog log) {
+        LOGGER.debug("addTxCompletionLog:{}", log);
         try {
             int i = 1;
             addTxCompletionLog.setObject(i++, UUID.randomUUID());

@@ -45,4 +45,13 @@ public class ConnectionInfo implements LogMessage {
         return connectionProperties;
     }
 
+    @Override
+    public String toString() {
+        return "ConnectionInfo["//
+                + "connectionId=" + uuid//
+                + ", connectionNumber=" + connectionNumber//
+                + ", url=" + url//
+                + ", creationDate=" + creationDate//
+                + "]";
+    }
 }

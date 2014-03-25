@@ -44,4 +44,13 @@ public class ResultSetLog implements LogMessage {
         return nbRowsIterated;
     }
 
+    @Override
+    public String toString() {
+        return "ResultSetLog["//
+                + "logId=" + logId//
+                + ", resultSetIterationTimeNanos=" + resultSetIterationTimeNanos//
+                + ", nbRowsIterated=" + nbRowsIterated//
+                + "]";
+    }
+
 }

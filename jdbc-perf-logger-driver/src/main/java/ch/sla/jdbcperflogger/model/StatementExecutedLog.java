@@ -55,4 +55,14 @@ public class StatementExecutedLog implements LogMessage {
     public String getSqlException() {
         return sqlException;
     }
+
+    @Override
+    public String toString() {
+        return "StatementExecutedLog["//
+                + "logId=" + logId//
+                + ", executionTimeNanos=" + executionTimeNanos//
+                + ", updateCount=" + updateCount//
+                + "]";
+    }
+
 }

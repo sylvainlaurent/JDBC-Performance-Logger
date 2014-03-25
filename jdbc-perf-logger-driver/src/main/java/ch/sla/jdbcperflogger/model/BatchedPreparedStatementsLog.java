@@ -45,4 +45,17 @@ public class BatchedPreparedStatementsLog extends AbstractBeforeStatementExecuti
         return sqlList;
     }
 
+    @Override
+    public String toString() {
+        return "BatchedPreparedStatementsLog["//
+                + "logId=" + getLogId()//
+                + ", rawSql=" + rawSql//
+                + ", timestamp=" + getTimestamp()//
+                + ", statementType=" + getStatementType()//
+                + ", threadName=" + getThreadName()//
+                + ", timeout=" + getTimeout()//
+                + ", autocommit=" + isAutoCommit()//
+                + "]";
+    }
+
 }

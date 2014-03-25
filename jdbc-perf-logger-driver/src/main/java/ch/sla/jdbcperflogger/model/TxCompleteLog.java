@@ -52,4 +52,15 @@ public class TxCompleteLog implements LogMessage {
         return savePointDescription;
     }
 
+    @Override
+    public String toString() {
+        return "TxCompleteLog["//
+                + "connectionUuid=" + connectionUuid//
+                + ", timestamp=" + timestamp//
+                + ", completionType=" + completionType//
+                + ", executionTimeNanos=" + executionTimeNanos//
+                + ", threadName=" + threadName//
+                + ", savePointDescription=" + savePointDescription//
+                + "]";
+    }
 }

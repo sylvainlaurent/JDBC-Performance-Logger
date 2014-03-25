@@ -57,4 +57,18 @@ public class StatementLog extends AbstractBeforeStatementExecutionLog {
         return preparedStatement;
     }
 
+    @Override
+    public String toString() {
+        return "StatementLog["//
+                + "logId=" + getLogId()//
+                + ", timestamp=" + getTimestamp()//
+                + ", statementType=" + getStatementType()//
+                + ", threadName=" + getThreadName()//
+                + ", timeout=" + getTimeout()//
+                + ", autocommit=" + isAutoCommit()//
+                + ", rawSql=" + rawSql//
+                + ", filledSql=" + filledSql//
+                + ", preparedStatement=" + preparedStatement//
+                + "]";
+    }
 }

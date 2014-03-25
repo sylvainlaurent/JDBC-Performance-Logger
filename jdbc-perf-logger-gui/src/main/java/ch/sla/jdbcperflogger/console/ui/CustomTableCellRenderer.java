@@ -75,7 +75,7 @@ public class CustomTableCellRenderer extends DefaultTableCellRenderer {
             }
 
             component.setToolTipText(value + " (use STATEMENTTYPE=" + statementType.getId()
-                    + ") in the \"Advanced filter\")");
+                    + " in the \"Advanced filter\")");
 
         } else if (value != null) {
             component.setToolTipText(value.toString());
