@@ -85,6 +85,11 @@ class ResultSetDataModel extends AbstractTableModel {
 
     }
 
+    @Nullable
+    public Object getRawValueAt(final int rowIndex, final int columnIndex) {
+        return rows.get(rowIndex)[columnIndex];
+    }
+
     @Override
     public String getColumnName(final int columnIndex) {
         return columnNames.get(columnIndex);

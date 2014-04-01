@@ -103,6 +103,10 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
         if (searchCriteria.getSqlPassThroughFilter() != null) {
             addWhereClause(sql, false, searchCriteria.getSqlPassThroughFilter());
         }
+        if (searchCriteria.isRemoveTransactionCompletions()) {
+            addWhereClause(sql, false, "statementType<>" + StatementType.TRANSACTION.getId());
+        }
+
         sql.append(" order by total_exec_time desc");
 
         try (PreparedStatement statement = connectionRead.prepareStatement(sql.toString())) {
@@ -135,6 +139,9 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
         sql.append(") ");
         if (searchCriteria.getSqlPassThroughFilter() != null) {
             addWhereClause(sql, false, searchCriteria.getSqlPassThroughFilter());
+        }
+        if (searchCriteria.isRemoveTransactionCompletions()) {
+            addWhereClause(sql, false, "statementType<>" + StatementType.TRANSACTION.getId());
         }
         sql.append(" order by total_exec_time desc");
 

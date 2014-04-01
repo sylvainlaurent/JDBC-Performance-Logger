@@ -136,6 +136,24 @@ public class PerfLoggerController {
         refresh();
     }
 
+    void appendFilter(final String columnName, final @Nullable Object value) {
+        String filter = sqlPassthroughFilter;
+        if (filter != null) {
+            filter += " AND ";
+        } else {
+            filter = "";
+        }
+        filter += columnName;
+        if (value != null) {
+            filter += "='" + value + "'";
+        } else {
+            filter += " is null";
+        }
+        perfLoggerPanel.setAdvancedFilter(filter);
+
+        refresh();
+    }
+
     void setMinDurationFilter(@Nullable final Long durationMs) {
         if (durationMs == null) {
             minDurationNanos = null;
@@ -164,6 +182,7 @@ public class PerfLoggerController {
             break;
         }
         tableStructureChanged = true;
+        perfLoggerPanel.setAdvancedFilter(null);
         refresh();
     }
 

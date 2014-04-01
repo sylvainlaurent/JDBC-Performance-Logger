@@ -36,6 +36,8 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.EnumSet;
@@ -50,7 +52,9 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
@@ -402,6 +406,39 @@ public class PerfLoggerPanel extends JPanel {
             }
 
         });
+
+        {// popup menu
+            final JPopupMenu popupMenu = new JPopupMenu();
+            final JMenuItem deleteItem = new JMenuItem("Append filter");
+            deleteItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(@Nullable final ActionEvent e) {
+                    perfLoggerController.appendFilter(getSelectedColumnName(), getSelectedCellRawValue());
+                }
+            });
+            popupMenu.add(deleteItem);
+
+            table.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mousePressed(@Nullable final MouseEvent e) {
+                    assert e != null;
+                    if (e.isPopupTrigger()) {
+                        final JTable source = (JTable) e.getSource();
+                        final int row = source.rowAtPoint(e.getPoint());
+                        final int column = source.columnAtPoint(e.getPoint());
+                        if (row >= 0) {
+                            if (!source.isRowSelected(row) || !source.isColumnSelected(column)) {
+                                source.changeSelection(row, column, false, false);
+                            }
+
+                            popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                        }
+                    }
+                }
+
+            });
+        }
+
         splitPane.setTopComponent(logListPanel);
 
         final JPanel sqlDetailPanel = new JPanel();
@@ -731,4 +768,17 @@ public class PerfLoggerPanel extends JPanel {
         return null;
     }
 
+    String getSelectedColumnName() {
+        return dataModel.getColumnName(table.convertColumnIndexToModel(table.getSelectedColumn()));
+    }
+
+    @Nullable
+    Object getSelectedCellRawValue() {
+        return dataModel.getRawValueAt(table.convertRowIndexToModel(table.getSelectedRow()),
+                table.convertColumnIndexToModel(table.getSelectedColumn()));
+    }
+
+    void setAdvancedFilter(final @Nullable String filter) {
+        sqlClauseField.setText(filter);
+    }
 }

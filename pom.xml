@@ -15,6 +15,13 @@
     </license>
   </licenses>
 
+  <developers>
+    <developer>
+      <name>Sylvain LAURENT</name>
+      <email>slaurent@apache.org</email>
+    </developer>
+  </developers>
+
   <scm>
     <connection>scm:git:https://github.com/sylvainlaurent/JDBC-Performance-Logger.git</connection>
     <developerConnection>scm:git:https://github.com/sylvainlaurent/JDBC-Performance-Logger.git</developerConnection>
@@ -106,4 +113,5 @@
     </plugins>
   </build>
 
+  <url>https://github.com/sylvainlaurent/JDBC-Performance-Logger</url>
 </project>
