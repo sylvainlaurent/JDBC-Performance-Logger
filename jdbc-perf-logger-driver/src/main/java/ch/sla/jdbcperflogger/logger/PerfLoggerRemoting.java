@@ -30,6 +30,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -47,6 +48,7 @@ import org.xml.sax.SAXException;
 
 import ch.sla.jdbcperflogger.PerfLoggerConstants;
 import ch.sla.jdbcperflogger.driver.LoggingConnectionInvocationHandler;
+import ch.sla.jdbcperflogger.model.BufferFullLogMessage;
 import ch.sla.jdbcperflogger.model.ConnectionInfo;
 import ch.sla.jdbcperflogger.model.LogMessage;
 
@@ -153,6 +155,7 @@ public class PerfLoggerRemoting {
 
         private final BlockingQueue<LogMessage> logsToSend = new LinkedBlockingQueue<LogMessage>(10000);
         private final Socket socket;
+        private final AtomicBoolean queueFull = new AtomicBoolean();
 
         LogSender(final Socket socket) throws SocketException {
             this.socket = socket;
@@ -163,6 +166,7 @@ public class PerfLoggerRemoting {
         void postLog(final LogMessage log) {
             final boolean posted = logsToSend.offer(log);
             if (!posted) {
+                queueFull.set(true);
                 LOGGER2.warn("queue full, dropping remote log of statement");
             }
         }
@@ -182,16 +186,20 @@ public class PerfLoggerRemoting {
                 int cnt = 0;
                 while (true) {
                     try {
+                        if (queueFull.compareAndSet(true, false)) {
+                            oos.writeUnshared(new BufferFullLogMessage(System.currentTimeMillis()));
+                        }
+
                         final LogMessage log = logsToSend.poll(10, TimeUnit.SECONDS);
                         if (log != null) {
-                            oos.writeObject(log);
+                            oos.writeUnshared(log);
                         } else {
                             // check the socket state
                             if (socket.isClosed() || !socket.isConnected()) {
                                 // client disconnected
                                 break;
                             }
-                            oos.writeObject(null);
+                            oos.writeUnshared(null);
                         }
                         cnt = (cnt + 1) % 10;
                         if (cnt == 0) {

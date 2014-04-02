@@ -409,7 +409,7 @@ public class PerfLoggerPanel extends JPanel {
 
         {// popup menu
             final JPopupMenu popupMenu = new JPopupMenu();
-            final JMenuItem deleteItem = new JMenuItem("Append filter");
+            final JMenuItem deleteItem = new JMenuItem("Append to advanced filter");
             deleteItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(@Nullable final ActionEvent e) {

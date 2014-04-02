@@ -18,6 +18,7 @@ package ch.sla.jdbcperflogger.console.db;
 import static ch.sla.jdbcperflogger.console.db.LogRepositoryConstants.ID_COLUMN;
 import static java.util.UUID.randomUUID;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.sql.ResultSet;
@@ -239,6 +240,16 @@ public class LogRepositoryUpdateJdbcTest {
         assertEquals("SET_SAVE_POINT mySavePoint", readTxLog.getRawSql());
         assertEquals(txCompleteLog.getThreadName(), readTxLog.getThreadName());
         assertEquals(txCompleteLog.getTimestamp(), readTxLog.getTimestamp());
+    }
+
+    @Test
+    public void testlastLostMessageTime() {
+        final Long l = repositoryUpdate.getLastLostMessageTime();
+        assertNull(l);
+        repositoryUpdate.setLastLostMessageTime(123L);
+        assertEquals(123L, repositoryUpdate.getLastLostMessageTime().longValue());
+        repositoryUpdate.setLastLostMessageTime(null);
+        assertNull(l);
     }
 
     private StatementLog insert1Log() {

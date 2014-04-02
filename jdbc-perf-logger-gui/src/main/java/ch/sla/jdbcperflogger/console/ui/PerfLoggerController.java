@@ -16,9 +16,11 @@
 package ch.sla.jdbcperflogger.console.ui;
 
 import java.io.File;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -446,6 +448,12 @@ public class PerfLoggerController {
                         .getTotalExecAndFetchTimeNanos(searchCriteria)));
                 txt.append("ms total filtered");
             }
+            final Long lastLostMessageTime = logRepositoryUpdate.getLastLostMessageTime();
+            if (lastLostMessageTime != null) {
+                txt.append(" - WARNING: missed statements on ");
+                txt.append(DateFormat.getTimeInstance().format(new Date(lastLostMessageTime)));
+            }
+
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {

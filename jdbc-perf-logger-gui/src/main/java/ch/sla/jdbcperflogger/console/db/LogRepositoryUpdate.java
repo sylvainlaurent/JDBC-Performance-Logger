@@ -1,5 +1,7 @@
 package ch.sla.jdbcperflogger.console.db;
 
+import javax.annotation.Nullable;
+
 import ch.sla.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.BatchedPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.ConnectionInfo;
@@ -31,4 +33,9 @@ public interface LogRepositoryUpdate {
     void dispose();
 
     long getLastModificationTime();
+
+    void setLastLostMessageTime(@Nullable Long timestamp);
+
+    @Nullable
+    Long getLastLostMessageTime();
 }

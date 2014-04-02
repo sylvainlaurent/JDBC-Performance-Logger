@@ -30,6 +30,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.h2.Driver;
 import org.slf4j.Logger;
@@ -62,6 +63,8 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
     private long lastModificationTime = System.currentTimeMillis();
     private final Timer cleanupTimer;
     private final String dbName;
+    @Nullable
+    private Long lastLostMessageTime;
 
     public LogRepositoryUpdateJdbc(final String name) {
         try {
@@ -327,6 +330,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }
+        lastLostMessageTime = null;
         lastModificationTime = System.currentTimeMillis();
     }
 
@@ -395,6 +399,18 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
     @Override
     public synchronized long getLastModificationTime() {
         return lastModificationTime;
+    }
+
+    @Override
+    public void setLastLostMessageTime(@Nullable final Long timestamp) {
+        lastLostMessageTime = timestamp;
+        lastModificationTime = System.currentTimeMillis();
+    }
+
+    @Override
+    @Nullable
+    public Long getLastLostMessageTime() {
+        return lastLostMessageTime;
     }
 
     private static void checkSchemaVersion(final Connection conn) throws SQLException {

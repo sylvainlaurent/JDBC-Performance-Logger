@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import ch.sla.jdbcperflogger.console.db.LogRepositoryUpdate;
 import ch.sla.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.BatchedPreparedStatementsLog;
+import ch.sla.jdbcperflogger.model.BufferFullLogMessage;
 import ch.sla.jdbcperflogger.model.ConnectionInfo;
 import ch.sla.jdbcperflogger.model.ResultSetLog;
 import ch.sla.jdbcperflogger.model.StatementExecutedLog;
@@ -111,6 +112,8 @@ public abstract class AbstractLogReceiver extends Thread {
                     logRepository.addBatchedPreparedStatementsLog((BatchedPreparedStatementsLog) o);
                 } else if (o instanceof TxCompleteLog) {
                     logRepository.addTxCompletionLog((TxCompleteLog) o);
+                } else if (o instanceof BufferFullLogMessage) {
+                    logRepository.setLastLostMessageTime(((BufferFullLogMessage) o).getTimestamp());
                 } else {
                     throw new IllegalArgumentException("unexpected log, class=" + o.getClass());
                 }
