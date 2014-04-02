@@ -388,6 +388,12 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
                             lastModificationTime = System.currentTimeMillis();
                         }
                     }
+
+                    // clear flag about lost statements if they have been purged
+                    final Long lastLostMessageTime2 = lastLostMessageTime;
+                    if (lastLostMessageTime2 != null && lastLostMessageTime2 < timestamp.getTime()) {
+                        setLastLostMessageTime(null);
+                    }
                 }
             }
             LOGGER.debug("Peformed deleteOldRowsIfTooMany in {}ms", System.currentTimeMillis() - startTime);
