@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.util.Collection;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -58,6 +59,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
     private final PreparedStatement addStatementLog;
     private final PreparedStatement updateStatementLogWithResultSet;
     private final PreparedStatement updateStatementLogAfterExecution;
+    private final PreparedStatement addStatementLogWithAfterExecutionInfo;
     private final PreparedStatement addBatchedStatementLog;
     private final PreparedStatement addTxCompletionLog;
     private long lastModificationTime = System.currentTimeMillis();
@@ -80,6 +82,11 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
                     .prepareStatement("insert into statement_log (logId, tstamp, statementType, rawSql, filledSql, " //
                             + "threadName, connectionId, timeout, autoCommit)"//
                             + " values(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            addStatementLogWithAfterExecutionInfo = connectionUpdate
+                    .prepareStatement("insert into statement_log (logId, tstamp, statementType, rawSql, filledSql, " //
+                            + "threadName, connectionId, timeout, autoCommit, executionDurationNanos, nbRowsIterated, " //
+                            + "fetchDurationNanos, exception)"//
+                            + " values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             updateStatementLogWithResultSet = connectionUpdate
                     .prepareStatement("update statement_log set fetchDurationNanos=?, nbRowsIterated=? where logId=?");
             updateStatementLogAfterExecution = connectionUpdate
@@ -178,6 +185,35 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
             addStatementLog.setBoolean(i++, log.isAutoCommit());
             final int insertCount = addStatementLog.executeUpdate();
             assert insertCount == 1;
+        } catch (final SQLException e) {
+            throw new RuntimeException(e);
+        }
+        lastModificationTime = System.currentTimeMillis();
+    }
+
+    @Override
+    public synchronized void addStatementFullyExecutedLog(final Collection<StatementFullyExecutedLog> logs) {
+        LOGGER.debug("addStatementLogWithAfterExecutonInfo");
+        try {
+            for (final StatementFullyExecutedLog log : logs) {
+                int i = 1;
+                addStatementLogWithAfterExecutionInfo.setObject(i++, log.getLogId());
+                addStatementLogWithAfterExecutionInfo.setTimestamp(i++, new Timestamp(log.getTimestamp()));
+                addStatementLogWithAfterExecutionInfo.setInt(i++, log.getStatementType().getId());
+                addStatementLogWithAfterExecutionInfo.setString(i++, log.getRawSql());
+                addStatementLogWithAfterExecutionInfo.setString(i++, log.getFilledSql());
+                addStatementLogWithAfterExecutionInfo.setString(i++, log.getThreadName());
+                addStatementLogWithAfterExecutionInfo.setObject(i++, log.getConnectionUuid());
+                addStatementLogWithAfterExecutionInfo.setInt(i++, log.getTimeout());
+                addStatementLogWithAfterExecutionInfo.setBoolean(i++, log.isAutoCommit());
+                addStatementLogWithAfterExecutionInfo.setLong(i++, log.getExecutionTimeNanos());
+                addStatementLogWithAfterExecutionInfo.setObject(i++, log.getNbRowsIterated(), Types.INTEGER);
+                addStatementLogWithAfterExecutionInfo
+                        .setObject(i++, log.getResultSetIterationTimeNanos(), Types.BIGINT);
+                addStatementLogWithAfterExecutionInfo.setString(i++, log.getSqlException());
+                addStatementLogWithAfterExecutionInfo.addBatch();
+            }
+            addStatementLogWithAfterExecutionInfo.executeBatch();
         } catch (final SQLException e) {
             throw new RuntimeException(e);
         }

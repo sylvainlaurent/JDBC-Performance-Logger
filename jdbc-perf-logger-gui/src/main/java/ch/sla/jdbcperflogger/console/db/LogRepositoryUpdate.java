@@ -1,5 +1,7 @@
 package ch.sla.jdbcperflogger.console.db;
 
+import java.util.Collection;
+
 import javax.annotation.Nullable;
 
 import ch.sla.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
@@ -15,6 +17,8 @@ public interface LogRepositoryUpdate {
     void addConnection(ConnectionInfo connectionInfo);
 
     void addStatementLog(StatementLog log);
+
+    void addStatementFullyExecutedLog(final Collection<StatementFullyExecutedLog> logs);
 
     void updateLogAfterExecution(StatementExecutedLog log);
 

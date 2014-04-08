@@ -518,6 +518,7 @@ public class WrappingDriverTest {
             resultSet.close();
             // Thread.sleep(10);
         }
+        Thread.sleep(5000);
     }
 
     @SuppressWarnings("null")

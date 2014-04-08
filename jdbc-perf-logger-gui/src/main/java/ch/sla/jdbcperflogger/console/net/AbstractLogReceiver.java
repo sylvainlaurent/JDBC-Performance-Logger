@@ -21,15 +21,22 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.sla.jdbcperflogger.console.db.LogRepositoryUpdate;
+import ch.sla.jdbcperflogger.console.db.StatementFullyExecutedLog;
 import ch.sla.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.BatchedPreparedStatementsLog;
 import ch.sla.jdbcperflogger.model.BufferFullLogMessage;
 import ch.sla.jdbcperflogger.model.ConnectionInfo;
+import ch.sla.jdbcperflogger.model.LogMessage;
 import ch.sla.jdbcperflogger.model.ResultSetLog;
 import ch.sla.jdbcperflogger.model.StatementExecutedLog;
 import ch.sla.jdbcperflogger.model.StatementLog;
@@ -42,6 +49,8 @@ public abstract class AbstractLogReceiver extends Thread {
     protected volatile boolean connected;
     protected volatile boolean paused = false;
     protected volatile boolean disposed = false;
+
+    protected BlockingQueue<LogMessage> logs = new ArrayBlockingQueue<>(10000);
 
     public AbstractLogReceiver(final LogRepositoryUpdate logRepository) {
         this.logRepository = logRepository;
@@ -76,56 +85,129 @@ public abstract class AbstractLogReceiver extends Thread {
         socket.setSoTimeout(60 * 1000);
 
         final InputStream is = socket.getInputStream();
+        final LogPersister logPersister = new LogPersister();
+        logPersister.start();
+        try {
+            try (ObjectInputStream ois = new ObjectInputStream(is)) {
+                connected = true;
+                while (!disposed) {
+                    Object o;
+                    try {
+                        o = ois.readObject();
+                    } catch (final ClassNotFoundException e) {
+                        LOGGER.error(
+                                "unknown class, maybe the client is not compatible with the GUI? the msg will be skipped",
+                                e);
+                        continue;
+                    } catch (final EOFException e) {
+                        LOGGER.debug("The remote closed its connection");
+                        break;
+                    } catch (final SocketTimeoutException e) {
+                        LOGGER.trace("timeout while reading socket");
+                        continue;
+                    }
+                    if (o == null || paused || disposed) {
+                        continue;
+                    }
+                    try {
+                        logs.put((LogMessage) o);
+                    } catch (final InterruptedException e) {
+                        LOGGER.warn("interrupted", e);
+                        continue;
+                    }
 
-        try (ObjectInputStream ois = new ObjectInputStream(is)) {
-            connected = true;
-            while (!disposed) {
-                Object o;
-                try {
-                    o = ois.readObject();
-                } catch (final ClassNotFoundException e) {
-                    LOGGER.error(
-                            "unknown class, maybe the client is not compatible with the GUI? the msg will be skipped",
-                            e);
-                    continue;
-                } catch (final EOFException e) {
-                    LOGGER.debug("The remote closed its connection");
-                    break;
-                } catch (final SocketTimeoutException e) {
-                    LOGGER.trace("timeout while reading socket");
-                    continue;
                 }
-                if (o == null || paused || disposed) {
-                    continue;
-                }
-                if (o instanceof ConnectionInfo) {
-                    logRepository.addConnection((ConnectionInfo) o);
-                } else if (o instanceof StatementLog) {
-                    logRepository.addStatementLog((StatementLog) o);
-                } else if (o instanceof StatementExecutedLog) {
-                    logRepository.updateLogAfterExecution((StatementExecutedLog) o);
-                } else if (o instanceof ResultSetLog) {
-                    logRepository.updateLogWithResultSetLog((ResultSetLog) o);
-                } else if (o instanceof BatchedNonPreparedStatementsLog) {
-                    logRepository.addBatchedNonPreparedStatementsLog((BatchedNonPreparedStatementsLog) o);
-                } else if (o instanceof BatchedPreparedStatementsLog) {
-                    logRepository.addBatchedPreparedStatementsLog((BatchedPreparedStatementsLog) o);
-                } else if (o instanceof TxCompleteLog) {
-                    logRepository.addTxCompletionLog((TxCompleteLog) o);
-                } else if (o instanceof BufferFullLogMessage) {
-                    logRepository.setLastLostMessageTime(((BufferFullLogMessage) o).getTimestamp());
-                } else {
-                    throw new IllegalArgumentException("unexpected log, class=" + o.getClass());
-                }
+            } finally {
+                connected = false;
+
+                LOGGER.debug("Closing socket " + socket);
+                socket.close();
             }
         } finally {
-            connected = false;
-
-            LOGGER.debug("Closing socket " + socket);
-            socket.close();
+            try {
+                logPersister.join();
+            } catch (final InterruptedException e) {
+                LOGGER.error("error while waiting for LogPersister thread to finish", e);
+            }
         }
 
     }
 
     public abstract boolean isServerMode();
+
+    private class LogPersister extends Thread {
+
+        @Override
+        public void run() {
+            final List<LogMessage> drainedLogs = new ArrayList<>(1000);
+            final List<StatementFullyExecutedLog> statementFullyExecutedLogs = new ArrayList<StatementFullyExecutedLog>(
+                    100);
+
+            while (!disposed) {
+                LogMessage logMessage;
+                try {
+                    logMessage = logs.poll(1, TimeUnit.SECONDS);
+                } catch (final InterruptedException e) {
+                    LOGGER.warn("interrupted", e);
+                    continue;
+                }
+
+                if (logMessage == null) {
+                    continue;
+                }
+                drainedLogs.clear();
+                drainedLogs.add(logMessage);
+                logs.drainTo(drainedLogs);
+
+                for (int i = 0; i < drainedLogs.size(); i++) {
+                    logMessage = drainedLogs.get(i);
+                    if (i < drainedLogs.size() - 2 && logMessage instanceof StatementLog
+                            && drainedLogs.get(i + 1) instanceof StatementExecutedLog) {
+                        final StatementExecutedLog statementExecutedLog = (StatementExecutedLog) drainedLogs.get(i + 1);
+                        ResultSetLog resultSetLog = null;
+                        if (drainedLogs.get(i + 2) instanceof ResultSetLog) {
+                            resultSetLog = (ResultSetLog) drainedLogs.get(i + 2);
+                        }
+                        final StatementFullyExecutedLog statementFullyExecutedLog = new StatementFullyExecutedLog(
+                                (StatementLog) logMessage, statementExecutedLog, resultSetLog);
+                        statementFullyExecutedLogs.add(statementFullyExecutedLog);
+
+                        i += 1 + (resultSetLog != null ? 1 : 0);
+                        continue;
+                    }
+
+                    if (!statementFullyExecutedLogs.isEmpty()) {
+                        logRepository.addStatementFullyExecutedLog(statementFullyExecutedLogs);
+                        statementFullyExecutedLogs.clear();
+                    }
+
+                    if (logMessage instanceof ConnectionInfo) {
+                        logRepository.addConnection((ConnectionInfo) logMessage);
+                    } else if (logMessage instanceof StatementLog) {
+                        logRepository.addStatementLog((StatementLog) logMessage);
+                    } else if (logMessage instanceof StatementExecutedLog) {
+                        logRepository.updateLogAfterExecution((StatementExecutedLog) logMessage);
+                    } else if (logMessage instanceof ResultSetLog) {
+                        logRepository.updateLogWithResultSetLog((ResultSetLog) logMessage);
+                    } else if (logMessage instanceof BatchedNonPreparedStatementsLog) {
+                        logRepository.addBatchedNonPreparedStatementsLog((BatchedNonPreparedStatementsLog) logMessage);
+                    } else if (logMessage instanceof BatchedPreparedStatementsLog) {
+                        logRepository.addBatchedPreparedStatementsLog((BatchedPreparedStatementsLog) logMessage);
+                    } else if (logMessage instanceof TxCompleteLog) {
+                        logRepository.addTxCompletionLog((TxCompleteLog) logMessage);
+                    } else if (logMessage instanceof BufferFullLogMessage) {
+                        logRepository.setLastLostMessageTime(((BufferFullLogMessage) logMessage).getTimestamp());
+                    } else {
+                        throw new IllegalArgumentException("unexpected log, class=" + logMessage.getClass());
+                    }
+                }
+
+                if (!statementFullyExecutedLogs.isEmpty()) {
+                    logRepository.addStatementFullyExecutedLog(statementFullyExecutedLogs);
+                    statementFullyExecutedLogs.clear();
+                }
+
+            }
+        }
+    }
 }

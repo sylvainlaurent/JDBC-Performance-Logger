@@ -18,6 +18,7 @@ package ch.sla.jdbcperflogger.console.db;
 import static ch.sla.jdbcperflogger.console.db.LogRepositoryConstants.ID_COLUMN;
 import static java.util.UUID.randomUUID;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -132,19 +133,23 @@ public class LogRepositoryUpdateJdbcTest {
         final StatementLog log = insert1Log();
 
         assertEquals(1, countRowsInTable("statement_log"));
-        // nothing to delete of not too many rows
+        // nothing to delete if not too many rows
         repositoryUpdate.deleteOldRowsIfTooMany();
         assertEquals(1, countRowsInTable("statement_log"));
+        assertNull(repositoryUpdate.getLastLostMessageTime());
 
+        repositoryUpdate.setLastLostMessageTime(System.currentTimeMillis() - 1);
         for (int i = 1; i < 2 * LogRepositoryUpdateJdbc.NB_ROWS_MAX; i++) {
             final StatementLog newLog = new StatementLog(log.getConnectionUuid(), randomUUID(),
                     System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myrawsql" + i, Thread
                             .currentThread().getName(), i, i % 2 == 0);
             repositoryUpdate.addStatementLog(newLog);
         }
+        assertNotNull(repositoryUpdate.getLastLostMessageTime());
         assertEquals(2 * LogRepositoryUpdateJdbc.NB_ROWS_MAX, countRowsInTable("statement_log"));
         repositoryUpdate.deleteOldRowsIfTooMany();
         assertTrue(countRowsInTable("statement_log") <= LogRepositoryUpdateJdbc.NB_ROWS_MAX);
+        assertNull(repositoryUpdate.getLastLostMessageTime());
     }
 
     @Test
