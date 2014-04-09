@@ -24,14 +24,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import ch.sla.jdbcperflogger.StatementType;
@@ -45,22 +43,7 @@ import ch.sla.jdbcperflogger.model.StatementLog;
 import ch.sla.jdbcperflogger.model.TxCompleteLog;
 
 @SuppressWarnings("null")
-public class LogRepositoryUpdateJdbcTest {
-    private LogRepositoryUpdateJdbc repositoryUpdate;
-    private LogRepositoryRead repositoryRead;
-
-    @Before
-    public void setup() {
-        repositoryUpdate = new LogRepositoryUpdateJdbc("test");
-        repositoryRead = new LogRepositoryReadJdbc("test");
-    }
-
-    @After
-    public void tearDown() {
-        repositoryUpdate.dispose();
-        repositoryRead.dispose();
-    }
-
+public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
     @Test
     public void testSetup() {
         // just test setup and teardown
@@ -257,26 +240,99 @@ public class LogRepositoryUpdateJdbcTest {
         assertNull(l);
     }
 
-    private StatementLog insert1Log() {
+    @Test
+    public void testaddStatementFullyExecutedLog() {
         final Properties connProps = new Properties();
         connProps.setProperty("myprop", "myval");
         final ConnectionInfo connectionInfo = new ConnectionInfo(randomUUID(), 12, "jdbc:toto", new Date(), connProps);
         repositoryUpdate.addConnection(connectionInfo);
 
-        final StatementLog log = new StatementLog(connectionInfo.getUuid(), randomUUID(), System.currentTimeMillis(),
-                StatementType.BASE_NON_PREPARED_STMT, "myrawsql", Thread.currentThread().getName(), 123, true);
-        repositoryUpdate.addStatementLog(log);
-        return log;
+        final List<StatementFullyExecutedLog> fullLogs = new ArrayList<>();
+        {
+            final StatementLog log = new StatementLog(connectionInfo.getUuid(), randomUUID(),
+                    System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myrawsql", Thread
+                            .currentThread().getName(), 123, true);
+            final StatementExecutedLog statementExecutedLog = new StatementExecutedLog(log.getLogId(), 234L, 456L,
+                    "myexception");
+            fullLogs.add(new StatementFullyExecutedLog(log, statementExecutedLog, null));
+        }
+        {
+            final StatementLog log = new StatementLog(connectionInfo.getUuid(), randomUUID(),
+                    System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myrawsql", Thread
+                            .currentThread().getName(), 123, true);
+            final StatementExecutedLog statementExecutedLog = new StatementExecutedLog(log.getLogId(), 234L, 456L,
+                    "myexception");
+            final ResultSetLog resultSetLog = new ResultSetLog(log.getLogId(), 789L, 21);
+            fullLogs.add(new StatementFullyExecutedLog(log, statementExecutedLog, resultSetLog));
+        }
+
+        repositoryUpdate.addStatementFullyExecutedLog(fullLogs);
+        assertEquals(2, countRowsInTable("statement_log"));
+
+        repositoryRead.getStatements(new LogSearchCriteria(), new ResultSetAnalyzer() {
+
+            @Override
+            public void analyze(final ResultSet resultSet) throws SQLException {
+                {
+                    resultSet.next();
+                    final StatementFullyExecutedLog stmtLog = fullLogs.get(0);
+
+                    assertEquals(1, resultSet.getLong(ID_COLUMN));
+                    assertEquals(stmtLog.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
+                    assertEquals(stmtLog.isAutoCommit(), resultSet.getBoolean(LogRepositoryConstants.AUTOCOMMIT_COLUMN));
+                    assertEquals(12, resultSet.getInt(LogRepositoryConstants.CONNECTION_NUMBER_COLUMN));
+                    resultSet.getLong(LogRepositoryConstants.FETCH_TIME_COLUMN);
+                    assertTrue(resultSet.wasNull());
+                    assertEquals(stmtLog.getExecutionTimeNanos(),
+                            resultSet.getLong(LogRepositoryConstants.EXEC_TIME_COLUMN));
+                    assertEquals(stmtLog.getExecutionTimeNanos(),
+                            resultSet.getLong(LogRepositoryConstants.EXEC_PLUS_FETCH_TIME_COLUMN));
+                    resultSet.getInt(LogRepositoryConstants.NB_ROWS_COLUMN);
+                    assertTrue(resultSet.wasNull());
+                    assertEquals(stmtLog.getThreadName(),
+                            resultSet.getString(LogRepositoryConstants.THREAD_NAME_COLUMN));
+                    assertEquals(stmtLog.getTimeout(), resultSet.getInt(LogRepositoryConstants.TIMEOUT_COLUMN));
+                    assertEquals(stmtLog.getTimestamp(), resultSet.getTimestamp(LogRepositoryConstants.TSTAMP_COLUMN)
+                            .getTime());
+                    assertEquals(stmtLog.getStatementType().getId(),
+                            resultSet.getInt(LogRepositoryConstants.STMT_TYPE_COLUMN));
+                    assertTrue(resultSet.getBoolean(LogRepositoryConstants.ERROR_COLUMN));
+                }
+                {
+                    resultSet.next();
+                    final StatementFullyExecutedLog stmtLog = fullLogs.get(1);
+
+                    assertEquals(2, resultSet.getLong(ID_COLUMN));
+                    assertEquals(stmtLog.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
+                    assertEquals(stmtLog.isAutoCommit(), resultSet.getBoolean(LogRepositoryConstants.AUTOCOMMIT_COLUMN));
+                    assertEquals(12, resultSet.getInt(LogRepositoryConstants.CONNECTION_NUMBER_COLUMN));
+                    assertEquals(stmtLog.getResultSetIterationTimeNanos().longValue(),
+                            resultSet.getLong(LogRepositoryConstants.FETCH_TIME_COLUMN));
+                    assertEquals(stmtLog.getExecutionTimeNanos(),
+                            resultSet.getLong(LogRepositoryConstants.EXEC_TIME_COLUMN));
+                    assertEquals(stmtLog.getExecutionTimeNanos() + stmtLog.getResultSetIterationTimeNanos(),
+                            resultSet.getLong(LogRepositoryConstants.EXEC_PLUS_FETCH_TIME_COLUMN));
+                    assertEquals(stmtLog.getNbRowsIterated().intValue(),
+                            resultSet.getInt(LogRepositoryConstants.NB_ROWS_COLUMN));
+                    assertEquals(stmtLog.getThreadName(),
+                            resultSet.getString(LogRepositoryConstants.THREAD_NAME_COLUMN));
+                    assertEquals(stmtLog.getTimeout(), resultSet.getInt(LogRepositoryConstants.TIMEOUT_COLUMN));
+                    assertEquals(stmtLog.getTimestamp(), resultSet.getTimestamp(LogRepositoryConstants.TSTAMP_COLUMN)
+                            .getTime());
+                    assertEquals(stmtLog.getStatementType().getId(),
+                            resultSet.getInt(LogRepositoryConstants.STMT_TYPE_COLUMN));
+                    assertTrue(resultSet.getBoolean(LogRepositoryConstants.ERROR_COLUMN));
+                }
+            }
+        }, false);
     }
 
-    private int countRowsInTable(final String table) {
-        try (Statement stmt = repositoryUpdate.connectionUpdate.createStatement()) {
-            try (ResultSet rset = stmt.executeQuery("select count(1) from " + table)) {
-                rset.next();
-                return rset.getInt(1);
-            }
-        } catch (final SQLException e) {
-            throw new RuntimeException(e);
-        }
+    @Test
+    public void testgetLastModificationTime() throws Exception {
+        final long beforeInsert = System.currentTimeMillis();
+        Thread.sleep(5L);
+        insert1Log();
+        final long t2 = repositoryUpdate.getLastModificationTime();
+        assertTrue(t2 > beforeInsert);
     }
 }

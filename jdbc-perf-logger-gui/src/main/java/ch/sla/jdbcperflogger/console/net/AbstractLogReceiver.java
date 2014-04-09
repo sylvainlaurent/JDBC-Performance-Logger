@@ -45,6 +45,11 @@ import ch.sla.jdbcperflogger.model.TxCompleteLog;
 public abstract class AbstractLogReceiver extends Thread {
     private final static Logger LOGGER = LoggerFactory.getLogger(AbstractLogReceiver.class);
 
+    // Visible for testing
+    protected int SOCKET_TIMEOUT = 60 * 1000;
+    // Visible for testing
+    protected LogPersister logPersister = new LogPersister();
+
     protected final LogRepositoryUpdate logRepository;
     protected volatile boolean connected;
     protected volatile boolean paused = false;
@@ -82,10 +87,9 @@ public abstract class AbstractLogReceiver extends Thread {
 
     protected void handleConnection(final Socket socket) throws IOException {
         socket.setKeepAlive(true);
-        socket.setSoTimeout(60 * 1000);
+        socket.setSoTimeout(SOCKET_TIMEOUT);
 
         final InputStream is = socket.getInputStream();
-        final LogPersister logPersister = new LogPersister();
         logPersister.start();
         try {
             try (ObjectInputStream ois = new ObjectInputStream(is)) {

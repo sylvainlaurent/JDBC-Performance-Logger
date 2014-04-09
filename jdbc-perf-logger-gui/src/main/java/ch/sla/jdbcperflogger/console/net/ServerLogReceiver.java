@@ -55,6 +55,16 @@ public class ServerLogReceiver extends AbstractLogReceiver {
         } catch (final IOException e) {
             LOGGER.error("error while closing socket", e);
         }
+        try {
+            this.join();
+        } catch (final InterruptedException e) {
+            // ignore
+        }
+    }
+
+    // visible for testing
+    protected int getListenPort() {
+        return serverSocket.getLocalPort();
     }
 
     @Override
