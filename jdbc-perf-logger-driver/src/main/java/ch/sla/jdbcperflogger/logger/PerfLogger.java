@@ -202,10 +202,12 @@ public class PerfLogger {
         final Object value = sqlTypedValue.value; // using a local variable for null analysis
         final String setter = sqlTypedValue.setter;
         String sqlTypeStr = setter;
+        @SuppressWarnings("null")
+        final int sqlType = sqlTypedValue.sqlType != null ? sqlTypedValue.sqlType : 0;
         if (sqlTypeStr == null) {
-            sqlTypeStr = typesMap.get(sqlTypedValue.sqlType);
+            sqlTypeStr = typesMap.get(sqlType);
             if (sqlTypeStr == null) {
-                sqlTypeStr = "TYPE=" + sqlTypedValue.sqlType;
+                sqlTypeStr = "TYPE=" + sqlType;
             }
         }
         String additionalComment = null;
@@ -213,14 +215,14 @@ public class PerfLogger {
         final StringBuilder strBuilder = new StringBuilder(20);
         if (value == null) {
             strBuilder.append("NULL");
-        } else if (sqlTypedValue.sqlType == Types.CHAR //
-                || sqlTypedValue.sqlType == Types.VARCHAR//
-                || sqlTypedValue.sqlType == -15 // NCHAR, from java 6
-                || sqlTypedValue.sqlType == -9 // NVARCHAR, from java 6
+        } else if (sqlType == Types.CHAR //
+                || sqlType == Types.VARCHAR//
+                || sqlType == -15 // NCHAR, from java 6
+                || sqlType == -9 // NVARCHAR, from java 6
                 || "setString".equals(setter)//
                 || "setNString".equals(setter)) {
             strBuilder.append("'" + value + "'");
-        } else if (sqlTypedValue.sqlType == Types.DATE || "setDate".equals(setter) || value instanceof java.sql.Date) {
+        } else if (sqlType == Types.DATE || "setDate".equals(setter) || value instanceof java.sql.Date) {
             java.sql.Date sqlDate;
             if (value instanceof java.sql.Date) {
                 sqlDate = (java.sql.Date) value;
@@ -237,8 +239,7 @@ public class PerfLogger {
                 strBuilder.append("cast(timestamp'" + new Timestamp(sqlDate.getTime()) + "' as DATE)");
                 additionalComment = " (non pure)";
             }
-        } else if (sqlTypedValue.sqlType == Types.TIMESTAMP || "setTimestamp".equals(setter)
-                || value instanceof java.sql.Timestamp) {
+        } else if (sqlType == Types.TIMESTAMP || "setTimestamp".equals(setter) || value instanceof java.sql.Timestamp) {
             Timestamp tstamp;
             if (value instanceof Timestamp) {
                 tstamp = (Timestamp) value;
@@ -246,7 +247,7 @@ public class PerfLogger {
                 tstamp = new Timestamp(((java.util.Date) value).getTime());
             }
             strBuilder.append("timestamp'" + tstamp.toString() + "'");
-        } else if (sqlTypedValue.sqlType == Types.TIME || "setTime".equals(setter) || value instanceof java.sql.Time) {
+        } else if (sqlType == Types.TIME || "setTime".equals(setter) || value instanceof java.sql.Time) {
             java.sql.Time sqlTime;
             if (value instanceof java.sql.Time) {
                 sqlTime = (java.sql.Time) value;

@@ -13,28 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.sla.jdbcperflogger.model;
+package ch.sla.jdbcperflogger.logger;
 
-import javax.annotation.Nullable;
+import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting.LogSender;
 
-public class SqlTypedValue {
-    @Nullable
-    public final Object value;
-    @Nullable
-    public final Integer sqlType;
-    @Nullable
-    public final String setter;
-
-    public SqlTypedValue(@Nullable final Object value, final @Nullable Integer sqlType) {
-        this.value = value;
-        this.sqlType = sqlType;
-        setter = null;
+public class PerfLoggerRemotingHelper {
+    public static void addSender(final LogSender sender) {
+        PerfLoggerRemoting.senders.add(sender);
     }
 
-    public SqlTypedValue(final Object value, final String setter) {
-        this.value = value;
-        sqlType = -1;
-        this.setter = setter;
+    public static void removeSender(final LogSender sender) {
+        PerfLoggerRemoting.senders.remove(sender);
     }
-
 }

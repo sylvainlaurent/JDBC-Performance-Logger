@@ -22,10 +22,12 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 - Logging of SQLExceptions
 - Displays the `queryTimeout` of each statement (no value means 0 or no timeout) (since 0.5.0)
 - Displays the `autoCommit` status of each statement (since 0.6.0)
+- Supports new java 8 methods like `executeLargeUpdate` (since 0.6.2)
 
 ## Requirements
 - java 6 or later for the driver
-- java 7 or later for the GUI
+- java 7 or later for the GUI 
+- java 8 to test new JDBC 4.2 methods
 
 ## How to setup the JDBC Driver
 - Add one (and only one) of the following set of files to the classpath of the JDBC-client application (the files can be found in the `lib` directory of the binary distribution)

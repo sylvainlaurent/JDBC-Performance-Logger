@@ -24,7 +24,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ch.sla.jdbcperflogger.DatabaseType;
 import ch.sla.jdbcperflogger.StatementType;
@@ -33,11 +37,33 @@ import ch.sla.jdbcperflogger.model.PreparedStatementValuesHolder;
 import ch.sla.jdbcperflogger.model.SqlTypedValue;
 
 public class LoggingPreparedStatementInvocationHandler extends LoggingStatementInvocationHandler {
+    private static final String JAVA_SQL_SQL_TYPE = "java.sql.SQLType";
     private static final String CLEAR_PARAMETERS = "clearParameters";
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoggingPreparedStatementInvocationHandler.class);
+
+    @Nullable
+    private static final Method getVendorTypeNumberMethod;// for java 8
 
     private final String rawSql;
     private final PreparedStatementValuesHolder paramValues = new PreparedStatementValuesHolder();
     private final List<Object> batchedPreparedOrNonPreparedStmtExecutions = new ArrayList<Object>();
+
+    static {
+        // we use tempMethod to be able to keep getVendorTypeNumberMethod final
+        Method tempMethod = null;
+        try {
+            final Class<?> sqlTypeClass = Class.forName(JAVA_SQL_SQL_TYPE);
+            tempMethod = sqlTypeClass.getMethod("getVendorTypeNumber");
+        } catch (final ClassNotFoundException e) {
+            LOGGER.debug("not running under java 8");
+        } catch (final SecurityException e) {
+            LOGGER.warn("Error getting getVendorTypeNumber method from java.sql.SQLType");
+        } catch (final NoSuchMethodException e) {
+            LOGGER.warn("Error getting getVendorTypeNumber method from java.sql.SQLType");
+        } finally {
+            getVendorTypeNumberMethod = tempMethod;
+        }
+    }
 
     LoggingPreparedStatementInvocationHandler(final UUID connectionId, final PreparedStatement statement,
             final String rawSql, final DatabaseType databaseType) {
@@ -57,7 +83,8 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
         if (args == null || args.length == 0) {
             if (EXECUTE_QUERY.equals(methodName) && args == null) {
                 return internalExecutePreparedQuery(method);
-            } else if ((EXECUTE.equals(methodName) || EXECUTE_UPDATE.equals(methodName))) {
+            } else if ((EXECUTE.equals(methodName) || EXECUTE_UPDATE.equals(methodName) || EXECUTE_LARGE_UPDATE
+                    .equals(methodName))) {
                 return internalExecutePrepared(method, args);
             } else if (ADD_BATCH.equals(methodName)) {
                 result = Utils.invokeUnwrapException(wrappedStatement, method, args);
@@ -75,13 +102,30 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
         } else {
             if (methodName.startsWith("set")) {
                 result = Utils.invokeUnwrapException(wrappedStatement, method, args);
-                if ("setNull".equals(methodName)) {
-                    paramValues.put((Serializable) args[0], new SqlTypedValue(null, ((Integer) args[1]).intValue()));
+                if ("setNull".equals(methodName) && args[1] instanceof Integer) {
+                    paramValues.put((Serializable) args[0], new SqlTypedValue(null, ((Integer) args[1])));
                 } else if (args.length == 2 || "setDate".equals(methodName) || "setTime".equals(methodName)
                         || "setTimestamp".equals(methodName)) {
                     paramValues.put((Serializable) args[0], new SqlTypedValue(args[1], methodName));
                 } else if ("setObject".equals(methodName)) {
-                    paramValues.put((Serializable) args[0], new SqlTypedValue(args[1], ((Integer) args[2]).intValue()));
+                    final Class<?>[] argType = method.getParameterTypes();
+                    if (argType.length > 2) {
+                        Integer sqlType = null;
+                        if (argType[2] == Integer.TYPE) {
+                            sqlType = (Integer) args[2];
+                        } else if (getVendorTypeNumberMethod != null && argType[2].getName().equals(JAVA_SQL_SQL_TYPE)
+                                && args[2] != null) {
+                            // for java 8... we cannot directly reference the new SQLType at compile time to retain
+                            // compatibility with java <8
+
+                            // use a local variable to keep eclipse null-analysis happy
+                            @SuppressWarnings("null")
+                            @Nonnull
+                            final Method tempMethod = getVendorTypeNumberMethod;
+                            sqlType = (Integer) tempMethod.invoke(args[2]);
+                        }
+                        paramValues.put((Serializable) args[0], new SqlTypedValue(args[1], sqlType));
+                    }
                 }
                 return result;
             }
@@ -123,11 +167,8 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
         Long updateCount = null;
         try {
             final Object result = Utils.invokeUnwrapException(wrappedStatement, method, args);
-            if (result instanceof Integer) {
-                updateCount = ((Integer) result).longValue();
-            } else if (result instanceof Long) {
-                // for java 8
-                updateCount = (Long) result;
+            if (result instanceof Number) {
+                updateCount = ((Number) result).longValue();
             }
             return result;
         } catch (final Throwable e) {

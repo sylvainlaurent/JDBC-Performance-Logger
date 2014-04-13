@@ -35,7 +35,9 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
     protected static final String CLEAR_BATCH = "clearBatch";
     protected static final String ADD_BATCH = "addBatch";
     protected static final String EXECUTE_BATCH = "executeBatch";
+    protected static final String EXECUTE_LARGE_BATCH = "executeLargeBatch";
     protected static final String EXECUTE_UPDATE = "executeUpdate";
+    protected static final String EXECUTE_LARGE_UPDATE = "executeLargeUpdate";
     protected static final String EXECUTE = "execute";
     protected static final String EXECUTE_QUERY = "executeQuery";
 
@@ -63,9 +65,10 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
         final String methodName = method.getName();
         if (EXECUTE_QUERY.equals(methodName) && args != null) {
             return internalExecuteQuery(method, args);
-        } else if ((EXECUTE.equals(methodName) || EXECUTE_UPDATE.equals(methodName)) && args != null) {
+        } else if ((EXECUTE.equals(methodName) || EXECUTE_UPDATE.equals(methodName) || EXECUTE_LARGE_UPDATE
+                .equals(methodName)) && args != null) {
             return internalExecute(method, args);
-        } else if (EXECUTE_BATCH.equals(methodName)) {
+        } else if (EXECUTE_BATCH.equals(methodName) || EXECUTE_LARGE_BATCH.equals(methodName)) {
             return internalExecuteBatch(method, args);
         } else {
             result = Utils.invokeUnwrapException(wrappedStatement, method, args);
@@ -110,11 +113,8 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
         final long start = System.nanoTime();
         try {
             final Object result = Utils.invokeUnwrapException(wrappedStatement, method, args);
-            if (result instanceof Integer) {
-                updateCount = ((Integer) result).longValue();
-            } else if (result instanceof Long) {
-                // for java 8
-                updateCount = (Long) result;
+            if (result instanceof Number) {
+                updateCount = ((Number) result).longValue();
             }
             return result;
         } catch (final Throwable e) {
