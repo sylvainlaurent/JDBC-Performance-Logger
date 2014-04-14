@@ -92,6 +92,7 @@
 
           <!-- Custom template to add cd $BASEDIR -->
           <unixScriptTemplate>${project.basedir}/src/main/appassembler/unixBinTemplate</unixScriptTemplate>
+          <showConsoleWindow>false</showConsoleWindow>
         </configuration>
         <executions>
           <execution>
