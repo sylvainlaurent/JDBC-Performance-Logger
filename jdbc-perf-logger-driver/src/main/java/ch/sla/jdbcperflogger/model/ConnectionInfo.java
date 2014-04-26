@@ -11,17 +11,19 @@ public class ConnectionInfo implements LogMessage {
     private final int connectionNumber;
     private final String url;
     private final Date creationDate;
+    private final long connectionCreationDuration;
     /**
      * Connection props without password
      */
     private final Properties connectionProperties;
 
     public ConnectionInfo(final UUID uuid, final int connectionNumber, final String url, final Date creationDate,
-            final Properties connectionProperties) {
+            final long connectionCreationDuration, final Properties connectionProperties) {
         this.uuid = uuid;
         this.connectionNumber = connectionNumber;
         this.url = url;
         this.creationDate = creationDate;
+        this.connectionCreationDuration = connectionCreationDuration;
         this.connectionProperties = connectionProperties;
     }
 
@@ -45,6 +47,10 @@ public class ConnectionInfo implements LogMessage {
         return connectionProperties;
     }
 
+    public long getConnectionCreationDuration() {
+        return connectionCreationDuration;
+    }
+
     @Override
     public String toString() {
         return "ConnectionInfo["//
@@ -52,6 +58,7 @@ public class ConnectionInfo implements LogMessage {
                 + ", connectionNumber=" + connectionNumber//
                 + ", url=" + url//
                 + ", creationDate=" + creationDate//
+                + ", connectionCreationDuration=" + connectionCreationDuration//
                 + "]";
     }
 }

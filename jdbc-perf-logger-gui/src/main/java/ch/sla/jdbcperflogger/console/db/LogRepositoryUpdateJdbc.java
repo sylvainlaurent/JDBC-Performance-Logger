@@ -319,13 +319,15 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
     public synchronized void addConnection(final ConnectionInfo connectionInfo) {
         LOGGER.debug("addConnection:{}", connectionInfo);
         try (PreparedStatement stmt = connectionUpdate
-                .prepareStatement("merge into connection_info (connectionId, connectionNumber, url, creationDate, connectionProperties)"//
-                        + " key(connectionId) values (?,?,?,?,?)")) {
+                .prepareStatement("merge into connection_info (connectionId, connectionNumber, url, creationDate, "//
+                        + "connectionCreationDurationNanos, connectionProperties)"//
+                        + " key(connectionId) values (?,?,?,?,?,?)")) {
             int i = 1;
             stmt.setObject(i++, connectionInfo.getUuid());
             stmt.setInt(i++, connectionInfo.getConnectionNumber());
             stmt.setString(i++, connectionInfo.getUrl());
             stmt.setTimestamp(i++, new Timestamp(connectionInfo.getCreationDate().getTime()));
+            stmt.setLong(i++, connectionInfo.getConnectionCreationDuration());
             stmt.setObject(i++, connectionInfo.getConnectionProperties());
 
             stmt.execute();

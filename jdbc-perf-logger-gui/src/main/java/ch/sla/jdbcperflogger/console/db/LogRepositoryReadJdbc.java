@@ -207,7 +207,7 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
                 + "statement_log.threadName, statement_log.exception, "//
                 + "statement_log.connectionId,"//
                 + "connection_info.connectionNumber, connection_info.url, connection_info.creationDate,"//
-                + "connection_info.connectionProperties "//
+                + "connection_info.connectionCreationDurationNanos, connection_info.connectionProperties "//
                 + "from statement_log join connection_info on (statement_log.connectionId=connection_info.connectionId) "//
                 + "where statement_log.id=?";
 
@@ -231,10 +231,11 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
                     final int connectionNumber = resultSet.getInt(i++);
                     final String connectionUrl = resultSet.getString(i++);
                     final Timestamp creationDate = resultSet.getTimestamp(i++);
+                    final long connectionCreationDurationNanos = resultSet.getLong(i++);
                     final Properties connectionProperties = (Properties) resultSet.getObject(i++);
 
                     final ConnectionInfo connectionInfo = new ConnectionInfo(connectionId, connectionNumber,
-                            connectionUrl, creationDate, connectionProperties);
+                            connectionUrl, creationDate, connectionCreationDurationNanos, connectionProperties);
 
                     result = new DetailedViewStatementLog(logId, connectionInfo, tstamp.getTime(), statementType,
                             rawSql, filledSql, threadName, exception);

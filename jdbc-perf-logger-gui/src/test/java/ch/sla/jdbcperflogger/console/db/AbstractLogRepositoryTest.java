@@ -33,16 +33,26 @@ public class AbstractLogRepositoryTest {
         repositoryRead.dispose();
     }
 
-    protected StatementLog insert1Log() {
+    protected ConnectionInfo insert1Connection() {
         final Properties connProps = new Properties();
         connProps.setProperty("myprop", "myval");
-        final ConnectionInfo connectionInfo = new ConnectionInfo(randomUUID(), 12, "jdbc:toto", new Date(), connProps);
+        final ConnectionInfo connectionInfo = new ConnectionInfo(randomUUID(), 12, "jdbc:toto", new Date(), 12,
+                connProps);
         repositoryUpdate.addConnection(connectionInfo);
+        return connectionInfo;
+    }
+
+    protected StatementLog insert1Log(final ConnectionInfo connectionInfo) {
 
         final StatementLog log = new StatementLog(connectionInfo.getUuid(), randomUUID(), System.currentTimeMillis(),
                 StatementType.BASE_NON_PREPARED_STMT, "myrawsql", Thread.currentThread().getName(), 123, true);
         repositoryUpdate.addStatementLog(log);
         return log;
+    }
+
+    protected StatementLog insert1Log() {
+        final ConnectionInfo connectionInfo = insert1Connection();
+        return insert1Log(connectionInfo);
     }
 
     protected int countRowsInTable(final String table) {

@@ -440,7 +440,8 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
     private List<StatementFullyExecutedLog> insert3Logs() {
         final Properties connProps = new Properties();
         connProps.setProperty("myprop", "myval");
-        final ConnectionInfo connectionInfo = new ConnectionInfo(randomUUID(), 12, "jdbc:toto", new Date(), connProps);
+        final ConnectionInfo connectionInfo = new ConnectionInfo(randomUUID(), 12, "jdbc:toto", new Date(), 12,
+                connProps);
         repositoryUpdate.addConnection(connectionInfo);
 
         final List<StatementFullyExecutedLog> fullLogs = new ArrayList<>();

@@ -51,7 +51,8 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
 
     @Test
     public void testInsertAndRead() {
-        final StatementLog log = insert1Log();
+        final ConnectionInfo connectionInfo = insert1Connection();
+        final StatementLog log = insert1Log(connectionInfo);
 
         final DetailedViewStatementLog readLog = repositoryRead.getStatementLog(1);
         assertEquals(log.getLogId(), readLog.getLogId());
@@ -59,6 +60,13 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
         assertEquals(log.getStatementType(), readLog.getStatementType());
         assertEquals(log.getThreadName(), readLog.getThreadName());
         assertEquals(log.getTimestamp(), readLog.getTimestamp());
+        assertEquals(connectionInfo.getUrl(), readLog.getConnectionInfo().getUrl());
+        assertEquals(connectionInfo.getConnectionNumber(), readLog.getConnectionInfo().getConnectionNumber());
+        assertEquals(connectionInfo.getCreationDate(), readLog.getConnectionInfo().getCreationDate());
+        assertEquals(connectionInfo.getConnectionCreationDuration(), readLog.getConnectionInfo()
+                .getConnectionCreationDuration());
+        assertEquals(connectionInfo.getConnectionProperties(), readLog.getConnectionInfo().getConnectionProperties());
+        assertEquals(connectionInfo.getUuid(), readLog.getConnectionInfo().getUuid());
     }
 
     @Test
@@ -244,7 +252,8 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
     public void testaddStatementFullyExecutedLog() {
         final Properties connProps = new Properties();
         connProps.setProperty("myprop", "myval");
-        final ConnectionInfo connectionInfo = new ConnectionInfo(randomUUID(), 12, "jdbc:toto", new Date(), connProps);
+        final ConnectionInfo connectionInfo = new ConnectionInfo(randomUUID(), 12, "jdbc:toto", new Date(), 12,
+                connProps);
         repositoryUpdate.addConnection(connectionInfo);
 
         final List<StatementFullyExecutedLog> fullLogs = new ArrayList<>();

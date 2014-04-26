@@ -42,6 +42,7 @@ import ch.sla.jdbcperflogger.console.db.LogRepositoryUpdate;
 import ch.sla.jdbcperflogger.console.db.LogSearchCriteria;
 import ch.sla.jdbcperflogger.console.db.ResultSetAnalyzer;
 import ch.sla.jdbcperflogger.console.net.AbstractLogReceiver;
+import ch.sla.jdbcperflogger.model.ConnectionInfo;
 
 public class PerfLoggerController {
     private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerController.class);
@@ -260,6 +261,7 @@ public class PerfLoggerController {
         String txt2 = "";
         String connectionUrl = null;
         String connectionCreationDate = null;
+        Long connectionCreationDurationMillis = null;
         String connectionPropertiesString = null;
         DetailedViewStatementLog statementLog = null;
         if (logId != null) {
@@ -290,10 +292,13 @@ public class PerfLoggerController {
                 }
                 deltaTimestampBaseMillis = statementLog.getTimestamp();
 
-                connectionUrl = statementLog.getConnectionInfo().getUrl();
-                connectionPropertiesString = statementLog.getConnectionInfo().getConnectionProperties().toString();
+                final ConnectionInfo connectionInfo = statementLog.getConnectionInfo();
+                connectionUrl = connectionInfo.getUrl();
+                connectionPropertiesString = connectionInfo.getConnectionProperties().toString();
                 final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                connectionCreationDate = format.format(statementLog.getConnectionInfo().getCreationDate());
+                connectionCreationDate = format.format(connectionInfo.getCreationDate());
+                connectionCreationDurationMillis = TimeUnit.NANOSECONDS.toMillis(connectionInfo
+                        .getConnectionCreationDuration());
                 break;
             case RAW_SQL:
                 if (statementLog.getStatementType() != null) {
@@ -345,6 +350,8 @@ public class PerfLoggerController {
         perfLoggerPanel.txtFieldFilledSql.select(0, 0);
         perfLoggerPanel.connectionUrlField.setText(connectionUrl);
         perfLoggerPanel.connectionCreationDateField.setText(connectionCreationDate);
+        perfLoggerPanel.connectionCreationDurationField
+                .setText(connectionCreationDurationMillis != null ? connectionCreationDurationMillis.toString() : "");
         perfLoggerPanel.connectionPropertiesField.setText(connectionPropertiesString);
 
         perfLoggerPanel.setDeltaTimestampBaseMillis(deltaTimestampBaseMillis);

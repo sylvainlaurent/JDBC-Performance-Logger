@@ -122,6 +122,7 @@ public class PerfLoggerPanel extends JPanel {
     JTextField connectionCreationDateField;
     private JTextField sqlClauseField;
     JTextField connectionPropertiesField;
+    JTextField connectionCreationDurationField;
 
     public PerfLoggerPanel(final PerfLoggerController perfLoggerController) {
 
@@ -545,7 +546,7 @@ public class PerfLoggerPanel extends JPanel {
         final GridBagLayout gbl_panelConnectionInfo = new GridBagLayout();
         gbl_panelConnectionInfo.columnWidths = new int[] { 0, 0, 0, 0, 0 };
         gbl_panelConnectionInfo.rowHeights = new int[] { 0, 0, 0, 0 };
-        gbl_panelConnectionInfo.columnWeights = new double[] { 0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE };
+        gbl_panelConnectionInfo.columnWeights = new double[] { 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE };
         gbl_panelConnectionInfo.rowWeights = new double[] { 0.0, 0.0, 0.0, Double.MIN_VALUE };
         panelConnectionInfo.setLayout(gbl_panelConnectionInfo);
 
@@ -559,8 +560,9 @@ public class PerfLoggerPanel extends JPanel {
 
         connectionUrlField = new JTextField();
         final GridBagConstraints gbc_connectionUrlField = new GridBagConstraints();
+        gbc_connectionUrlField.gridwidth = 3;
         gbc_connectionUrlField.fill = GridBagConstraints.HORIZONTAL;
-        gbc_connectionUrlField.insets = new Insets(0, 0, 5, 5);
+        gbc_connectionUrlField.insets = new Insets(0, 0, 5, 0);
         gbc_connectionUrlField.gridx = 1;
         gbc_connectionUrlField.gridy = 0;
         panelConnectionInfo.add(connectionUrlField, gbc_connectionUrlField);
@@ -570,35 +572,51 @@ public class PerfLoggerPanel extends JPanel {
         final GridBagConstraints gbc_lblCreated = new GridBagConstraints();
         gbc_lblCreated.anchor = GridBagConstraints.EAST;
         gbc_lblCreated.insets = new Insets(0, 0, 5, 5);
-        gbc_lblCreated.gridx = 2;
-        gbc_lblCreated.gridy = 0;
+        gbc_lblCreated.gridx = 0;
+        gbc_lblCreated.gridy = 1;
         panelConnectionInfo.add(lblCreated, gbc_lblCreated);
 
         connectionCreationDateField = new JTextField();
         final GridBagConstraints gbc_connectionCreationDateField = new GridBagConstraints();
         gbc_connectionCreationDateField.fill = GridBagConstraints.HORIZONTAL;
-        gbc_connectionCreationDateField.insets = new Insets(0, 0, 5, 0);
-        gbc_connectionCreationDateField.gridx = 3;
-        gbc_connectionCreationDateField.gridy = 0;
+        gbc_connectionCreationDateField.insets = new Insets(0, 0, 5, 5);
+        gbc_connectionCreationDateField.gridx = 1;
+        gbc_connectionCreationDateField.gridy = 1;
         panelConnectionInfo.add(connectionCreationDateField, gbc_connectionCreationDateField);
         connectionCreationDateField.setColumns(15);
+
+        final JLabel lblCreationDuration = new JLabel("Creation duration (ms):");
+        final GridBagConstraints gbc_lblCreationDuration = new GridBagConstraints();
+        gbc_lblCreationDuration.anchor = GridBagConstraints.EAST;
+        gbc_lblCreationDuration.insets = new Insets(0, 0, 5, 5);
+        gbc_lblCreationDuration.gridx = 2;
+        gbc_lblCreationDuration.gridy = 1;
+        panelConnectionInfo.add(lblCreationDuration, gbc_lblCreationDuration);
+
+        connectionCreationDurationField = new JTextField();
+        final GridBagConstraints gbc_creationDurationField = new GridBagConstraints();
+        gbc_creationDurationField.insets = new Insets(0, 0, 5, 0);
+        gbc_creationDurationField.fill = GridBagConstraints.HORIZONTAL;
+        gbc_creationDurationField.gridx = 3;
+        gbc_creationDurationField.gridy = 1;
+        panelConnectionInfo.add(connectionCreationDurationField, gbc_creationDurationField);
+        connectionCreationDurationField.setColumns(10);
 
         final JLabel lblConectionProperties = new JLabel("Properties:");
         final GridBagConstraints gbc_lblConectionProperties = new GridBagConstraints();
         gbc_lblConectionProperties.anchor = GridBagConstraints.EAST;
-        gbc_lblConectionProperties.insets = new Insets(0, 0, 5, 5);
+        gbc_lblConectionProperties.insets = new Insets(0, 0, 0, 5);
         gbc_lblConectionProperties.gridx = 0;
-        gbc_lblConectionProperties.gridy = 1;
+        gbc_lblConectionProperties.gridy = 2;
         panelConnectionInfo.add(lblConectionProperties, gbc_lblConectionProperties);
         lblConectionProperties.setToolTipText("(Password property removed)");
 
         connectionPropertiesField = new JTextField();
         final GridBagConstraints gbc_connectionPropertiesField = new GridBagConstraints();
-        gbc_connectionPropertiesField.insets = new Insets(0, 0, 5, 0);
         gbc_connectionPropertiesField.fill = GridBagConstraints.HORIZONTAL;
         gbc_connectionPropertiesField.gridwidth = 3;
         gbc_connectionPropertiesField.gridx = 1;
-        gbc_connectionPropertiesField.gridy = 1;
+        gbc_connectionPropertiesField.gridy = 2;
         panelConnectionInfo.add(connectionPropertiesField, gbc_connectionPropertiesField);
         connectionPropertiesField.setColumns(10);
 

@@ -3,6 +3,7 @@
 ## Purpose
 Measuring performance of SQL statements executed through JDBC.
 
+(click on the image below for an overview of the features)
 [![Click here for an overview of the features](http://s159433608.onlinehome.fr/overview.png)](https://www.thinglink.com/scene/512018881544454146)
 
 
@@ -18,7 +19,7 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
  - the connection between the monitored java application (JDBC proxy driver) and the console can be initiated from either side
 - Logging of bound values of prepared statements, including the name of the set* method called to bind the value (very helpful to distinguish setDate and setTimestamp to understand [why Oracle does not use an index](http://docs.oracle.com/cd/E16655_01/java.121/e17657/apxref.htm#JJDBC28919) )
 - Separate measure of statement execution time and result set iteration time
-- Measures commit/rollback times
+- Measures connection creation and commit/rollback durations
 - Handling of batched statements
 - Logging of SQLExceptions
 - Displays the `queryTimeout` of each statement (no value means 0 or no timeout) (since 0.5.0)
@@ -58,7 +59,8 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 The source code is available on GitHub : https://github.com/sylvainlaurent/JDBC-Performance-Logger
 
 ### How to build source
-Use Maven and a JDK 7, and run `mvn clean package` in the root directory of the git repository. The binary distribution is then available in `jdbc-perf-logger-gui`.
+Use Maven and a JDK >=7, and run `mvn clean package` in the root directory of the git repository. The binary distribution is then available in `jdbc-perf-logger-gui`. You need a JDK 8 to be able to run tests present in the module `jdbc-perf-logger-java8-tests`.
+
 ### How to create a release
 `mvn release:prepare release:perform` and answer the questions about version number.
 

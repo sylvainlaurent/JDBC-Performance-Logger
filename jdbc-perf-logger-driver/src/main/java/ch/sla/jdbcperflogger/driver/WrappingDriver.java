@@ -66,7 +66,9 @@ public class WrappingDriver implements Driver {
         assert url != null;
         LOGGER.debug("connect url=[{}]", url);
         final String unWrappedUrl = extractUrlForWrappedDriver(url);
+        final long startNanos = System.nanoTime();
         Connection connection = DriverManager.getConnection(unWrappedUrl, info);
+        final long connectionCreationDuration = System.nanoTime() - startNanos;
 
         final Properties cleanedConnectionProperties = new Properties();
         if (info != null) {
@@ -82,7 +84,7 @@ public class WrappingDriver implements Driver {
         connection = (Connection) Proxy.newProxyInstance(WrappingDriver.class.getClassLoader(),
                 Utils.extractAllInterfaces(connection.getClass()), connectionInvocationHandler);
 
-        PerfLoggerRemoting.connectionCreated(connectionInvocationHandler);
+        PerfLoggerRemoting.connectionCreated(connectionInvocationHandler, connectionCreationDuration);
 
         return connection;
     }
