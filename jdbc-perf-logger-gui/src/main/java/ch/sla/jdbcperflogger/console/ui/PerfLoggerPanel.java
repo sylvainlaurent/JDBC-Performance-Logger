@@ -423,6 +423,16 @@ public class PerfLoggerPanel extends JPanel {
                 @Override
                 public void mousePressed(@Nullable final MouseEvent e) {
                     assert e != null;
+                    handlePotentialRightClick(e);
+                }
+
+                @Override
+                public void mouseReleased(@Nullable final MouseEvent e) {
+                    assert e != null;
+                    handlePotentialRightClick(e);
+                }
+
+                private void handlePotentialRightClick(final MouseEvent e) {
                     if (e.isPopupTrigger()) {
                         final JTable source = (JTable) e.getSource();
                         final int row = source.rowAtPoint(e.getPoint());
@@ -436,7 +446,6 @@ public class PerfLoggerPanel extends JPanel {
                         }
                     }
                 }
-
             });
         }
 
