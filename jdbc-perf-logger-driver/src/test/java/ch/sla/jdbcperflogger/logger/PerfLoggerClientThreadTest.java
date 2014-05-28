@@ -1,6 +1,7 @@
 package ch.sla.jdbcperflogger.logger;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 
 import javax.annotation.Nullable;
 
@@ -18,7 +19,7 @@ public class PerfLoggerClientThreadTest {
             final MyClassLoader myClassLoader = new MyClassLoader();
             Thread.currentThread().setContextClassLoader(myClassLoader);
 
-            final PerfLoggerClientThread thread = PerfLoggerClientThread.spawn("localhost", 0);
+            final PerfLoggerClientThread thread = PerfLoggerClientThread.spawn(new InetSocketAddress("localhost", 0));
             Thread.sleep(1000);
             classLoaderInsideThread = thread.getContextClassLoader();
             thread.done = true;

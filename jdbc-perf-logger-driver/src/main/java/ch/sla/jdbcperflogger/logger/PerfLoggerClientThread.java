@@ -16,6 +16,7 @@
 package ch.sla.jdbcperflogger.logger;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -29,12 +30,13 @@ import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting.LogSender;
 class PerfLoggerClientThread extends Thread {
     private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerClientThread.class);
 
+    private static final int CONNECT_TIMEOUT_MS = 30000;
+
     boolean done;
 
-    private final String host;
-    private final int port;
+    private final InetSocketAddress socketAddress;
 
-    static PerfLoggerClientThread spawn(final String host, final int port) {
+    static PerfLoggerClientThread spawn(final InetSocketAddress socketAddress) {
         // avoid Classloader leaks
 
         return AccessController.doPrivileged(new PrivilegedAction<PerfLoggerClientThread>() {
@@ -44,7 +46,7 @@ class PerfLoggerClientThread extends Thread {
                 try {
                     Thread.currentThread().setContextClassLoader(null);
 
-                    final PerfLoggerClientThread thread = new PerfLoggerClientThread(host, port);
+                    final PerfLoggerClientThread thread = new PerfLoggerClientThread(socketAddress);
                     thread.start();
                     return thread;
                 } finally {
@@ -55,11 +57,10 @@ class PerfLoggerClientThread extends Thread {
         });
     }
 
-    private PerfLoggerClientThread(final String host, final int port) {
+    private PerfLoggerClientThread(final InetSocketAddress socketAddress) {
         this.setDaemon(true);
-        this.setName("PerfLoggerClient " + host + ":" + port);
-        this.host = host;
-        this.port = port;
+        this.setName("PerfLoggerClient " + socketAddress);
+        this.socketAddress = socketAddress;
     }
 
     @Override
@@ -67,19 +68,20 @@ class PerfLoggerClientThread extends Thread {
         while (!done) {
             final Socket socket;
             try {
-                socket = new Socket(host, port);
+                socket = new Socket();
+                socket.connect(socketAddress, CONNECT_TIMEOUT_MS);
             } catch (final IOException e) {
-                LOGGER.debug("Unable to connect to " + host + ":" + port + ", will try again later", e);
+                LOGGER.debug("Unable to connect to " + socketAddress + ", will try again later", e);
                 quietSleep(30);
                 continue;
             }
-            LOGGER.debug("Connected to " + host + ":" + socket);
+            LOGGER.debug("Connected to " + socketAddress);
             try {
                 final LogSender sender = new LogSender(socket);
                 PerfLoggerRemoting.senders.add(sender);
                 sender.run();
             } catch (final IOException e) {
-                LOGGER.info("Error in connection with " + host + ":" + port + ", will try again later", e);
+                LOGGER.info("Error in connection with " + socketAddress + ", will try again later", e);
             }
         }
     }
