@@ -20,11 +20,16 @@ public class DriverConfigTest {
     @SuppressWarnings("null")
     @Test
     public void testDefaultConfig() throws Exception {
-        assertEquals(8889, DriverConfig.getServerPort().intValue());
-        assertEquals(1, DriverConfig.getClientAddresses().size());
-        final InetSocketAddress defaultClientAddress = DriverConfig.getClientAddresses().get(0);
+        assertEquals(8889, DriverConfig.INSTANCE.getServerPort().intValue());
+        assertEquals(1, DriverConfig.INSTANCE.getClientAddresses().size());
+        final InetSocketAddress defaultClientAddress = DriverConfig.INSTANCE.getClientAddresses().get(0);
         assertEquals("localhost", defaultClientAddress.getHostName());
         assertEquals(4561, defaultClientAddress.getPort());
+
+        assertEquals("oracle.jdbc.OracleDriver", DriverConfig.INSTANCE.getClassNameForJdbcUrl("jdbc:oracle:"));
+        assertEquals("oracle.jdbc.OracleDriver", DriverConfig.INSTANCE.getClassNameForJdbcUrl("jdbc:oracle:thin:toto"));
+        assertEquals("com.MyDriver", DriverConfig.INSTANCE.getClassNameForJdbcUrl("jdbc:mydriver:"));
+        assertNull(DriverConfig.INSTANCE.getClassNameForJdbcUrl("jdbc:mynonexisting:"));
     }
 
     @Test

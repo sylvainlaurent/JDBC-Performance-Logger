@@ -102,6 +102,11 @@ public class WrappingDriverTest {
         Assert.assertNotNull(connection);
     }
 
+    @Test(expected = SQLException.class)
+    public void testUnknownDriver() throws Exception {
+        DriverManager.getConnection("jdbcperflogger:jdbc:nonexistingdriver");
+    }
+
     @Test
     public void testSelectNonPrepared() throws Exception {
         final Statement statement = connection.createStatement();

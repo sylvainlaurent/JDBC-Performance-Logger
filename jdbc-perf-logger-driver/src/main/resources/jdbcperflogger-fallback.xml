@@ -1,5 +1,23 @@
 <!-- This is the fallback config file, if no config file is provided -->
 <jdbc-perf-logger>
-	<!-- <local-server port="8889" /> -->
-	<target-console host="localhost" port="4561" />
+  <!-- <local-server port="8889" /> -->
+  <target-console host="localhost" port="4561" />
+  <jdbc-drivers>
+    <jdbc-driver>
+      <prefix>jdbc:oracle:</prefix>
+      <driver-class-name>oracle.jdbc.OracleDriver</driver-class-name>
+    </jdbc-driver>
+    <jdbc-driver>
+      <prefix>jdbc:h2:</prefix>
+      <driver-class-name>org.h2.Driver</driver-class-name>
+    </jdbc-driver>
+    <jdbc-driver>
+      <prefix>jdbc:hsqldb:</prefix>
+      <driver-class-name>org.hsqldb.jdbc.JDBCDriver</driver-class-name>
+    </jdbc-driver>
+    <jdbc-driver>
+      <prefix>jdbc:mysql:</prefix>
+      <driver-class-name>com.mysql.jdbc.Driver</driver-class-name>
+    </jdbc-driver>
+  </jdbc-drivers>
 </jdbc-perf-logger>

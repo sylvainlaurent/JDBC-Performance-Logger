@@ -22,7 +22,10 @@ import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.text.MessageFormat;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
@@ -30,6 +33,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.sla.jdbcperflogger.DriverConfig;
 import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting;
 
 /**
@@ -43,12 +47,34 @@ public class WrappingDriver implements Driver {
     private final static Logger LOGGER = LoggerFactory.getLogger(WrappingDriver.class);
 
     private final static WrappingDriver INSTANCE = new WrappingDriver();
+    private final static Map<String, Driver> underlyingDrivers = new ConcurrentHashMap<String, Driver>();
+    private static boolean registered;
 
     static {
-        try {
-            DriverManager.registerDriver(INSTANCE);
-        } catch (final SQLException e) {
-            throw new RuntimeException(e);
+        load();
+    }
+
+    public static synchronized Driver load() {
+        if (!registered) {
+            try {
+                DriverManager.registerDriver(INSTANCE);
+            } catch (final SQLException e) {
+                throw new RuntimeException(e);
+            }
+            registered = true;
+        }
+        return INSTANCE;
+    }
+
+    public static synchronized void unload() {
+        if (registered) {
+            try {
+                DriverManager.deregisterDriver(INSTANCE);
+                // TODO : properly stop threads and sockets
+                registered = false;
+            } catch (final SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -66,8 +92,36 @@ public class WrappingDriver implements Driver {
         assert url != null;
         LOGGER.debug("connect url=[{}]", url);
         final String unWrappedUrl = extractUrlForWrappedDriver(url);
+
+        Driver underlyingDriver = null;
+
+        final String underlyingDriverClassName = DriverConfig.INSTANCE.getClassNameForJdbcUrl(unWrappedUrl);
+        underlyingDriver = underlyingDrivers.get(underlyingDriverClassName);
+
+        if (underlyingDriver == null && underlyingDriverClassName != null) {
+            try {
+                final Class<?> underlyingDriverClass = Class.forName(underlyingDriverClassName);
+                underlyingDriver = (Driver) underlyingDriverClass.newInstance();
+                underlyingDrivers.put(underlyingDriverClassName, underlyingDriver);
+            } catch (final ClassNotFoundException e) {
+                final String msg = MessageFormat.format("Cannot find driver class {0} for JDBC url {1}",
+                        underlyingDriverClassName, unWrappedUrl);
+                LOGGER.warn(msg, e);
+            } catch (final InstantiationException e) {
+                throw new SQLException(e);
+            } catch (final IllegalAccessException e) {
+                throw new SQLException(e);
+            }
+        }
+        if (underlyingDriver == null) {
+            // unknown driver, just use the DriverManager to attempt to locate it
+            underlyingDriver = DriverManager.getDriver(unWrappedUrl);
+        }
+
         final long startNanos = System.nanoTime();
-        Connection connection = DriverManager.getConnection(unWrappedUrl, info);
+
+        Connection connection = underlyingDriver.connect(unWrappedUrl, info);
+
         final long connectionCreationDuration = System.nanoTime() - startNanos;
 
         final Properties cleanedConnectionProperties = new Properties();

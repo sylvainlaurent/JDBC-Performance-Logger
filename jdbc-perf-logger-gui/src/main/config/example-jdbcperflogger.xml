@@ -1,4 +1,24 @@
 <jdbc-perf-logger>
   <local-server port="8889" />
   <target-console host="localhost" port="4561" />
+  <jdbc-drivers>
+    <!-- list of known drivers according to the JDBC URL prefix. This is useful only if these drivers are not in the JVM 
+      classpath but in a child classloader. For instance if the driver is in a webapp or in tomcat common loader. -->
+    <jdbc-driver>
+      <prefix>jdbc:oracle:</prefix>
+      <driver-class-name>oracle.jdbc.OracleDriver</driver-class-name>
+    </jdbc-driver>
+    <jdbc-driver>
+      <prefix>jdbc:h2:</prefix>
+      <driver-class-name>org.h2.Driver</driver-class-name>
+    </jdbc-driver>
+    <jdbc-driver>
+      <prefix>jdbc:hsqldb:</prefix>
+      <driver-class-name>org.hsqldb.jdbc.JDBCDriver</driver-class-name>
+    </jdbc-driver>
+    <jdbc-driver>
+      <prefix>jdbc:mysql:</prefix>
+      <driver-class-name>com.mysql.jdbc.Driver</driver-class-name>
+    </jdbc-driver>
+  </jdbc-drivers>
 </jdbc-perf-logger>

@@ -45,12 +45,12 @@ public class PerfLoggerRemoting {
     final static Map<LoggingConnectionInvocationHandler, ConnectionInfo> connectionToInfo = new WeakHashMap<LoggingConnectionInvocationHandler, ConnectionInfo>();
 
     static {
-        final Integer serverPort = DriverConfig.getServerPort();
+        final Integer serverPort = DriverConfig.INSTANCE.getServerPort();
         if (serverPort != null) {
             PerfLoggerServerThread.spawn(serverPort);
         }
 
-        for (final InetSocketAddress clientAddress : DriverConfig.getClientAddresses()) {
+        for (final InetSocketAddress clientAddress : DriverConfig.INSTANCE.getClientAddresses()) {
             PerfLoggerClientThread.spawn(clientAddress);
         }
     }
