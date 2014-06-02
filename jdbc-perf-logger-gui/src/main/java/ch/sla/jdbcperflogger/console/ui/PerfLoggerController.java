@@ -36,6 +36,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.console.db.DetailedViewStatementLog;
 import ch.sla.jdbcperflogger.console.db.LogRepositoryRead;
 import ch.sla.jdbcperflogger.console.db.LogRepositoryUpdate;
@@ -272,11 +273,12 @@ public class PerfLoggerController {
 
         if (statementLog != null) {
 
+            final StatementType statementType = statementLog.getStatementType();
             switch (groupBy) {
             case NONE:
                 txt1 = statementLog.getRawSql();
-                if (statementLog.getStatementType() != null) {
-                    switch (statementLog.getStatementType()) {
+                if (statementType != null) {
+                    switch (statementType) {
                     case NON_PREPARED_BATCH_EXECUTION:
                         txt1 = logExporter.getBatchedExecutions(statementLog);
                         break;
@@ -302,8 +304,8 @@ public class PerfLoggerController {
                         .getConnectionCreationDuration());
                 break;
             case RAW_SQL:
-                if (statementLog.getStatementType() != null) {
-                    switch (statementLog.getStatementType()) {
+                if (statementType != null) {
+                    switch (statementType) {
                     case BASE_NON_PREPARED_STMT:
                     case BASE_PREPARED_STMT:
                     case PREPARED_BATCH_EXECUTION:
@@ -319,8 +321,8 @@ public class PerfLoggerController {
                 }
                 break;
             case FILLED_SQL:
-                if (statementLog.getStatementType() != null) {
-                    switch (statementLog.getStatementType()) {
+                if (statementType != null) {
+                    switch (statementType) {
                     case BASE_NON_PREPARED_STMT:
                     case PREPARED_BATCH_EXECUTION:
                     case NON_PREPARED_QUERY_STMT:
@@ -352,7 +354,7 @@ public class PerfLoggerController {
         perfLoggerPanel.connectionUrlField.setText(connectionUrl);
         perfLoggerPanel.connectionCreationDateField.setText(connectionCreationDate);
         perfLoggerPanel.connectionCreationDurationField
-        .setText(connectionCreationDurationMillis != null ? connectionCreationDurationMillis.toString() : "");
+                .setText(connectionCreationDurationMillis != null ? connectionCreationDurationMillis.toString() : "");
         perfLoggerPanel.connectionPropertiesField.setText(connectionPropertiesString);
 
         perfLoggerPanel.setDeltaTimestampBaseMillis(deltaTimestampBaseMillis);

@@ -67,7 +67,6 @@ public class WrappingDriverJava8Test {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(WrappingDriverJava8Test.class);
 
-    @SuppressWarnings("null")
     private Connection connection;
     @Nullable
     private LogMessage lastLogMessage1;
@@ -75,14 +74,12 @@ public class WrappingDriverJava8Test {
     private LogMessage lastLogMessage2;
     @Nullable
     private LogMessage lastLogMessage3;
-    @SuppressWarnings("null")
     private LogSender logSenderMock;
 
     @Before
     public void setup() throws Exception {
         connection = DriverManager.getConnection("jdbcperflogger:jdbc:derby:memory:mydb;create=true");
         logSenderMock = Mockito.mock(PerfLoggerRemoting.LogSender.class, new Answer<Void>() {
-            @SuppressWarnings("null")
             @Override
             @Nullable
             public Void answer(final @Nullable InvocationOnMock invocation) throws Throwable {
