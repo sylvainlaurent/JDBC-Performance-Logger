@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -229,6 +229,7 @@ public class PerfLoggerController {
         }
         logReceiver.dispose();
         logRepositoryUpdate.dispose();
+        logRepositoryRead.dispose();
         clientConnectionDelegate.close(this);
     }
 
@@ -351,7 +352,7 @@ public class PerfLoggerController {
         perfLoggerPanel.connectionUrlField.setText(connectionUrl);
         perfLoggerPanel.connectionCreationDateField.setText(connectionCreationDate);
         perfLoggerPanel.connectionCreationDurationField
-                .setText(connectionCreationDurationMillis != null ? connectionCreationDurationMillis.toString() : "");
+        .setText(connectionCreationDurationMillis != null ? connectionCreationDurationMillis.toString() : "");
         perfLoggerPanel.connectionPropertiesField.setText(connectionPropertiesString);
 
         perfLoggerPanel.setDeltaTimestampBaseMillis(deltaTimestampBaseMillis);
@@ -403,7 +404,7 @@ public class PerfLoggerController {
     /**
      * A task that regularly polls the associated {@link LogRepositoryUpdate} to check for new statements to display. If
      * the UI must be refreshed it is later done in the EDT.
-     * 
+     *
      * @author slaurent
      */
     private class RefreshDataTask implements Runnable {

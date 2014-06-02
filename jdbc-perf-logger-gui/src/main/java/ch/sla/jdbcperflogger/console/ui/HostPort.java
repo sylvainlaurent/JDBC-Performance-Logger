@@ -25,7 +25,10 @@ public class HostPort implements Comparable<HostPort> {
     }
 
     @Override
-    public int compareTo(final HostPort o) {
+    public int compareTo(final @Nullable HostPort o) {
+        if (o == null) {
+            return 1;
+        }
         int cmp = host.compareToIgnoreCase(o.host);
         if (cmp != 0) {
             return cmp;

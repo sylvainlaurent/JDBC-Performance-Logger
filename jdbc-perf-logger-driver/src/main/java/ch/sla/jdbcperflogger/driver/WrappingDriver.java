@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,9 +38,9 @@ import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting;
 
 /**
  * This is the JDBC Driver implementation of the performance logger.
- * 
+ *
  * @author slaurent
- * 
+ *
  */
 public class WrappingDriver implements Driver {
     public final static String URL_PREFIX = "jdbcperflogger:";
@@ -96,7 +96,9 @@ public class WrappingDriver implements Driver {
         Driver underlyingDriver = null;
 
         final String underlyingDriverClassName = DriverConfig.INSTANCE.getClassNameForJdbcUrl(unWrappedUrl);
-        underlyingDriver = underlyingDrivers.get(underlyingDriverClassName);
+        if (underlyingDriverClassName != null) {
+            underlyingDriver = underlyingDrivers.get(underlyingDriverClassName);
+        }
 
         if (underlyingDriver == null && underlyingDriverClassName != null) {
             try {

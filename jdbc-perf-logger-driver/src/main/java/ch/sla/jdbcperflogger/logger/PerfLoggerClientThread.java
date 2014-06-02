@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -68,8 +68,10 @@ class PerfLoggerClientThread extends Thread {
         while (!done) {
             final Socket socket;
             try {
+                final InetSocketAddress resolvedAddress = new InetSocketAddress(socketAddress.getHostName(),
+                        socketAddress.getPort());
                 socket = new Socket();
-                socket.connect(socketAddress, CONNECT_TIMEOUT_MS);
+                socket.connect(resolvedAddress, CONNECT_TIMEOUT_MS);
             } catch (final IOException e) {
                 LOGGER.debug("Unable to connect to " + socketAddress + ", will try again later", e);
                 quietSleep(30);

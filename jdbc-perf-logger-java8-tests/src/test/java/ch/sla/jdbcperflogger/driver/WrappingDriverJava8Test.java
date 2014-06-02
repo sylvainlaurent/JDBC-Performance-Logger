@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,6 +37,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.junit.After;
@@ -81,9 +82,10 @@ public class WrappingDriverJava8Test {
     public void setup() throws Exception {
         connection = DriverManager.getConnection("jdbcperflogger:jdbc:derby:memory:mydb;create=true");
         logSenderMock = Mockito.mock(PerfLoggerRemoting.LogSender.class, new Answer<Void>() {
+            @SuppressWarnings("null")
             @Override
             @Nullable
-            public Void answer(@Nullable final InvocationOnMock invocation) throws Throwable {
+            public Void answer(final @Nullable InvocationOnMock invocation) throws Throwable {
                 assert invocation != null;
                 lastLogMessage3 = lastLogMessage2;
                 lastLogMessage2 = lastLogMessage1;
@@ -175,7 +177,9 @@ public class WrappingDriverJava8Test {
                     ((StatementLog) lastLogMessage2).getLogId());
             assertEquals(sql, ((StatementLog) lastLogMessage2).getRawSql());
             assertEquals(StatementType.BASE_NON_PREPARED_STMT, ((StatementLog) lastLogMessage2).getStatementType());
-            assertEquals(1L, ((StatementExecutedLog) lastLogMessage1).getUpdateCount().longValue());
+            @Nonnull
+            final Long updateCount = ((StatementExecutedLog) lastLogMessage1).getUpdateCount();
+            assertEquals(1L, updateCount.longValue());
             statement.close();
         }
         {
@@ -183,7 +187,9 @@ public class WrappingDriverJava8Test {
             final Statement statement = connection.createStatement();
             final long nb = statement.executeLargeUpdate(sql);
             Assert.assertEquals(0, nb);
-            assertEquals(0L, ((StatementExecutedLog) lastLogMessage1).getUpdateCount().longValue());
+            @Nonnull
+            final Long updateCount = ((StatementExecutedLog) lastLogMessage1).getUpdateCount();
+            assertEquals(0L, updateCount.longValue());
             statement.close();
         }
     }
@@ -213,7 +219,9 @@ public class WrappingDriverJava8Test {
             assertEquals(StatementType.BASE_PREPARED_STMT, ((StatementLog) lastLogMessage2).getStatementType());
             assertEquals("insert into test (key_id) values (123 /*setInt*/)",
                     ((StatementLog) lastLogMessage2).getFilledSql());
-            assertEquals(1L, ((StatementExecutedLog) lastLogMessage1).getUpdateCount().longValue());
+            @Nonnull
+            final Long updateCount = ((StatementExecutedLog) lastLogMessage1).getUpdateCount();
+            assertEquals(1L, updateCount.longValue());
             statement.close();
         }
         {
@@ -222,7 +230,9 @@ public class WrappingDriverJava8Test {
             statement.setInt(1, 87687);
             final long nb = statement.executeLargeUpdate();
             Assert.assertEquals(0, nb);
-            assertEquals(0L, ((StatementExecutedLog) lastLogMessage1).getUpdateCount().longValue());
+            @Nonnull
+            final Long updateCount = ((StatementExecutedLog) lastLogMessage1).getUpdateCount();
+            assertEquals(0L, updateCount.longValue());
             statement.close();
         }
     }

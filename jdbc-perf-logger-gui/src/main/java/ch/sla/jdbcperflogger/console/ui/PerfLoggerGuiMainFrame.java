@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -45,6 +45,7 @@ public class PerfLoggerGuiMainFrame extends JFrame {
 
     void addTab(final String tabName, final Component tab) {
         tabbedPane.add(tabName, tab);
+        tabbedPane.setSelectedComponent(tab);
     }
 
     void removeTab(final Component tab) {

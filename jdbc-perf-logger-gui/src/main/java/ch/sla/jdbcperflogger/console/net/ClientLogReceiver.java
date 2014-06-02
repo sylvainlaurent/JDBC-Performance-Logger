@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,32 +29,37 @@ public class ClientLogReceiver extends AbstractLogReceiver {
     private final static Logger LOGGER = LoggerFactory.getLogger(ClientLogReceiver.class);
 
     final InetSocketAddress targetRemoteAddress;
+    private final LogRepositoryUpdate logRepository;
 
     public ClientLogReceiver(final String targetHost, final int targetPort, final LogRepositoryUpdate logRepository) {
-        super(logRepository);
         targetRemoteAddress = InetSocketAddress.createUnresolved(targetHost, targetPort);
+        this.logRepository = logRepository;
     }
 
     @Override
     public void run() {
-        while (!disposed) {
-            try {
-                final InetSocketAddress addr = new InetSocketAddress(targetRemoteAddress.getHostName(),
-                        targetRemoteAddress.getPort());
-                LOGGER.debug("Trying to connect to {}", targetRemoteAddress);
-                final Socket socket = new Socket(addr.getAddress(), addr.getPort());
-                LOGGER.info("Connected to remote {}", targetRemoteAddress);
-                handleConnection(socket);
-            } catch (final IOException e) {
-                LOGGER.debug("expected error", e);
-            }
-            LOGGER.debug("Sleeping before trying to connect again to remote {}", targetRemoteAddress);
-            try {
-                Thread.sleep(TimeUnit.SECONDS.toMillis(10));
-            } catch (final InterruptedException ignored) {
-            }
+        try (LogPersister logPersister = new LogPersister(logRepository)) {
+            logPersister.start();
+            while (!disposed) {
+                try {
+                    final InetSocketAddress addr = new InetSocketAddress(targetRemoteAddress.getHostName(),
+                            targetRemoteAddress.getPort());
+                    LOGGER.debug("Trying to connect to {}", targetRemoteAddress);
+                    final Socket socket = new Socket(addr.getAddress(), addr.getPort());
+                    LOGGER.info("Connected to remote {}", targetRemoteAddress);
+                    handleConnection(socket, logPersister);
+                } catch (final IOException e) {
+                    LOGGER.debug("expected error", e);
+                }
+                LOGGER.debug("Sleeping before trying to connect again to remote {}", targetRemoteAddress);
+                try {
+                    Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+                } catch (final InterruptedException ignored) {
+                }
 
+            }
         }
+
     }
 
     @Override

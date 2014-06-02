@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,9 +35,9 @@ public class ServerLogReceiver extends AbstractLogReceiver {
 
     private ServerSocket serverSocket;
     private final Set<AbstractLogReceiver> childReceivers = new CopyOnWriteArraySet<>();
+    private final LogRepositoryUpdate logRepository;
 
     public ServerLogReceiver(final int listenPort, final LogRepositoryUpdate logRepository) {
-        super(logRepository);
         try {
             serverSocket = new ServerSocket(listenPort);
             serverSocket.setSoTimeout((int) TimeUnit.MINUTES.toMillis(5));
@@ -45,6 +45,8 @@ public class ServerLogReceiver extends AbstractLogReceiver {
             throw new RuntimeException(e);
         }
         this.setName("ServerLogReceiver " + listenPort);
+
+        this.logRepository = logRepository;
     }
 
     @Override
@@ -79,7 +81,8 @@ public class ServerLogReceiver extends AbstractLogReceiver {
 
     @Override
     public void run() {
-        try {
+        try (LogPersister logPersister = new LogPersister(logRepository)) {
+            logPersister.start();
             while (!disposed) {
                 try {
                     LOGGER.debug("Waiting for client connections on " + serverSocket);
@@ -87,11 +90,11 @@ public class ServerLogReceiver extends AbstractLogReceiver {
                     final Socket socket = serverSocket.accept();
                     LOGGER.debug("Got client connection from " + socket);
 
-                    final AbstractLogReceiver logReceiver = new AbstractLogReceiver(logRepository) {
+                    final AbstractLogReceiver logReceiver = new AbstractLogReceiver() {
                         @Override
                         public void run() {
                             try {
-                                handleConnection(socket);
+                                handleConnection(socket, logPersister);
                             } catch (final IOException e) {
                                 LOGGER.error("error while receiving logs from " + socket.getRemoteSocketAddress(), e);
                             } finally {
