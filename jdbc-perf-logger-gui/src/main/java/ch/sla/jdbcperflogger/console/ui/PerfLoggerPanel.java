@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,7 +17,6 @@
 package ch.sla.jdbcperflogger.console.ui;
 
 import static java.awt.event.InputEvent.CTRL_MASK;
-import static java.awt.event.KeyEvent.KEY_PRESSED;
 import static java.awt.event.KeyEvent.VK_BACK_SPACE;
 import static java.awt.event.KeyEvent.VK_DELETE;
 
@@ -25,8 +24,6 @@ import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.KeyEventDispatcher;
-import java.awt.KeyboardFocusManager;
 import java.awt.SystemColor;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
@@ -80,7 +77,7 @@ import ch.sla.jdbcperflogger.console.ui.PerfLoggerController.GroupBy;
 
 /**
  * @author slaurent
- * 
+ *
  */
 @SuppressWarnings("serial")
 public class PerfLoggerPanel extends JPanel {
@@ -396,12 +393,16 @@ public class PerfLoggerPanel extends JPanel {
             public void keyReleased(@Nullable final KeyEvent e) {
                 assert e != null;
                 if (e.getKeyCode() == VK_BACK_SPACE || e.getKeyCode() == VK_DELETE) {
-                    final int[] selectedRowsTableIndexes = table.getSelectedRows();
-                    final long[] logIds = new long[selectedRowsTableIndexes.length];
-                    for (int i = 0; i < selectedRowsTableIndexes.length; i++) {
-                        logIds[i] = dataModel.getIdAtRow(table.convertRowIndexToModel(selectedRowsTableIndexes[i]));
+                    if (e.getModifiers() == CTRL_MASK) {
+                        perfLoggerController.onClear();
+                    } else {
+                        final int[] selectedRowsTableIndexes = table.getSelectedRows();
+                        final long[] logIds = new long[selectedRowsTableIndexes.length];
+                        for (int i = 0; i < selectedRowsTableIndexes.length; i++) {
+                            logIds[i] = dataModel.getIdAtRow(table.convertRowIndexToModel(selectedRowsTableIndexes[i]));
+                        }
+                        perfLoggerController.onDeleteSelectedStatements(logIds);
                     }
-                    perfLoggerController.onDeleteSelectedStatements(logIds);
                 }
 
             }
@@ -709,19 +710,6 @@ public class PerfLoggerPanel extends JPanel {
         gbc_btnClose.gridx = 3;
         gbc_btnClose.gridy = 0;
         bottomPanel.add(btnClose, gbc_btnClose);
-
-        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
-            @Override
-            public boolean dispatchKeyEvent(@Nullable final KeyEvent e) {
-                assert e != null;
-                if ((e.getKeyCode() == VK_BACK_SPACE || e.getKeyCode() == VK_DELETE) && e.getModifiers() == CTRL_MASK
-                        && e.getID() == KEY_PRESSED) {
-                    perfLoggerController.onClear();
-                    return true;
-                }
-                return false;
-            }
-        });
 
     }
 
