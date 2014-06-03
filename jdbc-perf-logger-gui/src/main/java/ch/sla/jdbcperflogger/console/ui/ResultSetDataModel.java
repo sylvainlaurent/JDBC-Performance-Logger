@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,7 +34,7 @@ class ResultSetDataModel extends AbstractTableModel {
 
     /**
      * Must be called in EDT
-     * 
+     *
      * @param rows
      * @param columnNames
      * @param columnTypes
@@ -110,8 +110,10 @@ class ResultSetDataModel extends AbstractTableModel {
         if (columnIndex < 0) {
             return null;
         }
-        final Object o = rows.get(rowIndex)[columnIndex];
-
+        Object o = rows.get(rowIndex)[columnIndex];
+        if (LogRepositoryConstants.STMT_TYPE_COLUMN.equals(columnName)) {
+            o = StatementType.fromId(((Byte) o).byteValue());
+        }
         return o;
     }
 }

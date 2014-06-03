@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,13 +25,18 @@ import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 
+import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.console.db.LogRepositoryConstants;
 
 public class CustomTable extends JTable {
+    private static final long serialVersionUID = 1L;
+
     private static final Color ERROR_COLOR = Color.RED;
     private static final Color DEFAULT_BG_COLOR = Color.WHITE;
     private static final Color HIGHLIGHT_COLOR = Color.ORANGE;
-    private static final long serialVersionUID = 1L;
+    private static final Color COMMIT_COLOR = new Color(204, 255, 102);
+    private static final Color ROLLBACK_COLOR = Color.PINK;
+
     @Nullable
     private String txtToHighlightUpper;
     @Nullable
@@ -71,11 +76,21 @@ public class CustomTable extends JTable {
             final int modelIndex = convertRowIndexToModel(row);
 
             Color bgColor = DEFAULT_BG_COLOR;
+            final StatementType statementType = (StatementType) model.getValueAt(modelIndex,
+                    LogRepositoryConstants.STMT_TYPE_COLUMN);
+            final String sql = (String) model.getValueAt(modelIndex, LogRepositoryConstants.RAW_SQL_COLUMN);
+
+            if (statementType == StatementType.TRANSACTION && sql != null) {
+                if (sql.contains("COMMIT")) {
+                    bgColor = COMMIT_COLOR;
+                } else if (sql.contains("ROLLBACK")) {
+                    bgColor = ROLLBACK_COLOR;
+                }
+            }
             final Integer error = (Integer) model.getValueAt(modelIndex, LogRepositoryConstants.ERROR_COLUMN);
             if (error != null && error.intValue() != 0) {
                 bgColor = ERROR_COLOR;
             } else if (txtToHighlightUpper != null) {
-                final String sql = (String) model.getValueAt(modelIndex, LogRepositoryConstants.RAW_SQL_COLUMN);
                 if (sql != null && sql.toUpperCase().contains(txtToHighlightUpper)) {
                     bgColor = HIGHLIGHT_COLOR;
                 }
