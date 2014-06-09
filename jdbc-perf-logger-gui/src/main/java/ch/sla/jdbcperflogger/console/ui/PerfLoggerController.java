@@ -282,15 +282,15 @@ public class PerfLoggerController {
                     switch (statementType) {
                     case NON_PREPARED_BATCH_EXECUTION:
                         txt1 = logExporter.getBatchedExecutions(statementLog);
+                        txt2 = txt1;
                         break;
                     case PREPARED_BATCH_EXECUTION:
                         txt2 = logExporter.getBatchedExecutions(statementLog);
                         break;
                     case BASE_PREPARED_STMT:
                     case PREPARED_QUERY_STMT:
-                        txt2 = statementLog.getFilledSql();
-                        break;
                     default:
+                        txt2 = statementLog.getFilledSql();
                         break;
                     }
                 }
@@ -345,7 +345,8 @@ public class PerfLoggerController {
 
             final String sqlException = statementLog.getSqlException();
             if (sqlException != null) {
-                txt2 += "\n" + sqlException;
+                txt1 += "\n\n" + sqlException;
+                txt2 += "\n\n" + sqlException;
             }
         }
         perfLoggerPanel.txtFieldRawSql.setText(txt1);
@@ -355,7 +356,7 @@ public class PerfLoggerController {
         perfLoggerPanel.connectionUrlField.setText(connectionUrl);
         perfLoggerPanel.connectionCreationDateField.setText(connectionCreationDate);
         perfLoggerPanel.connectionCreationDurationField
-                .setText(connectionCreationDurationMillis != null ? connectionCreationDurationMillis.toString() : "");
+        .setText(connectionCreationDurationMillis != null ? connectionCreationDurationMillis.toString() : "");
         perfLoggerPanel.connectionPropertiesField.setText(connectionPropertiesString);
 
         perfLoggerPanel.setDeltaTimestampBaseMillis(deltaTimestampBaseMillis);
