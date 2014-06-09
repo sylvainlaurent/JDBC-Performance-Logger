@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -226,7 +226,7 @@ public class WrappingDriverTest {
         {
             final Statement statement = connection.createStatement();
             statement
-                    .execute("create table test (key_id int, myDate date, myTimestamp timestamp(0), myTime time, myBoolean boolean);");
+            .execute("create table test (key_id int, myDate date, myTimestamp timestamp(0), myTime time, myBoolean boolean);");
             statement.close();
         }
         {
@@ -352,13 +352,18 @@ public class WrappingDriverTest {
             for (int i = 0; i < 100; i++) {
                 statement.addBatch("insert into test (key_id) values (" + i + ")");
             }
-            statement.executeBatch();
+            final int[] nbRowsBatch = statement.executeBatch();
+            assertEquals(100, nbRowsBatch.length);
+            for (int i = 0; i < 100; i++) {
+                assertEquals(1, nbRowsBatch[i]);
+            }
             assertEquals(((StatementExecutedLog) lastLogMessage1).getLogId(),
                     ((BatchedNonPreparedStatementsLog) lastLogMessage2).getLogId());
             final List<String> sqlList = ((BatchedNonPreparedStatementsLog) lastLogMessage2).getSqlList();
             assertEquals(100, sqlList.size());
             assertEquals("insert into test (key_id) values (0)", sqlList.get(0));
             assertEquals("insert into test (key_id) values (99)", sqlList.get(99));
+            assertEquals(100L, ((StatementExecutedLog) lastLogMessage1).getUpdateCount().longValue());
         }
         {
             lastLogMessage1 = null;
@@ -407,6 +412,7 @@ public class WrappingDriverTest {
             assertEquals(100, sqlList.size());
             assertEquals("insert into test (key_id) values (0 /*setInt*/)", sqlList.get(0));
             assertEquals("insert into test (key_id) values (99 /*setInt*/)", sqlList.get(99));
+            assertEquals(100L, ((StatementExecutedLog) lastLogMessage1).getUpdateCount().longValue());
         }
         // {
         // statement.executeBatch();

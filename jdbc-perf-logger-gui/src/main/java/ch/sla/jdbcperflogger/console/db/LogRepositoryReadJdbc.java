@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -61,7 +61,7 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
             final boolean withFilledSql) {
         final StringBuilder sql = new StringBuilder("select id, tstamp, statementType, rawSql, " //
                 + "exec_plus_fetch_time, execution_time, fetch_time, "//
-                + "nbRowsIterated, threadName, connectionNumber, timeout, autoCommit, error ");
+                + "nbRows, threadName, connectionNumber, timeout, autoCommit, error ");
         if (withFilledSql) {
             sql.append(", " + LogRepositoryConstants.FILLED_SQL_COLUMN);
         }
@@ -85,11 +85,11 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
     public void getStatementsGroupByRawSQL(final LogSearchCriteria searchCriteria, final ResultSetAnalyzer analyzer) {
         final StringBuilder sql = new StringBuilder(
                 "select * from (select min(id) as ID, statementType, rawSql, count(1) as exec_count, " //
-                        + "sum(executionDurationNanos) as total_exec_time, "//
-                        + "max(executionDurationNanos) as max_exec_time, " //
-                        + "min(executionDurationNanos) as min_exec_time, " //
-                        + "avg(executionDurationNanos) as avg_exec_time " //
-                        + "from statement_log ");
+                + "sum(executionDurationNanos) as total_exec_time, "//
+                + "max(executionDurationNanos) as max_exec_time, " //
+                + "min(executionDurationNanos) as min_exec_time, " //
+                + "avg(executionDurationNanos) as avg_exec_time " //
+                + "from statement_log ");
         boolean whereAdded = false;
 
         if (searchCriteria.getFilter() != null) {
@@ -124,11 +124,11 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
     public void getStatementsGroupByFilledSQL(final LogSearchCriteria searchCriteria, final ResultSetAnalyzer analyzer) {
         final StringBuilder sql = new StringBuilder(
                 "select * from (select min(id) as ID, statementType, rawSql, filledSql, count(1) as exec_count, " //
-                        + "sum(executionDurationNanos) as total_exec_time, "//
-                        + "max(executionDurationNanos) as max_exec_time, " //
-                        + "min(executionDurationNanos) as min_exec_time, " //
-                        + "avg(executionDurationNanos) as avg_exec_time " //
-                        + "from statement_log ");
+                + "sum(executionDurationNanos) as total_exec_time, "//
+                + "max(executionDurationNanos) as max_exec_time, " //
+                + "min(executionDurationNanos) as min_exec_time, " //
+                + "avg(executionDurationNanos) as avg_exec_time " //
+                + "from statement_log ");
         if (searchCriteria.getFilter() != null) {
             sql.append("where (UPPER(rawSql) like ? or UPPER(filledSql) like ?)");
         }

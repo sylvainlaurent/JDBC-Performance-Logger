@@ -12,7 +12,7 @@ create table if not exists connection_info
 create table if not exists statement_log 
     (id identity, connectionId UUID not null, logId UUID not null, tstamp timestamp not null, statementType tinyInt not null, 
     rawSql varchar not null, filledSql varchar not null, 
-    executionDurationNanos bigInt, fetchDurationNanos bigInt, nbRowsIterated int, 
+    executionDurationNanos bigInt, fetchDurationNanos bigInt, nbRows int, 
     threadName varchar, exception varchar, timeout int, autoCommit boolean);
 
 create index if not exists idx_logId on statement_log(logId);
@@ -27,12 +27,12 @@ create table if not exists batched_statement_log
 create index if not exists idx_batched_logId on batched_statement_log(logId);
 
 create or replace view v_statement_log
-    (id, tstamp, statementType, rawSql, filledSql, exec_plus_fetch_time, execution_time, fetch_time, nbRowsIterated, threadName, timeout, autoCommit, error, connectionNumber)
+    (id, tstamp, statementType, rawSql, filledSql, exec_plus_fetch_time, execution_time, fetch_time, nbRows, threadName, timeout, autoCommit, error, connectionNumber)
   as select statement_log.id, statement_log.tstamp, statement_log.statementType, statement_log.rawSql, statement_log.filledSql,
             statement_log.executionDurationNanos+coalesce(statement_log.fetchDurationNanos,0) as exec_plus_fetch_time,
             statement_log.executionDurationNanos as execution_time, 
             statement_log.fetchDurationNanos as fetch_time,
-            statement_log.nbRowsIterated,
+            statement_log.nbRows,
             statement_log.threadName,
             case when statement_log.timeout = 0 then null else statement_log.timeout end as timeout,
             case when statement_log.autoCommit then 'Y' else null end as autoCommit,

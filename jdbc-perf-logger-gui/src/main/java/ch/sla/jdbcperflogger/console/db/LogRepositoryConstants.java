@@ -15,7 +15,7 @@ public class LogRepositoryConstants {
     public static final String ID_COLUMN = "ID";
     public static final String MAX_EXEC_TIME_COLUMN = "MAX_EXEC_TIME";
     public static final String MIN_EXEC_TIME_COLUMN = "MIN_EXEC_TIME";
-    public static final String NB_ROWS_COLUMN = "nbRowsIterated";
+    public static final String NB_ROWS_COLUMN = "NBROWS";
     public static final String RAW_SQL_COLUMN = "RAWSQL";
     public static final String STMT_TYPE_COLUMN = "STATEMENTTYPE";
     public static final String THREAD_NAME_COLUMN = "threadName";

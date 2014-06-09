@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -131,19 +131,46 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
         final UUID logId = UUID.randomUUID();
         PerfLogger.logNonPreparedBatchedStatements(connectionId, logId, batchedNonPreparedStmtExecutions, databaseType,
                 wrappedStatement.getQueryTimeout(), wrappedStatement.getConnection().getAutoCommit());
+        try {
+            return internalExecuteBatchInternal(method, args, logId);
+        } finally {
+            batchedNonPreparedStmtExecutions.clear();
+        }
+
+    }
+
+    @Nullable
+    protected Object internalExecuteBatchInternal(final Method method, final @Nullable Object[] args, final UUID logId)
+            throws Throwable {
         Throwable exc = null;
+        Long updateCount = null;
         final long start = System.nanoTime();
         try {
-            return Utils.invokeUnwrapException(wrappedStatement, method, args);
+            final Object result = Utils.invokeUnwrapException(wrappedStatement, method, args);
+            if (result instanceof int[]) {
+                final int[] nbRows = (int[]) result;
+                long totalRows = 0;
+                for (int i = 0; i < nbRows.length; i++) {
+                    totalRows += nbRows[i];
+                }
+                updateCount = Long.valueOf(totalRows);
+            } else if (result instanceof long[]) {// java8
+                final long[] nbRows = (long[]) result;
+                long totalRows = 0;
+                for (int i = 0; i < nbRows.length; i++) {
+                    totalRows += nbRows[i];
+                }
+                updateCount = Long.valueOf(totalRows);
+            }
+            return result;
         } catch (final Throwable e) {
             exc = e;
             throw exc;
         } finally {
             final long end = System.nanoTime();
-            PerfLogger.logStatementExecuted(logId, end - start, null, exc);
-            batchedNonPreparedStmtExecutions.clear();
-        }
+            PerfLogger.logStatementExecuted(logId, end - start, updateCount, exc);
 
+        }
     }
 
 }

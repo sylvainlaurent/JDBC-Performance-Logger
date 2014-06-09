@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -84,13 +84,13 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
                             + " values(?, ?, ?, ?, ?, ?, ?, ?, ?)");
             addStatementLogWithAfterExecutionInfo = connectionUpdate
                     .prepareStatement("insert into statement_log (logId, tstamp, statementType, rawSql, filledSql, " //
-                            + "threadName, connectionId, timeout, autoCommit, executionDurationNanos, nbRowsIterated, " //
+                            + "threadName, connectionId, timeout, autoCommit, executionDurationNanos, nbRows, " //
                             + "fetchDurationNanos, exception)"//
                             + " values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             updateStatementLogWithResultSet = connectionUpdate
-                    .prepareStatement("update statement_log set fetchDurationNanos=?, nbRowsIterated=? where logId=?");
+                    .prepareStatement("update statement_log set fetchDurationNanos=?, nbRows=? where logId=?");
             updateStatementLogAfterExecution = connectionUpdate
-                    .prepareStatement("update statement_log set executionDurationNanos=?, nbRowsIterated=?, exception=? where logId=?");
+                    .prepareStatement("update statement_log set executionDurationNanos=?, nbRows=?, exception=? where logId=?");
 
             addBatchedStatementLog = connectionUpdate
                     .prepareStatement("insert into batched_statement_log (logId, batched_stmt_order, filledSql)"
@@ -193,7 +193,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
 
     @Override
     public synchronized void addStatementFullyExecutedLog(final Collection<StatementFullyExecutedLog> logs) {
-        LOGGER.debug("addStatementLogWithAfterExecutonInfo");
+        LOGGER.debug("addStatementLogWithAfterExecutionInfo");
         try {
             for (final StatementFullyExecutedLog log : logs) {
                 int i = 1;

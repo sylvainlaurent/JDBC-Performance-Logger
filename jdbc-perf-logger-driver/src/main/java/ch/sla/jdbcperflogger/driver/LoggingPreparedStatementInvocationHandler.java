@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -137,7 +137,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
         final UUID logId = UUID.randomUUID();
         PerfLogger.logBeforePreparedStatement(connectionId, logId, rawSql, paramValues,
                 StatementType.PREPARED_QUERY_STMT, databaseType, wrappedStatement.getQueryTimeout(), wrappedStatement
-                        .getConnection().getAutoCommit());
+                .getConnection().getAutoCommit());
         final long start = System.nanoTime();
         Throwable exc = null;
         try {
@@ -162,7 +162,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
         final long start = System.nanoTime();
         PerfLogger.logBeforePreparedStatement(connectionId, logId, rawSql, paramValues,
                 StatementType.BASE_PREPARED_STMT, databaseType, wrappedStatement.getQueryTimeout(), wrappedStatement
-                        .getConnection().getAutoCommit());
+                .getConnection().getAutoCommit());
         Throwable exc = null;
         Long updateCount = null;
         try {
@@ -187,16 +187,9 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
         PerfLogger.logPreparedBatchedStatements(connectionId, logId, rawSql,
                 batchedPreparedOrNonPreparedStmtExecutions, databaseType, wrappedStatement.getQueryTimeout(),
                 wrappedStatement.getConnection().getAutoCommit());
-        final long start = System.nanoTime();
-        Throwable exc = null;
         try {
-            return Utils.invokeUnwrapException(wrappedStatement, method, args);
-        } catch (final Throwable e) {
-            exc = e;
-            throw exc;
+            return internalExecuteBatchInternal(method, args, logId);
         } finally {
-            final long end = System.nanoTime();
-            PerfLogger.logStatementExecuted(logId, end - start, null, exc);
             batchedPreparedOrNonPreparedStmtExecutions.clear();
         }
 

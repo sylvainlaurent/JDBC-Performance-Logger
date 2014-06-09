@@ -94,6 +94,7 @@ public class PerfLoggerPanel extends JPanel {
         COLUMNS_WIDTH.put(LogRepositoryConstants.STMT_TYPE_COLUMN, 40);
         COLUMNS_WIDTH.put(LogRepositoryConstants.RAW_SQL_COLUMN, 350);
         COLUMNS_WIDTH.put(LogRepositoryConstants.FILLED_SQL_COLUMN, 200);
+        COLUMNS_WIDTH.put(LogRepositoryConstants.NB_ROWS_COLUMN, 60);
         COLUMNS_WIDTH.put(LogRepositoryConstants.THREAD_NAME_COLUMN, 200);
         COLUMNS_WIDTH.put(LogRepositoryConstants.EXEC_COUNT_COLUMN, 100);
         COLUMNS_WIDTH.put(LogRepositoryConstants.TOTAL_EXEC_TIME_COLUMN, 100);
@@ -231,7 +232,7 @@ public class PerfLoggerPanel extends JPanel {
             {
                 sqlClauseField = new JTextField();
                 sqlClauseField
-                .setToolTipText("<html>\n<p>Use this field to further filter statements by directly injecting a<br>\nWHERE clause to the SELECT statement used by the console<br>\nagainst its internal H2 database.</p>\n<p>You may use the column names that appear in the list below.<br>\nCaution: times are in nanoseconds in the internal DB<br>\nExamples:</p>\n<ul>\n<li>THREADNAME like 'Execute%'</li>\n<li>CONNECTIONNUMBER=2</li>\n<li>NBROWSITERATED>10</li>\n<li>ERROR=1</li>\n</ul>\n</html>");
+                .setToolTipText("<html>\n<p>Use this field to further filter statements by directly injecting a<br>\nWHERE clause to the SELECT statement used by the console<br>\nagainst its internal H2 database.</p>\n<p>You may use the column names that appear in the list below.<br>\nCaution: times are in nanoseconds in the internal DB<br>\nExamples:</p>\n<ul>\n<li>THREADNAME like 'Execute%'</li>\n<li>CONNECTIONNUMBER=2</li>\n<li>NBROWS>10</li>\n<li>ERROR=1</li>\n</ul>\n</html>");
                 final GridBagConstraints gbc_sqlClauseField = new GridBagConstraints();
                 gbc_sqlClauseField.insets = new Insets(0, 0, 0, 5);
                 gbc_sqlClauseField.fill = GridBagConstraints.HORIZONTAL;
