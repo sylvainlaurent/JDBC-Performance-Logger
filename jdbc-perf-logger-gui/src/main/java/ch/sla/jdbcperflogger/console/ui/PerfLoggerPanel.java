@@ -120,6 +120,7 @@ public class PerfLoggerPanel extends JPanel {
     private JTextField sqlClauseField;
     JTextField connectionPropertiesField;
     JTextField connectionCreationDurationField;
+    JLabel lblConnectionStatus;
 
     public PerfLoggerPanel(final PerfLoggerController perfLoggerController) {
 
@@ -230,7 +231,7 @@ public class PerfLoggerPanel extends JPanel {
             {
                 sqlClauseField = new JTextField();
                 sqlClauseField
-                        .setToolTipText("<html>\n<p>Use this field to further filter statements by directly injecting a<br>\nWHERE clause to the SELECT statement used by the console<br>\nagainst its internal H2 database.</p>\n<p>You may use the column names that appear in the list below.<br>\nCaution: times are in nanoseconds in the internal DB<br>\nExamples:</p>\n<ul>\n<li>THREADNAME like 'Execute%'</li>\n<li>CONNECTIONNUMBER=2</li>\n<li>NBROWSITERATED>10</li>\n<li>ERROR=1</li>\n</ul>\n</html>");
+                .setToolTipText("<html>\n<p>Use this field to further filter statements by directly injecting a<br>\nWHERE clause to the SELECT statement used by the console<br>\nagainst its internal H2 database.</p>\n<p>You may use the column names that appear in the list below.<br>\nCaution: times are in nanoseconds in the internal DB<br>\nExamples:</p>\n<ul>\n<li>THREADNAME like 'Execute%'</li>\n<li>CONNECTIONNUMBER=2</li>\n<li>NBROWSITERATED>10</li>\n<li>ERROR=1</li>\n</ul>\n</html>");
                 final GridBagConstraints gbc_sqlClauseField = new GridBagConstraints();
                 gbc_sqlClauseField.insets = new Insets(0, 0, 0, 5);
                 gbc_sqlClauseField.fill = GridBagConstraints.HORIZONTAL;
@@ -653,9 +654,9 @@ public class PerfLoggerPanel extends JPanel {
         gbc_bottomPanel.gridy = 2;
         add(bottomPanel, gbc_bottomPanel);
         final GridBagLayout gbl_bottomPanel = new GridBagLayout();
-        gbl_bottomPanel.columnWidths = new int[] { 507, 125, 125, 79, 0 };
+        gbl_bottomPanel.columnWidths = new int[] { 0, 507, 125, 125, 79, 0 };
         gbl_bottomPanel.rowHeights = new int[] { 29, 0 };
-        gbl_bottomPanel.columnWeights = new double[] { 1.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
+        gbl_bottomPanel.columnWeights = new double[] { 0.0, 1.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
         gbl_bottomPanel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
         bottomPanel.setLayout(gbl_bottomPanel);
 
@@ -685,29 +686,36 @@ public class PerfLoggerPanel extends JPanel {
             }
         });
 
+        lblConnectionStatus = new JLabel("");
+        final GridBagConstraints gbc_lblConnectionStatus = new GridBagConstraints();
+        gbc_lblConnectionStatus.insets = new Insets(0, 0, 0, 5);
+        gbc_lblConnectionStatus.gridx = 0;
+        gbc_lblConnectionStatus.gridy = 0;
+        bottomPanel.add(lblConnectionStatus, gbc_lblConnectionStatus);
+
         lblStatus = new JLabel(" ");
         final GridBagConstraints gbc_lblStatus = new GridBagConstraints();
         gbc_lblStatus.anchor = GridBagConstraints.BASELINE;
         gbc_lblStatus.fill = GridBagConstraints.HORIZONTAL;
         gbc_lblStatus.insets = new Insets(0, 0, 0, 5);
-        gbc_lblStatus.gridx = 0;
+        gbc_lblStatus.gridx = 1;
         gbc_lblStatus.gridy = 0;
         bottomPanel.add(lblStatus, gbc_lblStatus);
         final GridBagConstraints gbc_btnExportSql = new GridBagConstraints();
         gbc_btnExportSql.anchor = GridBagConstraints.BASELINE_LEADING;
         gbc_btnExportSql.insets = new Insets(0, 0, 0, 5);
-        gbc_btnExportSql.gridx = 1;
+        gbc_btnExportSql.gridx = 2;
         gbc_btnExportSql.gridy = 0;
         bottomPanel.add(btnExportSql, gbc_btnExportSql);
         final GridBagConstraints gbc_btnExportCsv = new GridBagConstraints();
         gbc_btnExportCsv.anchor = GridBagConstraints.BASELINE_LEADING;
         gbc_btnExportCsv.insets = new Insets(0, 0, 0, 5);
-        gbc_btnExportCsv.gridx = 2;
+        gbc_btnExportCsv.gridx = 3;
         gbc_btnExportCsv.gridy = 0;
         bottomPanel.add(btnExportCsv, gbc_btnExportCsv);
         final GridBagConstraints gbc_btnClose = new GridBagConstraints();
         gbc_btnClose.anchor = GridBagConstraints.BASELINE_LEADING;
-        gbc_btnClose.gridx = 3;
+        gbc_btnClose.gridx = 4;
         gbc_btnClose.gridy = 0;
         bottomPanel.add(btnClose, gbc_btnClose);
 

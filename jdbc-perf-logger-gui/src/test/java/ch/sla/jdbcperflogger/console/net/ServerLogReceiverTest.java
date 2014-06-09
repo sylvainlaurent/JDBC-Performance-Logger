@@ -28,6 +28,7 @@ public class ServerLogReceiverTest {
     public void setUp() throws Exception {
         receiver = new ServerLogReceiver(0, repository);
         receiver.start();
+        receiver.waitUntilServerIsReady();
     }
 
     @After

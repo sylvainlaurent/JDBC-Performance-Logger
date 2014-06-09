@@ -29,6 +29,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -435,17 +436,24 @@ public class PerfLoggerController {
             doRefreshData(currentSelectLogRunner);
 
             final StringBuilder txt = new StringBuilder();
-            if (logReceiver.isServerMode()) {
-                txt.append(connectionsCount);
-                txt.append(" connection(s)");
-            } else {
-                if (logReceiver.getConnectionsCount() == 0) {
-                    txt.append("Not connected");
+            if (logReceiver.getConnectionsCount() == 0) {
+                perfLoggerPanel.lblConnectionStatus.setIcon(new ImageIcon(PerfLoggerController.class
+                        .getResource("/icons/network-offline.png")));
+                final Throwable lastConnectionError = logReceiver.getLastConnectionError();
+                if (lastConnectionError != null) {
+                    perfLoggerPanel.lblConnectionStatus.setToolTipText(lastConnectionError.toString());
                 } else {
-                    txt.append("Connected");
+                    perfLoggerPanel.lblConnectionStatus.setToolTipText("");
+                }
+            } else {
+                perfLoggerPanel.lblConnectionStatus.setIcon(new ImageIcon(PerfLoggerController.class
+                        .getResource("/icons/network-transmit-receive.png")));
+                if (logReceiver.isServerMode()) {
+                    perfLoggerPanel.lblConnectionStatus.setToolTipText(connectionsCount + " connection(s)");
+                } else {
+                    perfLoggerPanel.lblConnectionStatus.setToolTipText("Connected");
                 }
             }
-            txt.append(" - ");
             txt.append(logRepositoryRead.countStatements());
             txt.append(" statements logged - ");
             txt.append(TimeUnit.NANOSECONDS.toMillis(logRepositoryRead.getTotalExecAndFetchTimeNanos()));

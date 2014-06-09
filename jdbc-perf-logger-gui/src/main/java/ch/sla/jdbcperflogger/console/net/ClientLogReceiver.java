@@ -42,13 +42,13 @@ public class ClientLogReceiver extends AbstractLogReceiver {
             logPersister.start();
             while (!disposed) {
                 try {
-                    final InetSocketAddress addr = new InetSocketAddress(targetRemoteAddress.getHostName(),
-                            targetRemoteAddress.getPort());
-                    LOGGER.debug("Trying to connect to {}", targetRemoteAddress);
-                    final Socket socket = new Socket(addr.getAddress(), addr.getPort());
+                    LOGGER.debug("Trying to connect to {}:{}", new Object[] { targetRemoteAddress.getHostName(),
+                            targetRemoteAddress, targetRemoteAddress.getPort() });
+                    final Socket socket = new Socket(targetRemoteAddress.getHostName(), targetRemoteAddress.getPort());
                     LOGGER.info("Connected to remote {}", targetRemoteAddress);
                     handleConnection(socket, logPersister);
                 } catch (final IOException e) {
+                    lastConnectionError = e;
                     LOGGER.debug("expected error", e);
                 }
                 LOGGER.debug("Sleeping before trying to connect again to remote {}", targetRemoteAddress);

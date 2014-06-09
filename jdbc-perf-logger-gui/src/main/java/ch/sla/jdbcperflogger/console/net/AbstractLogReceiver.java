@@ -22,6 +22,8 @@ import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +38,8 @@ public abstract class AbstractLogReceiver extends Thread {
     protected volatile boolean connected;
     protected volatile boolean paused = false;
     protected volatile boolean disposed = false;
+    @Nullable
+    protected Throwable lastConnectionError;
 
     public AbstractLogReceiver() {
         this.setDaemon(true);
@@ -83,9 +87,11 @@ public abstract class AbstractLogReceiver extends Thread {
                     continue;
                 } catch (final EOFException e) {
                     LOGGER.debug("The remote closed its connection");
+                    lastConnectionError = e;
                     break;
                 } catch (final SocketTimeoutException e) {
-                    LOGGER.trace("timeout while reading socket");
+                    LOGGER.debug("timeout while reading socket");
+                    lastConnectionError = e;
                     continue;
                 }
                 if (o == null || paused || disposed) {
@@ -104,4 +110,9 @@ public abstract class AbstractLogReceiver extends Thread {
     }
 
     public abstract boolean isServerMode();
+
+    public @Nullable Throwable getLastConnectionError() {
+        return lastConnectionError;
+    }
+
 }
