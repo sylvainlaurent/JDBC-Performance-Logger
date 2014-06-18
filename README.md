@@ -31,8 +31,21 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 - java 7 or later for the GUI 
 - java 8 to test new JDBC 4.2 methods
 
+## How to download
+- The package containing both the console and driver is available here : https://github.com/sylvainlaurent/JDBC-Performance-Logger/releases
+- The driver is also available on Maven Central :
+
+```xml
+<dependency>
+    <groupId>com.github.sylvainlaurent.jdbcperflogger</groupId>
+    <artifactId>jdbc-perf-logger-driver</artifactId>
+    <version>...</version>
+</dependency>
+```
+
 ## How to setup the JDBC Driver
-- Add one (and only one) of the following set of files to the classpath of the JDBC-client application (the files can be found in the `lib` directory of the binary distribution)
+- If using maven, add the `<dependency>` snippet above (replacing the version with the latest one) to your `pom.xml`
+- If NOT using maven, add one (and only one) of the following set of files to the classpath of the JDBC-client application (the files can be found in the `lib` directory of the binary distribution)
  - `jdbc-perf-logger-driver` and `slf4j-api` jar files
  - `jdbc-perf-logger-driver-depsincluded` jar file
 - Change the driver class name to `ch.sla.jdbcperflogger.driver.WrappingDriver`
@@ -41,7 +54,7 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 - (optional) the location of the config file can be overriden with the System property `jdbcperflogger.config.location`. Example : `java -Djdbcperflogger.config.location=/Users/me/myjdbcperflogger.xml ....`
 
 ## How to use the graphical console
-- launch `bin/jdbc-performance-logger-gui` (unix/MacOS) or `bin\jdbc-performance-logger-gui.bat`
+- launch `bin/jdbc-performance-logger-gui.sh` (unix/MacOS) or `bin\jdbc-performance-logger-gui.bat`
 - by default the console waits for connections from jdbc-logger-drivers on port 4561. All statements will be logged to the same tab
 - The console can also connect to a jdbc-perf-logger-driver instance on a specific host and port. A tab is created for each host/port combination.
 - Once a tab is opened, the status of the connection is indicated at the bottom of the panel. If the connection is broken and was initiated by the console, the console will try to reconnect regularly. If the connection was initiated by the driver, the latter will try to reconnect regularly.

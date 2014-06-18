@@ -29,11 +29,6 @@
     <tag>HEAD</tag>
   </scm>
 
-  <modules>
-    <module>jdbc-perf-logger-driver</module>
-    <module>jdbc-perf-logger-gui</module>
-  </modules>
-
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
@@ -117,7 +112,7 @@
         <configuration>
           <serverId>ossrh</serverId>
           <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-          <autoReleaseAfterClose>true</autoReleaseAfterClose>
+          <autoReleaseAfterClose>false</autoReleaseAfterClose>
         </configuration>
       </plugin>
     </plugins>
@@ -134,12 +129,26 @@
 
   <profiles>
     <profile>
+      <id>java7</id>
+      <activation>
+        <jdk>1.7</jdk>
+      </activation>
+      <modules>
+        <module>jdbc-perf-logger-driver</module>
+        <module>jdbc-perf-logger-gui</module>
+      </modules>
+    </profile>
+    <profile>
       <id>java8</id>
       <activation>
         <jdk>1.8</jdk>
       </activation>
       <modules>
+        <!-- we specifically put jdbc-perf-logger-java8-tests not in last position to work around a bug in nexus-staging-maven-plugin 
+          that deploys the last module of the reactor even if it is configured not to be deployed... -->
         <module>jdbc-perf-logger-java8-tests</module>
+        <module>jdbc-perf-logger-driver</module>
+        <module>jdbc-perf-logger-gui</module>
       </modules>
     </profile>
     <profile>
