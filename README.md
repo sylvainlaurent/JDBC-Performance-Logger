@@ -25,6 +25,7 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 - Displays the `queryTimeout` of each statement (no value means 0 or no timeout) (since 0.5.0)
 - Displays the `autoCommit` status of each statement (since 0.6.0)
 - Supports new java 8 methods like `executeLargeUpdate` (since 0.6.2)
+- Auto configuration for [Spring Boot](http://projects.spring.io/spring-boot/) (since 0.7.2)
 
 ## Requirements
 - java 6 or later for the driver
@@ -44,6 +45,7 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 ```
 
 ## How to setup the JDBC Driver
+- If using Spring-Boot see [README.md](jdbc-perf-logger-spring-boot-starter/README.md)
 - If using maven, add the `<dependency>` snippet above (replacing the version with the latest one) to your `pom.xml`
 - If NOT using maven, add one (and only one) of the following set of files to the classpath of the JDBC-client application (the files can be found in the `lib` directory of the binary distribution)
  - `jdbc-perf-logger-driver` and `slf4j-api` jar files
@@ -67,6 +69,24 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 ## Current limitations
 - No DataSource nor XADataSource class provided
 - Only the first ResultSet of queries is logged (`Statement.getMoreResults()` works but no effort has been put to log the fetching of those ResultSets)
+
+## Potential ClassLoader issues
+Here are the rules to observe :
+- The jdbc-perf-logger must be able to use your bare JDBC driver
+- The DataSource you use must be able to use the jdbc-perf-logger driver classes
+
+Here are the most common cases with Tomcat :
+- Tomcat _shared.loader_ includes
+  - the DataSource implementation (which is by default for tomcat 7 DataSource)
+  - the bare JDBC driver
+  - the jdbc-perf-logger driver
+This is the case if you place your JDBC driver and jdbc-perf-logger driver in the `lib` directory of `CATALINA_BASE` or `CATALINA_HOME`.
+This can also be done by configuring the `catalina.properties` file.
+- your WAR file embeds the jars for
+  - the DataSource implementation
+  - the bare JDBC driver
+  - the jdbc-perf-logger driver
+- the JVM classpath includes the bare JDBC driver and the jdbc-perf-logger driver and the Tomcat _shared.loader_ includes the DataSource implementation.
 
 ## Source code
 The source code is available on GitHub : https://github.com/sylvainlaurent/JDBC-Performance-Logger
