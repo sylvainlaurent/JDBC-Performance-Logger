@@ -30,10 +30,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import ch.sla.jdbcperflogger.DriverConfig;
+import ch.sla.jdbcperflogger.Logger;
 import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting;
 
 /**
@@ -44,7 +42,7 @@ import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting;
  */
 public class WrappingDriver implements Driver {
     public final static String URL_PREFIX = "jdbcperflogger:";
-    private final static Logger LOGGER = LoggerFactory.getLogger(WrappingDriver.class);
+    private final static Logger LOGGER = Logger.getLogger(WrappingDriver.class);
 
     private final static WrappingDriver INSTANCE = new WrappingDriver();
     private final static Map<String, Driver> underlyingDrivers = new ConcurrentHashMap<String, Driver>();
@@ -90,7 +88,7 @@ public class WrappingDriver implements Driver {
             return null;
         }
         assert url != null;
-        LOGGER.debug("connect url=[{}]", url);
+        LOGGER.debug("connect url=[" + url + "]");
         final String unWrappedUrl = extractUrlForWrappedDriver(url);
 
         Driver underlyingDriver = null;

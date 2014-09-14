@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,10 +31,8 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import ch.sla.jdbcperflogger.DatabaseType;
+import ch.sla.jdbcperflogger.Logger;
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.TxCompletionType;
 import ch.sla.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
@@ -47,13 +45,12 @@ import ch.sla.jdbcperflogger.model.StatementLog;
 import ch.sla.jdbcperflogger.model.TxCompleteLog;
 
 public class PerfLogger {
-    private final static Logger LOGGER_ORIGINAL_SQL = LoggerFactory.getLogger(PerfLogger.class.getName()
-            + ".originalSql");
-    private final static Logger LOGGER_FILLED_SQL = LoggerFactory.getLogger(PerfLogger.class.getName() + ".filledSql");
-    private final static Logger LOGGER_EXECUTED = LoggerFactory.getLogger(PerfLogger.class.getName() + ".executed");
-    private final static Logger LOGGER_CLOSED_RESULTSET = LoggerFactory.getLogger(PerfLogger.class.getName()
+    private final static Logger LOGGER_ORIGINAL_SQL = Logger.getLogger(PerfLogger.class.getName() + ".originalSql");
+    private final static Logger LOGGER_FILLED_SQL = Logger.getLogger(PerfLogger.class.getName() + ".filledSql");
+    private final static Logger LOGGER_EXECUTED = Logger.getLogger(PerfLogger.class.getName() + ".executed");
+    private final static Logger LOGGER_CLOSED_RESULTSET = Logger.getLogger(PerfLogger.class.getName()
             + ".closedResultSet");
-    private final static Logger LOGGER_BATCHED_STATEMENTS_DETAIL = LoggerFactory.getLogger(PerfLogger.class.getName()
+    private final static Logger LOGGER_BATCHED_STATEMENTS_DETAIL = Logger.getLogger(PerfLogger.class.getName()
             + ".batchedStatementDetail");
 
     private final static Pattern PSTMT_PARAMETERS_PATTERN = Pattern.compile("\\?");
@@ -77,7 +74,7 @@ public class PerfLogger {
     public static void logBeforeStatement(final UUID connectionId, final UUID logId, final String sql,
             final StatementType statementType, final int timeout, final boolean autoCommit) {
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
-            LOGGER_ORIGINAL_SQL.debug("Before execution of non-prepared stmt {}: {}", logId, sql);
+            LOGGER_ORIGINAL_SQL.debug("Before execution of non-prepared stmt " + logId + ": " + sql);
         }
         final long now = System.currentTimeMillis();
         PerfLoggerRemoting.postLog(new StatementLog(connectionId, logId, now, statementType, sql, Thread
@@ -88,11 +85,11 @@ public class PerfLogger {
             final PreparedStatementValuesHolder pstmtValues, final StatementType statementType,
             final DatabaseType databaseType, final int timeout, final boolean autoCommit) {
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
-            LOGGER_ORIGINAL_SQL.debug("Before execution of prepared stmt {}: {}", logId, rawSql);
+            LOGGER_ORIGINAL_SQL.debug("Before execution of prepared stmt " + logId + ": " + rawSql);
         }
         final String filledSql = fillParameters(rawSql, pstmtValues, databaseType);
         if (LOGGER_FILLED_SQL.isDebugEnabled()) {
-            LOGGER_FILLED_SQL.debug("Before execution of prepared stmt {}: {}", logId, filledSql);
+            LOGGER_FILLED_SQL.debug("Before execution of prepared stmt " + logId + ": " + filledSql);
         }
         final long now = System.currentTimeMillis();
         PerfLoggerRemoting.postLog(new StatementLog(connectionId, logId, now, statementType, rawSql, filledSql, Thread
@@ -105,13 +102,13 @@ public class PerfLogger {
 
         final long now = System.currentTimeMillis();
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
-            LOGGER_ORIGINAL_SQL.debug("Before execution of {} batched non-prepared statements",
-                    batchedExecutions.size());
+            LOGGER_ORIGINAL_SQL.debug("Before execution of " + batchedExecutions.size()
+                    + " batched non-prepared statements");
         }
         for (int i = 0; i < batchedExecutions.size(); i++) {
             final String sql = batchedExecutions.get(i);
             if (LOGGER_BATCHED_STATEMENTS_DETAIL.isDebugEnabled()) {
-                LOGGER_BATCHED_STATEMENTS_DETAIL.debug("#{}: {}", i, sql);
+                LOGGER_BATCHED_STATEMENTS_DETAIL.debug("#" + i + ": " + sql);
             }
         }
         PerfLoggerRemoting.postLog(new BatchedNonPreparedStatementsLog(connectionId, logId, now, batchedExecutions,
@@ -123,8 +120,8 @@ public class PerfLogger {
             final boolean autoCommit) {
         final long now = System.currentTimeMillis();
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
-            LOGGER_ORIGINAL_SQL.debug("Before execution of {} batched prepared statements with raw sql {}",
-                    batchedExecutions.size(), rawSql);
+            LOGGER_ORIGINAL_SQL.debug("Before execution of " + batchedExecutions.size()
+                    + " batched prepared statements with raw sql " + rawSql);
         }
         final List<String> filledSqlList = new ArrayList<String>(batchedExecutions.size());
 
@@ -138,7 +135,7 @@ public class PerfLogger {
             }
             filledSqlList.add(filledSql);
             if (LOGGER_BATCHED_STATEMENTS_DETAIL.isDebugEnabled()) {
-                LOGGER_BATCHED_STATEMENTS_DETAIL.debug("#{}: {}", i, filledSql);
+                LOGGER_BATCHED_STATEMENTS_DETAIL.debug("#" + i + ": " + filledSql);
             }
         }
         PerfLoggerRemoting.postLog(new BatchedPreparedStatementsLog(connectionId, logId, now, rawSql, filledSqlList,
@@ -167,8 +164,8 @@ public class PerfLogger {
     public static void logClosedResultSet(final UUID logId, final long resultSetIterationTimeNanos,
             final int nbRowsIterated) {
         if (LOGGER_CLOSED_RESULTSET.isDebugEnabled()) {
-            LOGGER_CLOSED_RESULTSET.debug("{}ms to use and close ResultSet, iterating {} rows for statement #{}",
-                    new Object[] { TimeUnit.NANOSECONDS.toMillis(resultSetIterationTimeNanos), nbRowsIterated, logId });
+            LOGGER_CLOSED_RESULTSET.debug(TimeUnit.NANOSECONDS.toMillis(resultSetIterationTimeNanos)
+                    + "ms to use and close ResultSet, iterating " + nbRowsIterated + " rows for statement #" + logId);
         }
         PerfLoggerRemoting.postLog(new ResultSetLog(logId, resultSetIterationTimeNanos, nbRowsIterated));
     }

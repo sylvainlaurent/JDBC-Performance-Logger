@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,13 +21,11 @@ import java.net.Socket;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import ch.sla.jdbcperflogger.Logger;
 import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting.LogSender;
 
 class PerfLoggerServerThread extends Thread {
-    private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerServerThread.class);
+    private final static Logger LOGGER = Logger.getLogger(PerfLoggerServerThread.class);
 
     ServerSocket serverSocket;
     boolean done;

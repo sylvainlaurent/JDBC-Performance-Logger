@@ -22,13 +22,11 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import ch.sla.jdbcperflogger.Logger;
 import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting.LogSender;
 
 class PerfLoggerClientThread extends Thread {
-    private final static Logger LOGGER = LoggerFactory.getLogger(PerfLoggerClientThread.class);
+    private final static Logger LOGGER = Logger.getLogger(PerfLoggerClientThread.class);
 
     private static final int CONNECT_TIMEOUT_MS = 30000;
 

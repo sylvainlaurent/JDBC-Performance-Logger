@@ -17,8 +17,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -26,7 +24,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 public class DriverConfig {
-    private final static Logger LOGGER = LoggerFactory.getLogger(DriverConfig.class);
+    private final static Logger LOGGER = Logger.getLogger(DriverConfig.class);
 
     public final static DriverConfig INSTANCE;
 

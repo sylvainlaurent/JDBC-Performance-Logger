@@ -27,10 +27,8 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import ch.sla.jdbcperflogger.DatabaseType;
+import ch.sla.jdbcperflogger.Logger;
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.logger.PerfLogger;
 import ch.sla.jdbcperflogger.model.PreparedStatementValuesHolder;
@@ -39,7 +37,7 @@ import ch.sla.jdbcperflogger.model.SqlTypedValue;
 public class LoggingPreparedStatementInvocationHandler extends LoggingStatementInvocationHandler {
     private static final String JAVA_SQL_SQL_TYPE = "java.sql.SQLType";
     private static final String CLEAR_PARAMETERS = "clearParameters";
-    private static final Logger LOGGER = LoggerFactory.getLogger(LoggingPreparedStatementInvocationHandler.class);
+    private static final Logger LOGGER = Logger.getLogger(LoggingPreparedStatementInvocationHandler.class);
 
     @Nullable
     private static final Method getVendorTypeNumberMethod;// for java 8
@@ -137,7 +135,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
         final UUID logId = UUID.randomUUID();
         PerfLogger.logBeforePreparedStatement(connectionId, logId, rawSql, paramValues,
                 StatementType.PREPARED_QUERY_STMT, databaseType, wrappedStatement.getQueryTimeout(), wrappedStatement
-                .getConnection().getAutoCommit());
+                        .getConnection().getAutoCommit());
         final long start = System.nanoTime();
         Throwable exc = null;
         try {
@@ -162,7 +160,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
         final long start = System.nanoTime();
         PerfLogger.logBeforePreparedStatement(connectionId, logId, rawSql, paramValues,
                 StatementType.BASE_PREPARED_STMT, databaseType, wrappedStatement.getQueryTimeout(), wrappedStatement
-                .getConnection().getAutoCommit());
+                        .getConnection().getAutoCommit());
         Throwable exc = null;
         Long updateCount = null;
         try {

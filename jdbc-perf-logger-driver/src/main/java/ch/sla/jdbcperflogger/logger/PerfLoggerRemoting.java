@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,10 +30,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import ch.sla.jdbcperflogger.DriverConfig;
+import ch.sla.jdbcperflogger.Logger;
 import ch.sla.jdbcperflogger.driver.LoggingConnectionInvocationHandler;
 import ch.sla.jdbcperflogger.model.BufferFullLogMessage;
 import ch.sla.jdbcperflogger.model.ConnectionInfo;
@@ -77,7 +75,7 @@ public class PerfLoggerRemoting {
 
     // public for tests
     public static class LogSender implements Runnable {
-        private final static Logger LOGGER2 = LoggerFactory.getLogger(LogSender.class);
+        private final static Logger LOGGER2 = Logger.getLogger(LogSender.class);
 
         private final BlockingQueue<LogMessage> logsToSend = new LinkedBlockingQueue<LogMessage>(10000);
         private final Socket socket;
@@ -140,7 +138,7 @@ public class PerfLoggerRemoting {
             } catch (final IOException e) {
                 LOGGER2.warn("socket error", e);
             } finally {
-                LOGGER2.info("closing connection with {}", socket);
+                LOGGER2.info("closing connection with " + socket);
                 senders.remove(this);
                 if (oos != null) {
                     try {
