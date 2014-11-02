@@ -65,6 +65,7 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 ## Tested databases
 - H2 (lightly, used for our own unit tests)
 - Oracle 10.2/11.2
+- MySQL
 
 ## Current limitations
 - No DataSource nor XADataSource class provided
