@@ -1,1 +1,16 @@
 language: java
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "lsTdhAiNAYTfpi14mofp3W8HauFE5tj40TOuyGgNGfNNCuk0dktAuAnBVZyb/ylaRqedzMJ7LCBjFZFkycMdh0nQO9TgEav0WaFjflDIuUg6BhWi+sV/uNVUBUtUC5eXYEZbBlhJ+a2h4/oCSgPdRVrNdPQxunMZHegrFYzKWk4="
+
+addons:
+  coverity_scan:
+    project:
+      name: "sylvainlaurent/JDBC-Performance-Logger"
+      description: "A JDBC driver wrapper and GUI to analyze statement performance"
+    notification_email: slaurent@apache.org
+    build_command_prepend: "mvn clean"
+    build_command:   "mvn -DskipTests=true compile"
+    branch_pattern: master
