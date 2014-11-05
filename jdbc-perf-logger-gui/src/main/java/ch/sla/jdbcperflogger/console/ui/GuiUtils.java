@@ -1,12 +1,13 @@
 package ch.sla.jdbcperflogger.console.ui;
 
-import javax.annotation.Nullable;
 import java.awt.Desktop;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Properties;
+
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,18 +17,17 @@ public class GuiUtils {
 
     static String getAppVersion() {
         final Properties mavenProps = new Properties();
-        try {
-            @Nullable
-            InputStream pomPropsFile = WelcomePanel.class
-                    .getResourceAsStream("/META-INF/maven/ch.sla/jdbc-perf-logger-gui/pom.properties");
-            if(pomPropsFile!=null) {
+        try (@Nullable
+        InputStream pomPropsFile = WelcomePanel.class
+                .getResourceAsStream("/META-INF/maven/ch.sla/jdbc-perf-logger-gui/pom.properties")) {
+            if (pomPropsFile != null) {
                 mavenProps.load(pomPropsFile);
             }
             return mavenProps.getProperty("version");
         } catch (final IOException e) {
             LOGGER.warn("", e);
+            return "unknown";
         }
-        return "unknown";
     }
 
     static void openWebSite(final String address) {

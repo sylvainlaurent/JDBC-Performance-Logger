@@ -30,7 +30,6 @@ import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.h2.Driver;
@@ -120,15 +119,18 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
     private static Connection createDbConnection(final String path, final boolean inRecursion) throws SQLException {
         Driver.class.getClass();
         LOGGER.debug("Opening H2 connection for log repository " + path);
+        Connection conn = null;
         try {
-            @Nonnull
-            final Connection conn = DriverManager.getConnection("jdbc:h2:mem:" + path);
+            conn = DriverManager.getConnection("jdbc:h2:mem:" + path);
             LOGGER.debug("connection commit mode auto={}", conn.getAutoCommit());
             conn.setAutoCommit(true);
             checkSchemaVersion(conn);
 
             return conn;
         } catch (final SQLException exc) {
+            if (conn != null) {
+                conn.close();
+            }
             if (inRecursion) {
                 throw exc;
             }
