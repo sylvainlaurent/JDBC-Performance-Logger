@@ -15,18 +15,16 @@
  */
 package ch.sla.jdbcperflogger.console.ui;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.event.MouseEvent;
-import java.math.BigDecimal;
-
-import javax.annotation.Nullable;
-import javax.swing.JTable;
-import javax.swing.table.JTableHeader;
-import javax.swing.table.TableCellRenderer;
-
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.console.db.LogRepositoryConstants;
+
+import javax.annotation.Nullable;
+import javax.swing.*;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
+import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.math.BigDecimal;
 
 public class CustomTable extends JTable {
     private static final long serialVersionUID = 1L;
@@ -102,7 +100,7 @@ public class CustomTable extends JTable {
                     if (duration == null) {
                         // in case we are in group by mode
                         final BigDecimal val = (BigDecimal) model.getValueAt(modelIndex,
-                                LogRepositoryConstants.TOTAL_EXEC_TIME_COLUMN);
+                                LogRepositoryConstants.TOTAL_EXEC_PLUS_FETCH_TIME_COLUMN);
                         if (val != null) {
                             duration = val.longValue();
                         }

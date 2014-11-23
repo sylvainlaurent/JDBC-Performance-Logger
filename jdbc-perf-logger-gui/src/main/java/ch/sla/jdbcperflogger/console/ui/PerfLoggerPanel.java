@@ -16,25 +16,25 @@
 
 package ch.sla.jdbcperflogger.console.ui;
 
-import static java.awt.event.InputEvent.CTRL_MASK;
-import static java.awt.event.KeyEvent.VK_BACK_SPACE;
-import static java.awt.event.KeyEvent.VK_DELETE;
+import ch.sla.jdbcperflogger.console.db.LogRepositoryConstants;
+import ch.sla.jdbcperflogger.console.ui.PerfLoggerController.FilterType;
+import ch.sla.jdbcperflogger.console.ui.PerfLoggerController.GroupBy;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
+import org.fife.ui.rsyntaxtextarea.TokenTypes;
 
-import java.awt.Color;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.SystemColor;
-import java.awt.Toolkit;
+import javax.annotation.Nullable;
+import javax.swing.*;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.event.UndoableEditEvent;
+import javax.swing.event.UndoableEditListener;
+import java.awt.*;
 import java.awt.datatransfer.StringSelection;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.EnumSet;
@@ -42,38 +42,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.TitledBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.event.UndoableEditEvent;
-import javax.swing.event.UndoableEditListener;
-
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
-import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
-import org.fife.ui.rsyntaxtextarea.TokenTypes;
-
-import ch.sla.jdbcperflogger.console.db.LogRepositoryConstants;
-import ch.sla.jdbcperflogger.console.ui.PerfLoggerController.FilterType;
-import ch.sla.jdbcperflogger.console.ui.PerfLoggerController.GroupBy;
+import static java.awt.event.InputEvent.CTRL_MASK;
+import static java.awt.event.KeyEvent.VK_BACK_SPACE;
+import static java.awt.event.KeyEvent.VK_DELETE;
 
 /**
  * @author slaurent
@@ -97,7 +68,7 @@ public class PerfLoggerPanel extends JPanel {
         COLUMNS_WIDTH.put(LogRepositoryConstants.NB_ROWS_COLUMN, 60);
         COLUMNS_WIDTH.put(LogRepositoryConstants.THREAD_NAME_COLUMN, 200);
         COLUMNS_WIDTH.put(LogRepositoryConstants.EXEC_COUNT_COLUMN, 100);
-        COLUMNS_WIDTH.put(LogRepositoryConstants.TOTAL_EXEC_TIME_COLUMN, 100);
+        COLUMNS_WIDTH.put(LogRepositoryConstants.TOTAL_EXEC_PLUS_FETCH_TIME_COLUMN, 100);
         COLUMNS_WIDTH.put(LogRepositoryConstants.TIMEOUT_COLUMN, 70);
         COLUMNS_WIDTH.put(LogRepositoryConstants.AUTOCOMMIT_COLUMN, 40);
         COLUMNS_WIDTH.put(LogRepositoryConstants.ERROR_COLUMN, 0);

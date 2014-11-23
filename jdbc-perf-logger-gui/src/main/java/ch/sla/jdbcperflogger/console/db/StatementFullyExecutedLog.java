@@ -1,13 +1,12 @@
 package ch.sla.jdbcperflogger.console.db;
 
-import java.util.UUID;
-
-import javax.annotation.Nullable;
-
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.model.ResultSetLog;
 import ch.sla.jdbcperflogger.model.StatementExecutedLog;
 import ch.sla.jdbcperflogger.model.StatementLog;
+
+import javax.annotation.Nullable;
+import java.util.UUID;
 
 public class StatementFullyExecutedLog {
     private final StatementLog statementLog;
@@ -16,7 +15,7 @@ public class StatementFullyExecutedLog {
     private final ResultSetLog resultSetLog;
 
     public StatementFullyExecutedLog(final StatementLog statementLog, final StatementExecutedLog statementExecutedLog,
-            @Nullable final ResultSetLog resultSetLog) {
+                                     @Nullable final ResultSetLog resultSetLog) {
         this.statementLog = statementLog;
         this.statementExecutedLog = statementExecutedLog;
         this.resultSetLog = resultSetLog;
@@ -66,6 +65,10 @@ public class StatementFullyExecutedLog {
         return statementExecutedLog.getExecutionTimeNanos();
     }
 
+    public long getExecutionPlusFetchTimeNanos() {
+        return statementExecutedLog.getExecutionTimeNanos() + getResultSetIterationTimeNanosDefault0();
+    }
+
     @Nullable
     public Long getUpdateCount() {
         return statementExecutedLog.getUpdateCount();
@@ -81,6 +84,15 @@ public class StatementFullyExecutedLog {
         // extracted to local variable to make eclipse null-analysis happy...
         final ResultSetLog resultSetLog2 = resultSetLog;
         return resultSetLog2 != null ? resultSetLog2.getResultSetIterationTimeNanos() : null;
+    }
+
+    public long getResultSetIterationTimeNanosDefault0() {
+        Long nanos = getResultSetIterationTimeNanos();
+        if (nanos != null) {
+            return nanos.longValue();
+        } else {
+            return 0L;
+        }
     }
 
     @Nullable
