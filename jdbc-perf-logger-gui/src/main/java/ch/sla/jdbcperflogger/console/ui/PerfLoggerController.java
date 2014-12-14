@@ -254,6 +254,7 @@ public class PerfLoggerController {
             perfLoggerPanel.table.setTxtToHighlight(txtFilter);
             perfLoggerPanel.table.setMinDurationNanoToHighlight(minDurationNanos);
         }
+        perfLoggerPanel.setTxtToHighlight(txtFilter);
 
         refreshDataTask.forceRefresh();
         refreshDataScheduledExecutorService.submit(refreshDataTask);
@@ -349,14 +350,19 @@ public class PerfLoggerController {
                 txt2 += "\n\n" + sqlException;
             }
         }
-        perfLoggerPanel.txtFieldRawSql.setText(txt1);
-        perfLoggerPanel.txtFieldRawSql.select(0, 0);
-        perfLoggerPanel.txtFieldFilledSql.setText(txt2);
-        perfLoggerPanel.txtFieldFilledSql.select(0, 0);
+        if (!txt1.equals(perfLoggerPanel.txtFieldRawSql.getText())) {
+            perfLoggerPanel.txtFieldRawSql.setText(txt1);
+            // perfLoggerPanel.txtFieldRawSql.select(0, 0);
+        }
+        if (!txt2.equals(perfLoggerPanel.txtFieldFilledSql.getText())) {
+            perfLoggerPanel.txtFieldFilledSql.setText(txt2);
+            // perfLoggerPanel.txtFieldFilledSql.select(0, 0);
+        }
+        perfLoggerPanel.setTxtToHighlight(txtFilter);
         perfLoggerPanel.connectionUrlField.setText(connectionUrl);
         perfLoggerPanel.connectionCreationDateField.setText(connectionCreationDate);
         perfLoggerPanel.connectionCreationDurationField
-        .setText(connectionCreationDurationMillis != null ? connectionCreationDurationMillis.toString() : "");
+                .setText(connectionCreationDurationMillis != null ? connectionCreationDurationMillis.toString() : "");
         perfLoggerPanel.connectionPropertiesField.setText(connectionPropertiesString);
 
         perfLoggerPanel.setDeltaTimestampBaseMillis(deltaTimestampBaseMillis);
