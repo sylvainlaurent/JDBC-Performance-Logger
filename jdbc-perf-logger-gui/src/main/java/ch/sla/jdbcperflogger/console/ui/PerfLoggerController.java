@@ -352,11 +352,11 @@ public class PerfLoggerController {
         }
         if (!txt1.equals(perfLoggerPanel.txtFieldRawSql.getText())) {
             perfLoggerPanel.txtFieldRawSql.setText(txt1);
-            // perfLoggerPanel.txtFieldRawSql.select(0, 0);
+            perfLoggerPanel.txtFieldRawSql.select(0, 0);
         }
         if (!txt2.equals(perfLoggerPanel.txtFieldFilledSql.getText())) {
             perfLoggerPanel.txtFieldFilledSql.setText(txt2);
-            // perfLoggerPanel.txtFieldFilledSql.select(0, 0);
+            perfLoggerPanel.txtFieldFilledSql.select(0, 0);
         }
         perfLoggerPanel.setTxtToHighlight(txtFilter);
         perfLoggerPanel.connectionUrlField.setText(connectionUrl);
