@@ -226,7 +226,7 @@ public class WrappingDriverTest {
         {
             final Statement statement = connection.createStatement();
             statement
-            .execute("create table test (key_id int, myDate date, myTimestamp timestamp(0), myTime time, myBoolean boolean);");
+                    .execute("create table test (key_id int, myDate date, myTimestamp timestamp(0), myTime time, myBoolean boolean, myString varchar(128));");
             statement.close();
         }
         {
@@ -240,14 +240,22 @@ public class WrappingDriverTest {
 
             assertEquals("select * from test where key_id=1 /*setInt*/",
                     ((StatementLog) lastLogMessage3).getFilledSql());
+
             statement.setInt(1, 2);
             statement.executeQuery().close();
             assertEquals("select * from test where key_id=2 /*setInt*/",
                     ((StatementLog) lastLogMessage3).getFilledSql());
+
             statement.setByte(1, (byte) 112);
             statement.executeQuery().close();
             assertEquals("select * from test where key_id=112 /*setByte*/",
                     ((StatementLog) lastLogMessage3).getFilledSql());
+
+            statement.setLong(1, 123);
+            statement.executeQuery().close();
+            assertEquals("select * from test where key_id=123 /*setLong*/",
+                    ((StatementLog) lastLogMessage3).getFilledSql());
+
             statement.setLong(1, 123);
             statement.executeQuery().close();
             assertEquals("select * from test where key_id=123 /*setLong*/",
@@ -314,6 +322,14 @@ public class WrappingDriverTest {
             statement.setBoolean(1, true);
             statement.executeQuery().close();
             assertEquals("select * from test where myBoolean=true /*setBoolean*/",
+                    ((StatementLog) lastLogMessage3).getFilledSql());
+            statement.close();
+        }
+        {
+            final PreparedStatement statement = connection.prepareStatement("select * from test where myString=?");
+            statement.setString(1, "hel'lo");
+            statement.executeQuery().close();
+            assertEquals("select * from test where myString='hel''lo' /*setString*/",
                     ((StatementLog) lastLogMessage3).getFilledSql());
             statement.close();
         }

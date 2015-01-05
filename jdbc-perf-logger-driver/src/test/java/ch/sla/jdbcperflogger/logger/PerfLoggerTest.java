@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -74,8 +74,16 @@ public class PerfLoggerTest {
 
     @Test
     public void testgetValueAsString_string() {
-        final String val = PerfLogger.getValueAsString(new SqlTypedValue("toto", Types.VARCHAR), DatabaseType.ORACLE);
+        String val;
+
+        val = PerfLogger.getValueAsString(new SqlTypedValue("toto", Types.VARCHAR), DatabaseType.ORACLE);
         Assert.assertEquals("'toto' /*VARCHAR*/", val);
+
+        val = PerfLogger.getValueAsString(new SqlTypedValue("hel'lo", Types.VARCHAR), DatabaseType.ORACLE);
+        Assert.assertEquals("'hel''lo' /*VARCHAR*/", val);
+
+        val = PerfLogger.getValueAsString(new SqlTypedValue("java's cool, it''s", Types.VARCHAR), DatabaseType.ORACLE);
+        Assert.assertEquals("'java''s cool, it''''s' /*VARCHAR*/", val);
     }
 
 }

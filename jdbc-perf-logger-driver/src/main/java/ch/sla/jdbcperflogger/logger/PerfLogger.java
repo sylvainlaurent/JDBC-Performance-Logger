@@ -218,7 +218,7 @@ public class PerfLogger {
                 || sqlType == -9 // NVARCHAR, from java 6
                 || "setString".equals(setter)//
                 || "setNString".equals(setter)) {
-            strBuilder.append("'" + value + "'");
+            strBuilder.append("'" + value.toString().replace("'", "''") + "'");
         } else if (sqlType == Types.DATE || "setDate".equals(setter) || value instanceof java.sql.Date) {
             java.sql.Date sqlDate;
             if (value instanceof java.sql.Date) {
