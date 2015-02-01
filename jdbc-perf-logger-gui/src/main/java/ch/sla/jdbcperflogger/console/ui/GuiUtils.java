@@ -18,8 +18,8 @@ public class GuiUtils {
     static String getAppVersion() {
         final Properties mavenProps = new Properties();
         try (@Nullable
-        InputStream pomPropsFile = WelcomePanel.class
-                .getResourceAsStream("/META-INF/maven/ch.sla/jdbc-perf-logger-gui/pom.properties")) {
+                InputStream pomPropsFile = WelcomePanel.class
+                .getResourceAsStream("/META-INF/maven/com.github.sylvainlaurent.jdbcperflogger/jdbc-perf-logger-gui/pom.properties")) {
             if (pomPropsFile != null) {
                 mavenProps.load(pomPropsFile);
             }
