@@ -26,9 +26,8 @@ public abstract class AbstractDataSourcePostProcessor implements BeanPostProcess
         try {
             Class.forName(WrappingDriver.class.getName(), true, dataSourceClass.getClassLoader());
         } catch (final ClassNotFoundException e) {
-            throw new FatalBeanException(
-                    "The JDBC-perf-logger driver class must be available to your dataSource class " + dataSourceClass
-                            + ". Check your classpath");
+            throw new FatalBeanException("The JDBC-perf-logger driver class must be available to your dataSource class "
+                    + dataSourceClass + ". Check your classpath");
         }
     }
 

@@ -24,8 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.eclipse.jdt.annotation.Nullable;
 
 import ch.sla.jdbcperflogger.DatabaseType;
 import ch.sla.jdbcperflogger.StatementType;
@@ -55,18 +54,15 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
 
     @Override
     @Nullable
-    public Object invoke(final @Nullable Object _proxy, @Nullable final Method _method, final @Nullable Object[] args)
+    public Object invoke(final @Nullable Object _proxy, final Method method, final @Nullable Object[] args)
             throws Throwable {
-        assert _method != null;
 
-        @Nonnull
-        final Method method = _method;
         final Object result;
         final String methodName = method.getName();
         if (EXECUTE_QUERY.equals(methodName) && args != null) {
             return internalExecuteQuery(method, args);
-        } else if ((EXECUTE.equals(methodName) || EXECUTE_UPDATE.equals(methodName) || EXECUTE_LARGE_UPDATE
-                .equals(methodName)) && args != null) {
+        } else if ((EXECUTE.equals(methodName) || EXECUTE_UPDATE.equals(methodName)
+                || EXECUTE_LARGE_UPDATE.equals(methodName)) && args != null) {
             return internalExecute(method, args);
         } else if (EXECUTE_BATCH.equals(methodName) || EXECUTE_LARGE_BATCH.equals(methodName)) {
             return internalExecuteBatch(method, args);
@@ -90,8 +86,8 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
         try {
             final ResultSet resultSet = (ResultSet) Utils.invokeUnwrapExceptionReturnNonNull(wrappedStatement, method,
                     args);
-            return (ResultSet) Proxy.newProxyInstance(LoggingStatementInvocationHandler.class.getClassLoader(), Utils
-                    .extractAllInterfaces(resultSet.getClass()),
+            return (ResultSet) Proxy.newProxyInstance(LoggingStatementInvocationHandler.class.getClassLoader(),
+                    Utils.extractAllInterfaces(resultSet.getClass()),
                     new LoggingResultSetInvocationHandler(resultSet, logId));
         } catch (final Throwable e) {
             exc = e;

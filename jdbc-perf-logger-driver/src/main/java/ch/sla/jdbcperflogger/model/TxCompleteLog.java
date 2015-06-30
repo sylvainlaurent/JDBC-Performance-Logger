@@ -2,7 +2,7 @@ package ch.sla.jdbcperflogger.model;
 
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import org.eclipse.jdt.annotation.Nullable;
 
 import ch.sla.jdbcperflogger.TxCompletionType;
 

@@ -1,8 +1,8 @@
 package ch.sla.jdbcperflogger.console.db;
 
-import ch.sla.jdbcperflogger.annotations.NonNullByDefault;
+import org.eclipse.jdt.annotation.NonNullByDefault;
 
-@NonNullByDefault(false)
+@NonNullByDefault({})
 public class LogSearchCriteria {
     private String filter;
     private Long minDurationNanos;

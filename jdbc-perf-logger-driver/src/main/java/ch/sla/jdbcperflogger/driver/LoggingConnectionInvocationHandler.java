@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,7 @@ import java.sql.Statement;
 import java.util.Properties;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import org.eclipse.jdt.annotation.Nullable;
 
 import ch.sla.jdbcperflogger.DatabaseType;
 import ch.sla.jdbcperflogger.TxCompletionType;
@@ -51,9 +51,8 @@ public class LoggingConnectionInvocationHandler implements InvocationHandler {
 
     @Override
     @Nullable
-    public Object invoke(@Nullable final Object proxy, @Nullable final Method method, @Nullable final Object[] args)
+    public Object invoke(@Nullable final Object proxy, final Method method, @Nullable final Object[] args)
             throws Throwable {
-        assert method != null;
 
         final String methodName = method.getName();
 
@@ -81,13 +80,13 @@ public class LoggingConnectionInvocationHandler implements InvocationHandler {
         final Object result = Utils.invokeUnwrapException(wrappedConnection, method, args);
         if (result != null) {
             if ("createStatement".equals(methodName)) {
-                return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(), Utils
-                        .extractAllInterfaces(result.getClass()), new LoggingStatementInvocationHandler(connectionUuid,
-                        (Statement) result, databaseType));
+                return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(),
+                        Utils.extractAllInterfaces(result.getClass()),
+                        new LoggingStatementInvocationHandler(connectionUuid, (Statement) result, databaseType));
             } else if (("prepareStatement".equals(methodName) || "prepareCall".equals(methodName)) && args != null) {
-                return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(), Utils
-                        .extractAllInterfaces(result.getClass()), new LoggingPreparedStatementInvocationHandler(
-                        connectionUuid, (PreparedStatement) result, (String) args[0], databaseType));
+                return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(),
+                        Utils.extractAllInterfaces(result.getClass()), new LoggingPreparedStatementInvocationHandler(
+                                connectionUuid, (PreparedStatement) result, (String) args[0], databaseType));
             }
 
         }
@@ -97,8 +96,8 @@ public class LoggingConnectionInvocationHandler implements InvocationHandler {
                 final Savepoint savepoint = (Savepoint) result;
                 savePointDescription = savepoint.toString();
             }
-            PerfLogger.logTransactionComplete(connectionUuid, startTimeStamp, txCompletionType, System.nanoTime()
-                    - startNanos, savePointDescription);
+            PerfLogger.logTransactionComplete(connectionUuid, startTimeStamp, txCompletionType,
+                    System.nanoTime() - startNanos, savePointDescription);
         }
 
         return result;

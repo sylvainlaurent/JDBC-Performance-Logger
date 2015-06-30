@@ -24,8 +24,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,7 +98,7 @@ public class ServerLogReceiver extends AbstractLogReceiver {
                 while (!disposed) {
                     try {
                         LOGGER.debug("Waiting for client connections on " + serverSocketLocalVar);
-                        @Nonnull
+                        @NonNull
                         final Socket socket = serverSocketLocalVar.accept();
                         LOGGER.debug("Got client connection from " + socket);
 

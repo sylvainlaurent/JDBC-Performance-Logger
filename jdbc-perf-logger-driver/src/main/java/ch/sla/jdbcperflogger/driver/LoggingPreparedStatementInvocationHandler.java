@@ -24,8 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 
 import ch.sla.jdbcperflogger.DatabaseType;
 import ch.sla.jdbcperflogger.Logger;
@@ -71,18 +71,16 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
 
     @Override
     @Nullable
-    public Object invoke(@Nullable final Object proxy, @Nullable final Method _method, @Nullable final Object[] args)
+    public Object invoke(final @Nullable Object proxy, final Method method, @Nullable final Object[] args)
             throws Throwable {
-        assert _method != null;
-        final Method method = _method;
 
         final Object result;
         final String methodName = method.getName();
         if (args == null || args.length == 0) {
             if (EXECUTE_QUERY.equals(methodName) && args == null) {
                 return internalExecutePreparedQuery(method);
-            } else if ((EXECUTE.equals(methodName) || EXECUTE_UPDATE.equals(methodName) || EXECUTE_LARGE_UPDATE
-                    .equals(methodName))) {
+            } else if ((EXECUTE.equals(methodName) || EXECUTE_UPDATE.equals(methodName)
+                    || EXECUTE_LARGE_UPDATE.equals(methodName))) {
                 return internalExecutePrepared(method, args);
             } else if (ADD_BATCH.equals(methodName)) {
                 result = Utils.invokeUnwrapException(wrappedStatement, method, args);
@@ -118,7 +116,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
 
                             // use a local variable to keep eclipse null-analysis happy
                             @SuppressWarnings("null")
-                            @Nonnull
+                            @NonNull
                             final Method tempMethod = getVendorTypeNumberMethod;
                             sqlType = (Integer) tempMethod.invoke(args[2]);
                         }
@@ -134,16 +132,16 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
     protected ResultSet internalExecutePreparedQuery(final Method method) throws Throwable {
         final UUID logId = UUID.randomUUID();
         PerfLogger.logBeforePreparedStatement(connectionId, logId, rawSql, paramValues,
-                StatementType.PREPARED_QUERY_STMT, databaseType, wrappedStatement.getQueryTimeout(), wrappedStatement
-                        .getConnection().getAutoCommit());
+                StatementType.PREPARED_QUERY_STMT, databaseType, wrappedStatement.getQueryTimeout(),
+                wrappedStatement.getConnection().getAutoCommit());
         final long start = System.nanoTime();
         Throwable exc = null;
         try {
             final ResultSet resultSet = (ResultSet) Utils.invokeUnwrapExceptionReturnNonNull(wrappedStatement, method,
                     null);
             return (ResultSet) Proxy.newProxyInstance(LoggingPreparedStatementInvocationHandler.class.getClassLoader(),
-                    Utils.extractAllInterfaces(resultSet.getClass()), new LoggingResultSetInvocationHandler(resultSet,
-                            logId));
+                    Utils.extractAllInterfaces(resultSet.getClass()),
+                    new LoggingResultSetInvocationHandler(resultSet, logId));
         } catch (final Throwable e) {
             exc = e;
             throw exc;
@@ -159,8 +157,8 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
         final UUID logId = UUID.randomUUID();
         final long start = System.nanoTime();
         PerfLogger.logBeforePreparedStatement(connectionId, logId, rawSql, paramValues,
-                StatementType.BASE_PREPARED_STMT, databaseType, wrappedStatement.getQueryTimeout(), wrappedStatement
-                        .getConnection().getAutoCommit());
+                StatementType.BASE_PREPARED_STMT, databaseType, wrappedStatement.getQueryTimeout(),
+                wrappedStatement.getConnection().getAutoCommit());
         Throwable exc = null;
         Long updateCount = null;
         try {
@@ -182,9 +180,8 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
     @Nullable
     protected Object internalExecuteBatch(final Method method, @Nullable final Object[] args) throws Throwable {
         final UUID logId = UUID.randomUUID();
-        PerfLogger.logPreparedBatchedStatements(connectionId, logId, rawSql,
-                batchedPreparedOrNonPreparedStmtExecutions, databaseType, wrappedStatement.getQueryTimeout(),
-                wrappedStatement.getConnection().getAutoCommit());
+        PerfLogger.logPreparedBatchedStatements(connectionId, logId, rawSql, batchedPreparedOrNonPreparedStmtExecutions,
+                databaseType, wrappedStatement.getQueryTimeout(), wrappedStatement.getConnection().getAutoCommit());
         try {
             return internalExecuteBatchInternal(method, args, logId);
         } finally {

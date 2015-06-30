@@ -37,9 +37,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -152,7 +151,6 @@ public class WrappingDriverJava8Test {
         statement.close();
     }
 
-    @SuppressWarnings("null")
     @Test
     public void testExecuteNonPrepared() throws Exception {
         {
@@ -174,7 +172,7 @@ public class WrappingDriverJava8Test {
                     ((StatementLog) lastLogMessage2).getLogId());
             assertEquals(sql, ((StatementLog) lastLogMessage2).getRawSql());
             assertEquals(StatementType.BASE_NON_PREPARED_STMT, ((StatementLog) lastLogMessage2).getStatementType());
-            @Nonnull
+            @NonNull
             final Long updateCount = ((StatementExecutedLog) lastLogMessage1).getUpdateCount();
             assertEquals(1L, updateCount.longValue());
             statement.close();
@@ -184,14 +182,13 @@ public class WrappingDriverJava8Test {
             final Statement statement = connection.createStatement();
             final long nb = statement.executeLargeUpdate(sql);
             Assert.assertEquals(0, nb);
-            @Nonnull
+            @NonNull
             final Long updateCount = ((StatementExecutedLog) lastLogMessage1).getUpdateCount();
             assertEquals(0L, updateCount.longValue());
             statement.close();
         }
     }
 
-    @SuppressWarnings("null")
     @Test
     public void testExecutePrepared() throws Exception {
         {
@@ -216,7 +213,7 @@ public class WrappingDriverJava8Test {
             assertEquals(StatementType.BASE_PREPARED_STMT, ((StatementLog) lastLogMessage2).getStatementType());
             assertEquals("insert into test (key_id) values (123 /*setInt*/)",
                     ((StatementLog) lastLogMessage2).getFilledSql());
-            @Nonnull
+            @NonNull
             final Long updateCount = ((StatementExecutedLog) lastLogMessage1).getUpdateCount();
             assertEquals(1L, updateCount.longValue());
             statement.close();
@@ -227,20 +224,19 @@ public class WrappingDriverJava8Test {
             statement.setInt(1, 87687);
             final long nb = statement.executeLargeUpdate();
             Assert.assertEquals(0, nb);
-            @Nonnull
+            @NonNull
             final Long updateCount = ((StatementExecutedLog) lastLogMessage1).getUpdateCount();
             assertEquals(0L, updateCount.longValue());
             statement.close();
         }
     }
 
-    @SuppressWarnings("null")
     @Test
     public void testSelectPrepared() throws Exception {
         {
             final Statement statement = connection.createStatement();
-            statement
-                    .execute("create table test (key_id int, myDate date, myTimestamp timestamp, myTime time, myBoolean boolean)");
+            statement.execute(
+                    "create table test (key_id int, myDate date, myTimestamp timestamp, myTime time, myBoolean boolean)");
             statement.close();
         }
         {
@@ -356,7 +352,6 @@ public class WrappingDriverJava8Test {
         }
     }
 
-    @SuppressWarnings("null")
     @Test
     public void testBatchedNonPrepared() throws Exception {
         {
@@ -400,7 +395,6 @@ public class WrappingDriverJava8Test {
         // TimeUnit.SECONDS.sleep(10);
     }
 
-    @SuppressWarnings("null")
     @Test
     public void testBatchedPrepared() throws Exception {
         {
@@ -445,7 +439,6 @@ public class WrappingDriverJava8Test {
         // TimeUnit.SECONDS.sleep(10);
     }
 
-    @SuppressWarnings("null")
     @Test(expected = SQLException.class)
     public void testException() throws Exception {
         final Statement statement = connection.createStatement();
@@ -466,7 +459,6 @@ public class WrappingDriverJava8Test {
         }
     }
 
-    @SuppressWarnings("null")
     @Test
     public void testCallable() throws Exception {
         {
@@ -519,7 +511,6 @@ public class WrappingDriverJava8Test {
         connection.rollback(savepoint);
     }
 
-    @SuppressWarnings("null")
     private void executeStatementAndCheckLogged(final Statement statement, final String sql) throws SQLException {
         statement.execute(sql);
         final StatementLog statementLog = (StatementLog) lastLogMessage2;
@@ -528,7 +519,6 @@ public class WrappingDriverJava8Test {
         Assert.assertEquals(statementLog.getLogId(), statementExecutedLog.getLogId());
     }
 
-    @SuppressWarnings("null")
     private void executeQueryAndCheckLogged(final Statement statement, final String sql) throws SQLException {
         statement.executeQuery(sql);
         final StatementLog statementLog = (StatementLog) lastLogMessage2;

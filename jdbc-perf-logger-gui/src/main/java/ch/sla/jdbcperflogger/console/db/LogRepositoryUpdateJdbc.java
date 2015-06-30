@@ -30,8 +30,7 @@ import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Nullable;
-
+import org.eclipse.jdt.annotation.Nullable;
 import org.h2.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,15 +87,14 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
                             + " values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             updateStatementLogWithResultSet = connectionUpdate
                     .prepareStatement("update statement_log set fetchDurationNanos=?, nbRows=? where logId=?");
-            updateStatementLogAfterExecution = connectionUpdate
-                    .prepareStatement("update statement_log set executionDurationNanos=?, nbRows=?, exception=? where logId=?");
+            updateStatementLogAfterExecution = connectionUpdate.prepareStatement(
+                    "update statement_log set executionDurationNanos=?, nbRows=?, exception=? where logId=?");
 
-            addBatchedStatementLog = connectionUpdate
-                    .prepareStatement("insert into batched_statement_log (logId, batched_stmt_order, filledSql)"
-                            + " values(?, ?, ?)");
+            addBatchedStatementLog = connectionUpdate.prepareStatement(
+                    "insert into batched_statement_log (logId, batched_stmt_order, filledSql)" + " values(?, ?, ?)");
 
-            addTxCompletionLog = connectionUpdate
-                    .prepareStatement("insert into statement_log (logId, tstamp, statementType, rawSql, filledSql, executionDurationNanos, "//
+            addTxCompletionLog = connectionUpdate.prepareStatement(
+                    "insert into statement_log (logId, tstamp, statementType, rawSql, filledSql, executionDurationNanos, "//
                             + "threadName, connectionId) "//
                             + "values (?,?,?,?,?,?,?,?)");
 
@@ -210,8 +208,8 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
                 addStatementLogWithAfterExecutionInfo.setBoolean(i++, log.isAutoCommit());
                 addStatementLogWithAfterExecutionInfo.setLong(i++, log.getExecutionTimeNanos());
                 addStatementLogWithAfterExecutionInfo.setObject(i++, log.getNbRowsIterated(), Types.INTEGER);
-                addStatementLogWithAfterExecutionInfo
-                        .setObject(i++, log.getResultSetIterationTimeNanos(), Types.BIGINT);
+                addStatementLogWithAfterExecutionInfo.setObject(i++, log.getResultSetIterationTimeNanos(),
+                        Types.BIGINT);
                 addStatementLogWithAfterExecutionInfo.setString(i++, log.getSqlException());
                 addStatementLogWithAfterExecutionInfo.addBatch();
             }
@@ -228,6 +226,7 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
         try {
             int i = 1;
             updateStatementLogAfterExecution.setLong(i++, log.getExecutionTimeNanos());
+            @Nullable
             final Long updateCount = log.getUpdateCount();
             if (updateCount != null) {
                 updateStatementLogAfterExecution.setLong(i++, updateCount);
@@ -402,9 +401,8 @@ public class LogRepositoryUpdateJdbc implements LogRepositoryUpdate {
 
         try (Connection connection = createDbConnection(dbName)) {
 
-            try (PreparedStatement selectTstampStmt = connection
-                    .prepareStatement("select tstamp from statement_log order by tstamp desc limit 1 offset "
-                            + NB_ROWS_MAX);
+            try (PreparedStatement selectTstampStmt = connection.prepareStatement(
+                    "select tstamp from statement_log order by tstamp desc limit 1 offset " + NB_ROWS_MAX);
                     ResultSet tstampResultSet = selectTstampStmt.executeQuery()) {
                 if (tstampResultSet.next()) {
                     final Timestamp timestamp = tstampResultSet.getTimestamp(1);

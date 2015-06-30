@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,7 +31,6 @@ import java.util.TreeSet;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
-import javax.annotation.Nullable;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.ImageIcon;
@@ -53,6 +52,8 @@ import javax.swing.event.HyperlinkListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.eclipse.jdt.annotation.Nullable;
+
 @SuppressWarnings("serial")
 public class WelcomePanel extends JPanel {
     private final static String WEB_SITE_ADDRESS = "https://github.com/sylvainlaurent/JDBC-Performance-Logger";
@@ -72,8 +73,8 @@ public class WelcomePanel extends JPanel {
         setLayout(gridBagLayout);
 
         final JPanel lookAndFeelPanel = new JPanel();
-        lookAndFeelPanel.setBorder(new TitledBorder(null, "Look and Feel", TitledBorder.LEADING, TitledBorder.TOP,
-                null, null));
+        lookAndFeelPanel
+                .setBorder(new TitledBorder(null, "Look and Feel", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         final GridBagConstraints gbc_lookAndFeelPanel = new GridBagConstraints();
         gbc_lookAndFeelPanel.insets = new Insets(0, 0, 5, 0);
         gbc_lookAndFeelPanel.fill = GridBagConstraints.BOTH;

@@ -6,6 +6,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,9 +55,11 @@ class LogPersister extends Thread implements AutoCloseable {
     @Override
     public void run() {
         final List<LogMessage> drainedLogs = new ArrayList<>(1000);
-        final List<StatementFullyExecutedLog> statementFullyExecutedLogs = new ArrayList<StatementFullyExecutedLog>(100);
+        final List<StatementFullyExecutedLog> statementFullyExecutedLogs = new ArrayList<StatementFullyExecutedLog>(
+                100);
 
         while (!disposed) {
+            @Nullable
             LogMessage logMessage;
             try {
                 logMessage = logs.poll(1, TimeUnit.SECONDS);

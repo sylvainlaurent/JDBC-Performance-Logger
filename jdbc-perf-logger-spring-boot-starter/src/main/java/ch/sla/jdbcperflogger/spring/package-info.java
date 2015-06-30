@@ -13,28 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.sla.jdbcperflogger.model;
+@NonNullByDefault
+package ch.sla.jdbcperflogger.spring;
 
-import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jdt.annotation.NonNullByDefault;
 
-public class SqlTypedValue {
-    @Nullable
-    public final Object value;
-    @Nullable
-    public final Integer sqlType;
-    @Nullable
-    public final String setter;
-
-    public SqlTypedValue(@Nullable final Object value, final @Nullable Integer sqlType) {
-        this.value = value;
-        this.sqlType = sqlType;
-        setter = null;
-    }
-
-    public SqlTypedValue(final Object value, final String setter) {
-        this.value = value;
-        sqlType = -1;
-        this.setter = setter;
-    }
-
-}

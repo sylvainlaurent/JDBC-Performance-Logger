@@ -22,7 +22,7 @@ import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 
-import javax.annotation.Nullable;
+import org.eclipse.jdt.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,6 +1,6 @@
 package ch.sla.jdbcperflogger.console.ui;
 
-import javax.annotation.Nullable;
+import org.eclipse.jdt.annotation.Nullable;
 
 public class HostPort implements Comparable<HostPort> {
     private final String host;

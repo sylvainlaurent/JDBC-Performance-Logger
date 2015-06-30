@@ -14,7 +14,8 @@ import ch.sla.jdbcperflogger.driver.WrappingDriver;
 public class DbcpDataSourcePostProcessor extends AbstractDataSourcePostProcessor {
 
     @Override
-    public Object postProcessBeforeInitialization(final Object bean, final String beanName) throws BeansException {
+    public Object postProcessBeforeInitialization(@SuppressWarnings("null") final Object bean,
+            @SuppressWarnings("null") final String beanName) throws BeansException {
         if (bean instanceof BasicDataSource) {
             final BasicDataSource ds = (BasicDataSource) bean;
 

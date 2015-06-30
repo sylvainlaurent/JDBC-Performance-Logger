@@ -20,8 +20,8 @@ import ch.sla.jdbcperflogger.model.ConnectionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import java.sql.*;
 import java.util.Properties;
 import java.util.UUID;
@@ -216,11 +216,11 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
                     final UUID logId = (UUID) resultSet.getObject(i++);
                     final Timestamp tstamp = resultSet.getTimestamp(i++);
                     final StatementType statementType = StatementType.fromId(resultSet.getInt(i++));
-                    @Nonnull
+                    @NonNull
                     final String rawSql = resultSet.getString(i++);
-                    @Nonnull
+                    @NonNull
                     final String filledSql = resultSet.getString(i++);
-                    @Nonnull
+                    @NonNull
                     final String threadName = resultSet.getString(i++);
                     final String exception = resultSet.getString(i++);
                     final UUID connectionId = (UUID) resultSet.getObject(i++);

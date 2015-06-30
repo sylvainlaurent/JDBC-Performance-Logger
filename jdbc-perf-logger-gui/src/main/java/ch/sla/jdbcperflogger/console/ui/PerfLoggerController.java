@@ -28,12 +28,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Nullable;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -302,8 +302,8 @@ public class PerfLoggerController {
                 connectionPropertiesString = connectionInfo.getConnectionProperties().toString();
                 final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 connectionCreationDate = format.format(connectionInfo.getCreationDate());
-                connectionCreationDurationMillis = TimeUnit.NANOSECONDS.toMillis(connectionInfo
-                        .getConnectionCreationDuration());
+                connectionCreationDurationMillis = TimeUnit.NANOSECONDS
+                        .toMillis(connectionInfo.getConnectionCreationDuration());
                 break;
             case RAW_SQL:
                 if (statementType != null) {
@@ -444,8 +444,8 @@ public class PerfLoggerController {
 
             final StringBuilder txt = new StringBuilder();
             if (logReceiver.getConnectionsCount() == 0) {
-                perfLoggerPanel.lblConnectionStatus.setIcon(new ImageIcon(PerfLoggerController.class
-                        .getResource("/icons/network-offline.png")));
+                perfLoggerPanel.lblConnectionStatus
+                        .setIcon(new ImageIcon(PerfLoggerController.class.getResource("/icons/network-offline.png")));
                 final Throwable lastConnectionError = logReceiver.getLastConnectionError();
                 if (lastConnectionError != null) {
                     perfLoggerPanel.lblConnectionStatus.setToolTipText(lastConnectionError.toString());
@@ -453,8 +453,8 @@ public class PerfLoggerController {
                     perfLoggerPanel.lblConnectionStatus.setToolTipText("");
                 }
             } else {
-                perfLoggerPanel.lblConnectionStatus.setIcon(new ImageIcon(PerfLoggerController.class
-                        .getResource("/icons/network-transmit-receive.png")));
+                perfLoggerPanel.lblConnectionStatus.setIcon(
+                        new ImageIcon(PerfLoggerController.class.getResource("/icons/network-transmit-receive.png")));
                 if (logReceiver.isServerMode()) {
                     perfLoggerPanel.lblConnectionStatus.setToolTipText(connectionsCount + " connection(s)");
                 } else {
@@ -469,8 +469,8 @@ public class PerfLoggerController {
             final LogSearchCriteria searchCriteria = createSearchCriteria();
             if (searchCriteria.atLeastOneFilterApplied()) {
                 txt.append(" - ");
-                txt.append(TimeUnit.NANOSECONDS.toMillis(logRepositoryRead
-                        .getTotalExecAndFetchTimeNanos(searchCriteria)));
+                txt.append(
+                        TimeUnit.NANOSECONDS.toMillis(logRepositoryRead.getTotalExecAndFetchTimeNanos(searchCriteria)));
                 txt.append("ms total filtered");
             }
             final Long lastLostMessageTime = logRepositoryUpdate.getLastLostMessageTime();

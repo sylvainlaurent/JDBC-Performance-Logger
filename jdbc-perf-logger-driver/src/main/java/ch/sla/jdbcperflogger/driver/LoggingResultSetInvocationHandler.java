@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +20,7 @@ import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import org.eclipse.jdt.annotation.Nullable;
 
 import ch.sla.jdbcperflogger.logger.PerfLogger;
 
@@ -39,9 +39,8 @@ public class LoggingResultSetInvocationHandler implements InvocationHandler {
 
     @Override
     @Nullable
-    public Object invoke(@Nullable final Object proxy, @Nullable final Method method, @Nullable final Object[] args)
+    public Object invoke(@Nullable final Object proxy, final Method method, @Nullable final Object[] args)
             throws Throwable {
-        assert method != null;
 
         final Object result = Utils.invokeUnwrapException(wrappedResultSet, method, args);
 

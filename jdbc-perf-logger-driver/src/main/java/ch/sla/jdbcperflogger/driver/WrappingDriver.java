@@ -28,7 +28,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.annotation.Nullable;
+import org.eclipse.jdt.annotation.Nullable;
 
 import ch.sla.jdbcperflogger.DriverConfig;
 import ch.sla.jdbcperflogger.Logger;
@@ -83,11 +83,10 @@ public class WrappingDriver implements Driver {
 
     @Override
     @Nullable
-    public Connection connect(@Nullable final String url, @Nullable final Properties info) throws SQLException {
+    public Connection connect(final String url, @Nullable final Properties info) throws SQLException {
         if (!acceptsURL(url)) {
             return null;
         }
-        assert url != null;
         LOGGER.debug("connect url=[" + url + "]");
         final String unWrappedUrl = extractUrlForWrappedDriver(url);
 

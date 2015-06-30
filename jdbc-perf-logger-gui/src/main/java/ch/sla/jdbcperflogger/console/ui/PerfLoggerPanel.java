@@ -42,7 +42,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -66,6 +65,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.event.UndoableEditListener;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
@@ -166,13 +166,14 @@ public class PerfLoggerPanel extends JPanel {
         filterPanel.setLayout(gbl_filterPanel);
 
         comboBoxFilterType = new JComboBox<>();
-        comboBoxFilterType.setModel(new DefaultComboBoxModel<>(EnumSet.allOf(FilterType.class).toArray(
-                new FilterType[0])));
+        comboBoxFilterType
+                .setModel(new DefaultComboBoxModel<>(EnumSet.allOf(FilterType.class).toArray(new FilterType[0])));
         comboBoxFilterType.setSelectedItem(FilterType.HIGHLIGHT);
         comboBoxFilterType.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(@Nullable final ActionEvent e) {
-                perfLoggerController.setFilterType(comboBoxFilterType.getItemAt(comboBoxFilterType.getSelectedIndex()));
+                final FilterType filterType = comboBoxFilterType.getItemAt(comboBoxFilterType.getSelectedIndex());
+                perfLoggerController.setFilterType(filterType != null ? filterType : FilterType.HIGHLIGHT);
             }
         });
         final GridBagConstraints gbc_filterTypeComboBox = new GridBagConstraints();
@@ -233,8 +234,8 @@ public class PerfLoggerPanel extends JPanel {
             panel.add(lblSqlClause, gbc_lblSqlClause);
             {
                 sqlClauseField = new JTextField();
-                sqlClauseField
-                        .setToolTipText("<html>\n<p>Use this field to further filter statements by directly injecting a<br>\nWHERE clause to the SELECT statement used by the console<br>\nagainst its internal H2 database.</p>\n<p>You may use the column names that appear in the list below.<br>\nCaution: times are in nanoseconds in the internal DB<br>\nExamples:</p>\n<ul>\n<li>THREADNAME like 'Execute%'</li>\n<li>CONNECTIONNUMBER=2</li>\n<li>NBROWS>10</li>\n<li>ERROR=1</li>\n</ul>\n</html>");
+                sqlClauseField.setToolTipText(
+                        "<html>\n<p>Use this field to further filter statements by directly injecting a<br>\nWHERE clause to the SELECT statement used by the console<br>\nagainst its internal H2 database.</p>\n<p>You may use the column names that appear in the list below.<br>\nCaution: times are in nanoseconds in the internal DB<br>\nExamples:</p>\n<ul>\n<li>THREADNAME like 'Execute%'</li>\n<li>CONNECTIONNUMBER=2</li>\n<li>NBROWS>10</li>\n<li>ERROR=1</li>\n</ul>\n</html>");
                 final GridBagConstraints gbc_sqlClauseField = new GridBagConstraints();
                 gbc_sqlClauseField.insets = new Insets(0, 0, 0, 5);
                 gbc_sqlClauseField.fill = GridBagConstraints.HORIZONTAL;
@@ -538,7 +539,8 @@ public class PerfLoggerPanel extends JPanel {
         gbc_btnCopy2.gridy = 0;
         panelFilledSql.add(btnCopy2, gbc_btnCopy2);
         btnCopy2.setIcon(new ImageIcon(PerfLoggerPanel.class.getResource("/icons/32px-Edit-copy_purple.png")));
-        btnCopy2.setToolTipText("Copy the SQL statement to the clipboard, with the bind variables replaced by their actual value");
+        btnCopy2.setToolTipText(
+                "Copy the SQL statement to the clipboard, with the bind variables replaced by their actual value");
 
         final JScrollPane scrollPaneFilledSql = new JScrollPane();
         final GridBagConstraints gbc_scrollPaneFilledSql = new GridBagConstraints();
@@ -556,8 +558,9 @@ public class PerfLoggerPanel extends JPanel {
 
         final JPanel panelConnectionInfo = new JPanel();
         tabbedPanelsqlDetails.addTab("Connection", null, panelConnectionInfo, null);
-        panelConnectionInfo.setBorder(new TitledBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null,
-                null), "Connection info", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(51, 51, 51)),
+        panelConnectionInfo.setBorder(new TitledBorder(
+                new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Connection info",
+                        TitledBorder.LEADING, TitledBorder.TOP, null, new Color(51, 51, 51)),
                 "Connection info", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(51, 51, 51)));
         final GridBagLayout gbl_panelConnectionInfo = new GridBagLayout();
         gbl_panelConnectionInfo.columnWidths = new int[] { 0, 0, 0, 0, 0 };

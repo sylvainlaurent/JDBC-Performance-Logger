@@ -3,7 +3,7 @@ package ch.sla.jdbcperflogger.logger;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import javax.annotation.Nullable;
+import org.eclipse.jdt.annotation.Nullable;
 
 import org.junit.Assert;
 import org.junit.Test;

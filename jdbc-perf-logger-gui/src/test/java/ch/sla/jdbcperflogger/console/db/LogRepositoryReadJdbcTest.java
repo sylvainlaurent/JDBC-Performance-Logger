@@ -1,17 +1,29 @@
 package ch.sla.jdbcperflogger.console.db;
 
-import ch.sla.jdbcperflogger.StatementType;
-import ch.sla.jdbcperflogger.TxCompletionType;
-import ch.sla.jdbcperflogger.model.*;
-import org.junit.Test;
+import static ch.sla.jdbcperflogger.console.db.LogRepositoryConstants.ID_COLUMN;
+import static java.util.UUID.randomUUID;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Properties;
 
-import static ch.sla.jdbcperflogger.console.db.LogRepositoryConstants.ID_COLUMN;
-import static java.util.UUID.randomUUID;
-import static org.junit.Assert.*;
+import org.junit.Test;
+
+import ch.sla.jdbcperflogger.StatementType;
+import ch.sla.jdbcperflogger.TxCompletionType;
+import ch.sla.jdbcperflogger.model.BatchedPreparedStatementsLog;
+import ch.sla.jdbcperflogger.model.ConnectionInfo;
+import ch.sla.jdbcperflogger.model.ResultSetLog;
+import ch.sla.jdbcperflogger.model.StatementExecutedLog;
+import ch.sla.jdbcperflogger.model.StatementLog;
+import ch.sla.jdbcperflogger.model.TxCompleteLog;
 
 public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
     @Test
@@ -84,7 +96,9 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
                             resultSet.getInt(LogRepositoryConstants.MAX_EXEC_PLUS_FETCH_TIME_COLUMN));
                     assertEquals(stmtLog1.getExecutionPlusFetchTimeNanos(),
                             resultSet.getInt(LogRepositoryConstants.MIN_EXEC_PLUS_FETCH_TIME_COLUMN));
-                    assertEquals((stmtLog1.getExecutionPlusFetchTimeNanos() + stmtLog2.getExecutionPlusFetchTimeNanos()) / 2.0d,
+                    assertEquals(
+                            (stmtLog1.getExecutionPlusFetchTimeNanos() + stmtLog2.getExecutionPlusFetchTimeNanos())
+                                    / 2.0d,
                             resultSet.getInt(LogRepositoryConstants.AVG_EXEC_PLUS_FETCH_TIME_COLUMN), 1.0d);
                 }
                 {
@@ -125,14 +139,17 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
                             resultSet.getInt(LogRepositoryConstants.STMT_TYPE_COLUMN));
                     assertEquals(2, resultSet.getLong(LogRepositoryConstants.EXEC_COUNT_COLUMN));
                     assertEquals(stmtLog1.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
-                    assertEquals(stmtLog1.getFilledSql(), resultSet.getString(LogRepositoryConstants.FILLED_SQL_COLUMN));
+                    assertEquals(stmtLog1.getFilledSql(),
+                            resultSet.getString(LogRepositoryConstants.FILLED_SQL_COLUMN));
                     assertEquals(stmtLog1.getExecutionPlusFetchTimeNanos() + stmtLog2.getExecutionPlusFetchTimeNanos(),
                             resultSet.getInt(LogRepositoryConstants.TOTAL_EXEC_PLUS_FETCH_TIME_COLUMN));
                     assertEquals(stmtLog2.getExecutionPlusFetchTimeNanos(),
                             resultSet.getInt(LogRepositoryConstants.MAX_EXEC_PLUS_FETCH_TIME_COLUMN));
                     assertEquals(stmtLog1.getExecutionPlusFetchTimeNanos(),
                             resultSet.getInt(LogRepositoryConstants.MIN_EXEC_PLUS_FETCH_TIME_COLUMN));
-                    assertEquals((stmtLog1.getExecutionPlusFetchTimeNanos() + stmtLog2.getExecutionPlusFetchTimeNanos()) / 2.0d,
+                    assertEquals(
+                            (stmtLog1.getExecutionPlusFetchTimeNanos() + stmtLog2.getExecutionPlusFetchTimeNanos())
+                                    / 2.0d,
                             resultSet.getInt(LogRepositoryConstants.AVG_EXEC_PLUS_FETCH_TIME_COLUMN), 1.0d);
                 }
                 {
@@ -322,6 +339,7 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
         });
     }
 
+    @SuppressWarnings("null")
     @Test
     public void testgetStatementsGroupByRawSQL_filterCommits() {
         final List<StatementFullyExecutedLog> logs = insert3Logs();
@@ -354,6 +372,7 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
         });
     }
 
+    @SuppressWarnings("null")
     @Test
     public void testgetStatementsGroupByFilledSQL_filterCommits() {
         final List<StatementFullyExecutedLog> logs = insert3Logs();
@@ -397,6 +416,7 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
         assertEquals(2, countRowsInTable("statement_log"));
         assertEquals(3, countRowsInTable("batched_statement_log"));
 
+        @SuppressWarnings("null")
         final StatementExecutedLog statementExecutedLog = new StatementExecutedLog(batchedLogs.getLogId(), 123, null,
                 "myexception");
         repositoryUpdate.updateLogAfterExecution(statementExecutedLog);
@@ -435,16 +455,16 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
         final List<StatementFullyExecutedLog> fullLogs = new ArrayList<>();
         {
             final StatementLog log = new StatementLog(connectionInfo.getUuid(), randomUUID(),
-                    System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myrawsql", "myfilledsql", Thread
-                    .currentThread().getName(), 123, true);
+                    System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myrawsql", "myfilledsql",
+                    Thread.currentThread().getName(), 123, true);
             final StatementExecutedLog statementExecutedLog = new StatementExecutedLog(log.getLogId(), 234L, 4560L,
                     "myexception");
             fullLogs.add(new StatementFullyExecutedLog(log, statementExecutedLog, null));
         }
         {
             final StatementLog log = new StatementLog(connectionInfo.getUuid(), randomUUID(),
-                    System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myrawsql", "myfilledsql", Thread
-                    .currentThread().getName(), 123, true);
+                    System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myrawsql", "myfilledsql",
+                    Thread.currentThread().getName(), 123, true);
             final StatementExecutedLog statementExecutedLog = new StatementExecutedLog(log.getLogId(), 2340L, 456L,
                     "myexception");
             final ResultSetLog resultSetLog = new ResultSetLog(log.getLogId(), 789L, 21);
@@ -454,6 +474,7 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
             final StatementLog log = new StatementLog(connectionInfo.getUuid(), randomUUID(),
                     System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myRawsql2", "myfilledsql2",
                     Thread.currentThread().getName(), 0, true);
+            @SuppressWarnings("null")
             final StatementExecutedLog statementExecutedLog = new StatementExecutedLog(log.getLogId(), 12L, null, null);
             fullLogs.add(new StatementFullyExecutedLog(log, statementExecutedLog, null));
         }

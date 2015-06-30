@@ -16,5 +16,5 @@
 @NonNullByDefault
 package ch.sla.jdbcperflogger.console.ui;
 
-import ch.sla.jdbcperflogger.annotations.NonNullByDefault;
+import org.eclipse.jdt.annotation.NonNullByDefault;
 

@@ -2,7 +2,7 @@ package ch.sla.jdbcperflogger.console.db;
 
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import org.eclipse.jdt.annotation.Nullable;
 
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.model.ConnectionInfo;

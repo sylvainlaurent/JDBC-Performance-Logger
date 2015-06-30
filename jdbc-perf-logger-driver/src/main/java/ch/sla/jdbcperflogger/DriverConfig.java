@@ -11,12 +11,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -59,9 +59,9 @@ public class DriverConfig {
                 final NodeList targetClientList = root.getElementsByTagName("target-console");
                 for (int i = 0; i < targetClientList.getLength(); i++) {
                     final NamedNodeMap attributes = targetClientList.item(i).getAttributes();
-                    @Nonnull
+                    @NonNull
                     final String host = attributes.getNamedItem("host").getTextContent();
-                    @Nonnull
+                    @NonNull
                     final String port = attributes.getNamedItem("port").getTextContent();
                     config.clientAddresses.add(InetSocketAddress.createUnresolved(host, Integer.parseInt(port)));
                 }
@@ -108,8 +108,8 @@ public class DriverConfig {
             location = PerfLoggerConstants.CONFIG_FILE_FALLBACK_LOCATION;
             configFileStream = openConfigFile(location);
             if (configFileStream == null) {
-                throw new RuntimeException("Unexpected: cannot find "
-                        + PerfLoggerConstants.CONFIG_FILE_FALLBACK_LOCATION);
+                throw new RuntimeException(
+                        "Unexpected: cannot find " + PerfLoggerConstants.CONFIG_FILE_FALLBACK_LOCATION);
             }
         }
         LOGGER.info("Using config file " + location);

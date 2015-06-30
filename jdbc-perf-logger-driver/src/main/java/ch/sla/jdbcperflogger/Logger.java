@@ -2,7 +2,7 @@ package ch.sla.jdbcperflogger;
 
 import java.util.logging.Level;
 
-import javax.annotation.Nullable;
+import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * Abstraction for logging.

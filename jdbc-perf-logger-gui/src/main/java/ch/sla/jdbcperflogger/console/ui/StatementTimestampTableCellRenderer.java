@@ -19,7 +19,7 @@ import java.awt.Component;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 
-import javax.annotation.Nullable;
+import org.eclipse.jdt.annotation.Nullable;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 

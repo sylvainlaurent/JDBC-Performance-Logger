@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.Nullable;
+import org.eclipse.jdt.annotation.Nullable;
 
 import ch.sla.jdbcperflogger.DatabaseType;
 import ch.sla.jdbcperflogger.Logger;
@@ -48,10 +48,10 @@ public class PerfLogger {
     private final static Logger LOGGER_ORIGINAL_SQL = Logger.getLogger(PerfLogger.class.getName() + ".originalSql");
     private final static Logger LOGGER_FILLED_SQL = Logger.getLogger(PerfLogger.class.getName() + ".filledSql");
     private final static Logger LOGGER_EXECUTED = Logger.getLogger(PerfLogger.class.getName() + ".executed");
-    private final static Logger LOGGER_CLOSED_RESULTSET = Logger.getLogger(PerfLogger.class.getName()
-            + ".closedResultSet");
-    private final static Logger LOGGER_BATCHED_STATEMENTS_DETAIL = Logger.getLogger(PerfLogger.class.getName()
-            + ".batchedStatementDetail");
+    private final static Logger LOGGER_CLOSED_RESULTSET = Logger
+            .getLogger(PerfLogger.class.getName() + ".closedResultSet");
+    private final static Logger LOGGER_BATCHED_STATEMENTS_DETAIL = Logger
+            .getLogger(PerfLogger.class.getName() + ".batchedStatementDetail");
 
     private final static Pattern PSTMT_PARAMETERS_PATTERN = Pattern.compile("\\?");
 
@@ -77,8 +77,8 @@ public class PerfLogger {
             LOGGER_ORIGINAL_SQL.debug("Before execution of non-prepared stmt " + logId + ": " + sql);
         }
         final long now = System.currentTimeMillis();
-        PerfLoggerRemoting.postLog(new StatementLog(connectionId, logId, now, statementType, sql, Thread
-                .currentThread().getName(), timeout, autoCommit));
+        PerfLoggerRemoting.postLog(new StatementLog(connectionId, logId, now, statementType, sql,
+                Thread.currentThread().getName(), timeout, autoCommit));
     }
 
     public static void logBeforePreparedStatement(final UUID connectionId, final UUID logId, final String rawSql,
@@ -92,8 +92,8 @@ public class PerfLogger {
             LOGGER_FILLED_SQL.debug("Before execution of prepared stmt " + logId + ": " + filledSql);
         }
         final long now = System.currentTimeMillis();
-        PerfLoggerRemoting.postLog(new StatementLog(connectionId, logId, now, statementType, rawSql, filledSql, Thread
-                .currentThread().getName(), timeout, autoCommit));
+        PerfLoggerRemoting.postLog(new StatementLog(connectionId, logId, now, statementType, rawSql, filledSql,
+                Thread.currentThread().getName(), timeout, autoCommit));
     }
 
     public static void logNonPreparedBatchedStatements(final UUID connectionId, final UUID logId,
@@ -102,8 +102,8 @@ public class PerfLogger {
 
         final long now = System.currentTimeMillis();
         if (LOGGER_ORIGINAL_SQL.isDebugEnabled()) {
-            LOGGER_ORIGINAL_SQL.debug("Before execution of " + batchedExecutions.size()
-                    + " batched non-prepared statements");
+            LOGGER_ORIGINAL_SQL
+                    .debug("Before execution of " + batchedExecutions.size() + " batched non-prepared statements");
         }
         for (int i = 0; i < batchedExecutions.size(); i++) {
             final String sql = batchedExecutions.get(i);
@@ -199,7 +199,6 @@ public class PerfLogger {
         final Object value = sqlTypedValue.value; // using a local variable for null analysis
         final String setter = sqlTypedValue.setter;
         String sqlTypeStr = setter;
-        @SuppressWarnings("null")
         final int sqlType = sqlTypedValue.sqlType != null ? sqlTypedValue.sqlType : 0;
         if (sqlTypeStr == null) {
             sqlTypeStr = typesMap.get(sqlType);
