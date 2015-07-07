@@ -8,6 +8,8 @@ import org.springframework.core.Ordered;
 import ch.sla.jdbcperflogger.driver.WrappingDriver;
 
 public abstract class AbstractDataSourcePostProcessor implements BeanPostProcessor, Ordered {
+    protected static final String JDBC_URL_PREFIX = "jdbcperflogger:";
+
     @Override
     public int getOrder() {
         return 0;

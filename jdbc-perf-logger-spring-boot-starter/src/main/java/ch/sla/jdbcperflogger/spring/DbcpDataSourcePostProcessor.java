@@ -17,12 +17,15 @@ public class DbcpDataSourcePostProcessor extends AbstractDataSourcePostProcessor
     public Object postProcessBeforeInitialization(final Object bean, final String beanName) throws BeansException {
         if (bean instanceof BasicDataSource) {
             final BasicDataSource ds = (BasicDataSource) bean;
+            // avoid to wrap an already wrapped datasource
+            if (!ds.getUrl().startsWith(AbstractDataSourcePostProcessor.JDBC_URL_PREFIX)) {
 
-            checkVisibleFromDataSource(BasicDataSource.class);
-            checkUnderlyingDriverIsVisible(ds.getDriverClassName());
+                checkVisibleFromDataSource(BasicDataSource.class);
+                checkUnderlyingDriverIsVisible(ds.getDriverClassName());
 
-            ds.setUrl("jdbcperflogger:" + ds.getUrl());
-            ds.setDriverClassName(WrappingDriver.class.getName());
+                ds.setUrl("jdbcperflogger:" + ds.getUrl());
+                ds.setDriverClassName(WrappingDriver.class.getName());
+            }
         }
         return bean;
     }

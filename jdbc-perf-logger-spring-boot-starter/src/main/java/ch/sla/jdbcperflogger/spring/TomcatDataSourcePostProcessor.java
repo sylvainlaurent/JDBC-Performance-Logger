@@ -17,12 +17,14 @@ public class TomcatDataSourcePostProcessor extends AbstractDataSourcePostProcess
     public Object postProcessBeforeInitialization(final Object bean, final String beanName) throws BeansException {
         if (bean instanceof DataSource) {
             final DataSource ds = (DataSource) bean;
+            // avoid to wrap an already wrapped datasource
+            if (!ds.getUrl().startsWith(AbstractDataSourcePostProcessor.JDBC_URL_PREFIX)) {
+                checkVisibleFromDataSource(DataSource.class);
+                checkUnderlyingDriverIsVisible(ds.getDriverClassName());
 
-            checkVisibleFromDataSource(DataSource.class);
-            checkUnderlyingDriverIsVisible(ds.getDriverClassName());
-
-            ds.setUrl("jdbcperflogger:" + ds.getUrl());
-            ds.setDriverClassName(WrappingDriver.class.getName());
+                ds.setUrl(JDBC_URL_PREFIX + ds.getUrl());
+                ds.setDriverClassName(WrappingDriver.class.getName());
+            }
         }
         return bean;
     }
