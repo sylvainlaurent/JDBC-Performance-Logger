@@ -273,7 +273,7 @@ public class PerfLoggerPanel extends JPanel {
             panel.add(chckbxExcludeCommits, gbc_chckbxExcludeCommits);
             chckbxExcludeCommits.addItemListener(new ItemListener() {
                 @Override
-                public void itemStateChanged(@SuppressWarnings("null") final ItemEvent e) {
+                public void itemStateChanged(final ItemEvent e) {
                     perfLoggerController.setExcludeCommits(chckbxExcludeCommits.isSelected());
                 }
             });

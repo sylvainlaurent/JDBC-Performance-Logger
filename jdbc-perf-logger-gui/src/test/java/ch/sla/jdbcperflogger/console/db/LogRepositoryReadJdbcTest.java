@@ -339,13 +339,14 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
         });
     }
 
-    @SuppressWarnings("null")
     @Test
     public void testgetStatementsGroupByRawSQL_filterCommits() {
         final List<StatementFullyExecutedLog> logs = insert3Logs();
         final StatementFullyExecutedLog log1 = logs.get(0);
-        repositoryUpdate.addTxCompletionLog(new TxCompleteLog(log1.getConnectionUuid(), System.currentTimeMillis(),
-                TxCompletionType.COMMIT, 321, "mythread", null));
+        @SuppressWarnings("null")
+        final TxCompleteLog log = new TxCompleteLog(log1.getConnectionUuid(), System.currentTimeMillis(),
+                TxCompletionType.COMMIT, 321, "mythread", null);
+        repositoryUpdate.addTxCompletionLog(log);
 
         final LogSearchCriteria searchCriteria = new LogSearchCriteria();
         searchCriteria.setRemoveTransactionCompletions(false);

@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
 import ch.sla.jdbcperflogger.DatabaseType;
@@ -109,16 +108,16 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
                         Integer sqlType = null;
                         if (argType[2] == Integer.TYPE) {
                             sqlType = (Integer) args[2];
-                        } else if (getVendorTypeNumberMethod != null && argType[2].getName().equals(JAVA_SQL_SQL_TYPE)
-                                && args[2] != null) {
-                            // for java 8... we cannot directly reference the new SQLType at compile time to retain
-                            // compatibility with java <8
-
+                        } else {
                             // use a local variable to keep eclipse null-analysis happy
-                            @SuppressWarnings("null")
-                            @NonNull
                             final Method tempMethod = getVendorTypeNumberMethod;
-                            sqlType = (Integer) tempMethod.invoke(args[2]);
+                            if (tempMethod != null && argType[2].getName().equals(JAVA_SQL_SQL_TYPE)
+                                    && args[2] != null) {
+                                // for java 8... we cannot directly reference the new SQLType at compile time to retain
+                                // compatibility with java <8
+
+                                sqlType = (Integer) tempMethod.invoke(args[2]);
+                            }
                         }
                         paramValues.put((Serializable) args[0], new SqlTypedValue(args[1], sqlType));
                     }

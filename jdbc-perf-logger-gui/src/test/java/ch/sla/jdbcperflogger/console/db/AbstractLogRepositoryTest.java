@@ -1,6 +1,8 @@
 package ch.sla.jdbcperflogger.console.db;
 
 import static java.util.UUID.randomUUID;
+import static org.eclipse.jdt.annotation.DefaultLocation.PARAMETER;
+import static org.eclipse.jdt.annotation.DefaultLocation.RETURN_TYPE;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -8,6 +10,7 @@ import java.sql.Statement;
 import java.util.Date;
 import java.util.Properties;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.junit.After;
 import org.junit.Before;
 
@@ -15,7 +18,7 @@ import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.model.ConnectionInfo;
 import ch.sla.jdbcperflogger.model.StatementLog;
 
-@SuppressWarnings("null")
+@NonNullByDefault({ PARAMETER, RETURN_TYPE })
 public class AbstractLogRepositoryTest {
 
     protected LogRepositoryUpdateJdbc repositoryUpdate;
