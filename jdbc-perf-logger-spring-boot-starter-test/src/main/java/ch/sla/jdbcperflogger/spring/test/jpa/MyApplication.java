@@ -1,4 +1,4 @@
-package ch.sla.jdbcperflogger.spring.test;
+package ch.sla.jdbcperflogger.spring.test.jpa;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;

@@ -1,4 +1,4 @@
-package ch.sla.jdbcperflogger.spring.test;
+package ch.sla.jdbcperflogger.spring.test.jpa;
 
 import static org.junit.Assert.assertEquals;
 
@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import ch.sla.jdbcperflogger.spring.test.jpa.MyApplication;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = MyApplication.class)

@@ -1,19 +1,20 @@
-package ch.sla.jdbcperflogger.spring.test;
-
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+package ch.sla.jdbcperflogger.spring.test.mybatis;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 
 @NonNullByDefault(false)
-@Entity
 class Person {
-    @Id
-    @GeneratedValue
     private Long id;
     private String firstName;
     private String lastName;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(final Long id) {
+        this.id = id;
+    }
 
     public String getFirstName() {
         return firstName;

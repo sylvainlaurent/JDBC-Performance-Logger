@@ -11,6 +11,6 @@
  * specific language governing permissions and limitations under the License.
  */
 @NonNullByDefault
-package ch.sla.jdbcperflogger.spring.test;
+package ch.sla.jdbcperflogger.spring.test.jpa;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
