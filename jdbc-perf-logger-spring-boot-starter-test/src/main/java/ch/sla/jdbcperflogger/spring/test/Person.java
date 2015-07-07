@@ -4,6 +4,9 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
+
+@NonNullByDefault(false)
 @Entity
 class Person {
     @Id
@@ -13,23 +16,23 @@ class Person {
     private String lastName;
 
     public String getFirstName() {
-        return this.firstName;
+        return firstName;
     }
 
-    public void setFirstName(String firstName) {
+    public void setFirstName(final String firstName) {
         this.firstName = firstName;
     }
 
     public String getLastName() {
-        return this.lastName;
+        return lastName;
     }
 
-    public void setLastName(String lastname) {
-        this.lastName = lastname;
+    public void setLastName(final String lastname) {
+        lastName = lastname;
     }
 
     @Override
     public String toString() {
-        return "Person [firstName=" + this.firstName + ", lastName=" + this.lastName + "]";
+        return "Person [firstName=" + firstName + ", lastName=" + lastName + "]";
     }
 }
