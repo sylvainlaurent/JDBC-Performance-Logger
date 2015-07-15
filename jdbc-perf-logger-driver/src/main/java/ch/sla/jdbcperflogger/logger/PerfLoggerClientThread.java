@@ -23,7 +23,6 @@ import java.security.PrivilegedAction;
 import java.util.concurrent.TimeUnit;
 
 import ch.sla.jdbcperflogger.Logger;
-import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting.LogSender;
 
 class PerfLoggerClientThread extends Thread {
     private final static Logger LOGGER = Logger.getLogger(PerfLoggerClientThread.class);
@@ -77,7 +76,7 @@ class PerfLoggerClientThread extends Thread {
             }
             LOGGER.debug("Connected to " + socketAddress);
             try {
-                final LogSender sender = new LogSender(socket);
+                final SocketLogSender sender = new SocketLogSender(socket);
                 PerfLoggerRemoting.senders.add(sender);
                 sender.run();
             } catch (final IOException e) {

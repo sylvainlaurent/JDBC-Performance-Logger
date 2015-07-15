@@ -22,7 +22,6 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 
 import ch.sla.jdbcperflogger.Logger;
-import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting.LogSender;
 
 class PerfLoggerServerThread extends Thread {
     private final static Logger LOGGER = Logger.getLogger(PerfLoggerServerThread.class);
@@ -68,7 +67,7 @@ class PerfLoggerServerThread extends Thread {
                 try {
                     final Socket socket = serverSocket.accept();
                     LOGGER.debug("Got client connection from " + socket);
-                    final LogSender sender = new LogSender(socket);
+                    final SocketLogSender sender = new SocketLogSender(socket);
                     final Thread logSenderThread = new Thread(sender, "PerfLoggerServer " + socket.getInetAddress()
                             + ":" + socket.getPort());
                     logSenderThread.setDaemon(true);
