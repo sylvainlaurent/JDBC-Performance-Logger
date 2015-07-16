@@ -12,7 +12,7 @@ public abstract class AbstractDataSourcePostProcessor implements BeanPostProcess
 
     @Override
     public int getOrder() {
-        return 0;
+        return Ordered.HIGHEST_PRECEDENCE;
     }
 
     protected void checkUnderlyingDriverIsVisible(final String driverClassName) {

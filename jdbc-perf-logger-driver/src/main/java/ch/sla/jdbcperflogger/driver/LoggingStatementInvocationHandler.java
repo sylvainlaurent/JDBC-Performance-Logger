@@ -39,11 +39,13 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
     protected static final String EXECUTE_LARGE_UPDATE = "executeLargeUpdate";
     protected static final String EXECUTE = "execute";
     protected static final String EXECUTE_QUERY = "executeQuery";
+    protected static final String GET_RESULT_SET = "getResultSet";
 
     protected UUID connectionId;
     protected final DatabaseType databaseType;
     protected final Statement wrappedStatement;
     private final List<String> batchedNonPreparedStmtExecutions = new ArrayList<String>();
+    protected @Nullable UUID lastExecutionLogId;
 
     LoggingStatementInvocationHandler(final UUID connectionId, final Statement statement,
             final DatabaseType databaseType) {
@@ -66,6 +68,10 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
             return internalExecute(method, args);
         } else if (EXECUTE_BATCH.equals(methodName) || EXECUTE_LARGE_BATCH.equals(methodName)) {
             return internalExecuteBatch(method, args);
+        } else if (GET_RESULT_SET.equals(methodName)) {
+            // TODO : handle getResultSet to return a proxy to the resultset like in internalExecuteQuery
+            assert lastExecutionLogId != null;
+            return getAndWrapResultSet(method, args, lastExecutionLogId);
         } else {
             result = Utils.invokeUnwrapException(wrappedStatement, method, args);
             if (ADD_BATCH.equals(methodName) && args != null) {
@@ -84,19 +90,25 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
                 wrappedStatement.getQueryTimeout(), wrappedStatement.getConnection().getAutoCommit());
         Throwable exc = null;
         try {
-            final ResultSet resultSet = (ResultSet) Utils.invokeUnwrapExceptionReturnNonNull(wrappedStatement, method,
-                    args);
-            return (ResultSet) Proxy.newProxyInstance(LoggingStatementInvocationHandler.class.getClassLoader(),
-                    Utils.extractAllInterfaces(resultSet.getClass()),
-                    new LoggingResultSetInvocationHandler(resultSet, logId));
+            return getAndWrapResultSet(method, args, logId);
         } catch (final Throwable e) {
             exc = e;
             throw exc;
         } finally {
             final long end = System.nanoTime();
             PerfLogger.logStatementExecuted(logId, end - start, null, exc);
+            lastExecutionLogId = logId;
         }
 
+    }
+
+    private ResultSet getAndWrapResultSet(final Method method, final @Nullable Object[] args, final UUID logId)
+            throws Throwable {
+        final ResultSet resultSet = (ResultSet) Utils.invokeUnwrapExceptionReturnNonNull(wrappedStatement, method,
+                args);
+        return (ResultSet) Proxy.newProxyInstance(LoggingStatementInvocationHandler.class.getClassLoader(),
+                Utils.extractAllInterfaces(resultSet.getClass()),
+                new LoggingResultSetInvocationHandler(resultSet, logId));
     }
 
     @Nullable
@@ -119,6 +131,7 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
         } finally {
             final long end = System.nanoTime();
             PerfLogger.logStatementExecuted(logId, end - start, updateCount, exc);
+            lastExecutionLogId = logId;
         }
     }
 
@@ -131,6 +144,7 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
             return internalExecuteBatchInternal(method, args, logId);
         } finally {
             batchedNonPreparedStmtExecutions.clear();
+            lastExecutionLogId = logId;
         }
 
     }
@@ -165,7 +179,7 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
         } finally {
             final long end = System.nanoTime();
             PerfLogger.logStatementExecuted(logId, end - start, updateCount, exc);
-
+            lastExecutionLogId = logId;
         }
     }
 

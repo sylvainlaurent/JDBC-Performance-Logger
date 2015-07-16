@@ -94,6 +94,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
                 paramValues.clear();
                 return result;
             }
+            // TODO : handle getResultSet to return a proxy to the resultset like in internalExecutePreparedQuery
         } else {
             if (methodName.startsWith("set")) {
                 result = Utils.invokeUnwrapException(wrappedStatement, method, args);
@@ -147,6 +148,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
         } finally {
             final long end = System.nanoTime();
             PerfLogger.logStatementExecuted(logId, end - start, null, exc);
+            lastExecutionLogId = logId;
         }
 
     }
@@ -172,6 +174,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
         } finally {
             final long end = System.nanoTime();
             PerfLogger.logStatementExecuted(logId, end - start, updateCount, exc);
+            lastExecutionLogId = logId;
         }
     }
 
@@ -185,6 +188,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
             return internalExecuteBatchInternal(method, args, logId);
         } finally {
             batchedPreparedOrNonPreparedStmtExecutions.clear();
+            lastExecutionLogId = logId;
         }
 
     }
