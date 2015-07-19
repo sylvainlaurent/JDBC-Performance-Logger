@@ -26,6 +26,9 @@ These are Spring (Boot) properties, so they can e defined at various levels (app
 ## JDBC-perf-logger configuration
 There's nothing specific to Spring-Boot here, so see the [base documentation](../README.md).
 
+## When autoconfiguration might not work
+In some situations, the DataSource bean is instantiated earlier than our BeanPostProcessor so that it does not have the opportunity to change the driver class and URL. In such cases, this `jdbc-perf-logger-spring-boot-starter` is useless and you'll need to set the driver class and connection URL as explained in the [base documentation](../README.md).
+
 ## Potential ClassLoader issues
 If using the jar packaging of Spring-Boot, everything should work out of the box.
 

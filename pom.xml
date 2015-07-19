@@ -4,7 +4,7 @@
 
   <groupId>com.github.sylvainlaurent.jdbcperflogger</groupId>
   <artifactId>jdbc-perf-logger</artifactId>
-  <version>0.7.4-SNAPSHOT</version>
+  <version>0.8.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>JDBC Performance Logger Parent</name>
   <description>Parent/Reactor project for JDBC Performance Logger</description>
@@ -36,6 +36,14 @@
     <spring-boot.version>1.2.5.RELEASE</spring-boot.version>
     <slf4j.version>1.7.12</slf4j.version>
   </properties>
+
+  <modules>
+    <module>jdbc-perf-logger-java8-tests</module>
+    <module>jdbc-perf-logger-spring-boot-starter</module>
+    <module>jdbc-perf-logger-spring-boot-starter-test</module>
+    <module>jdbc-perf-logger-driver</module>
+    <module>jdbc-perf-logger-gui</module>
+  </modules>
 
   <dependencyManagement>
     <dependencies>
@@ -99,6 +107,20 @@
           <artifactId>maven-resources-plugin</artifactId>
           <version>2.4.3</version>
         </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>animal-sniffer-maven-plugin</artifactId>
+          <version>1.14</version>
+          <executions>
+            <execution>
+              <id>ensure-java-1.x-class-library</id>
+              <phase>test</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -155,33 +177,6 @@
   </distributionManagement>
 
   <profiles>
-    <profile>
-      <id>java7</id>
-      <activation>
-        <jdk>1.7</jdk>
-      </activation>
-      <modules>
-        <module>jdbc-perf-logger-spring-boot-starter-test</module>
-        <module>jdbc-perf-logger-driver</module>
-        <module>jdbc-perf-logger-gui</module>
-        <module>jdbc-perf-logger-spring-boot-starter</module>
-      </modules>
-    </profile>
-    <profile>
-      <id>java8</id>
-      <activation>
-        <jdk>1.8</jdk>
-      </activation>
-      <modules>
-        <!-- we specifically put jdbc-perf-logger-java8-tests not in last position to work around a bug in nexus-staging-maven-plugin 
-          that deploys the last module of the reactor even if it is configured not to be deployed... -->
-        <module>jdbc-perf-logger-java8-tests</module>
-        <module>jdbc-perf-logger-spring-boot-starter</module>
-        <module>jdbc-perf-logger-spring-boot-starter-test</module>
-        <module>jdbc-perf-logger-driver</module>
-        <module>jdbc-perf-logger-gui</module>
-      </modules>
-    </profile>
     <profile>
       <id>release-profile</id>
       <activation>

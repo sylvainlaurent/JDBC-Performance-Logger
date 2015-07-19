@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.github.sylvainlaurent.jdbcperflogger</groupId>
     <artifactId>jdbc-perf-logger</artifactId>
-    <version>0.7.4-SNAPSHOT</version>
+    <version>0.8.0-SNAPSHOT</version>
   </parent>
   <artifactId>jdbc-perf-logger-spring-boot-starter</artifactId>
 
@@ -54,4 +54,20 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>animal-sniffer-maven-plugin</artifactId>
+        <configuration>
+          <signature>
+            <groupId>org.codehaus.mojo.signature</groupId>
+            <artifactId>java17</artifactId>
+            <version>1.0</version>
+          </signature>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

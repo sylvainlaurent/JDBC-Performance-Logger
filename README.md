@@ -31,8 +31,8 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 
 ## Requirements
 - java 6 or later for the driver
-- java 7 or later for the GUI 
-- java 8 to test new JDBC 4.2 methods
+- java 8 or later for the GUI 
+- java 8 to build
 
 ## How to download
 - The package containing both the console and driver is available here : https://github.com/sylvainlaurent/JDBC-Performance-Logger/releases
@@ -49,16 +49,14 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 ## How to setup the JDBC Driver
 - If using Spring-Boot see [README.md](jdbc-perf-logger-spring-boot-starter/README.md)
 - If using maven, add the `<dependency>` snippet above (replacing the version with the latest one) to your `pom.xml`
-- If NOT using maven, add one (and only one) of the following set of files to the classpath of the JDBC-client application (the files can be found in the `lib` directory of the binary distribution)
- - `jdbc-perf-logger-driver` and `slf4j-api` jar files
- - `jdbc-perf-logger-driver-depsincluded` jar file
+- If NOT using maven, add `jdbc-perf-logger-driver` jar file to the classpath of the JDBC-client application (the file can be found in the `lib` directory of the binary distribution)
 - Change the driver class name to `ch.sla.jdbcperflogger.driver.WrappingDriver`
 - Prefix your current JDBC URL with `jdbcperflogger:`, example: `jdbcperflogger:jdbc:h2:mem:` or `jdbcperflogger:jdbc:oracle:thin:@myhost:1521:orcl`
 - (optional) add a `jdbcperflogger.xml` file to the classpath (see the [example file](/jdbc-perf-logger-gui/src/main/config/example-jdbcperflogger.xml/) for indications). If both the driver and console are used on the same machine, there's nothing to do: the driver will try to connect to the console on localhost:4561. 
 - (optional) the location of the config file can be overriden with the System property `jdbcperflogger.config.location`. Example : `java -Djdbcperflogger.config.location=/Users/me/myjdbcperflogger.xml ....`
 
 ## How to use the graphical console
-- launch `bin/jdbc-performance-logger-gui.sh` (unix/MacOS) or `bin\jdbc-performance-logger-gui.bat`
+- launch `bin/jdbc-performance-logger-gui.sh` (unix/MacOS) or `bin\jdbc-performance-logger-gui.bat` (requires java 8 JRE)
 - by default the console waits for connections from jdbc-logger-drivers on port 4561. All statements will be logged to the same tab
 - The console can also connect to a jdbc-perf-logger-driver instance on a specific host and port. A tab is created for each host/port combination.
 - Once a tab is opened, the status of the connection is indicated at the bottom of the panel. If the connection is broken and was initiated by the console, the console will try to reconnect regularly. If the connection was initiated by the driver, the latter will try to reconnect regularly.
@@ -67,7 +65,7 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 ## Tested databases
 - H2 (lightly, used for our own unit tests)
 - Oracle 10.2/11.2
-- MySQL
+- MySQL 5.1
 
 ## Current limitations
 - No DataSource nor XADataSource class provided
@@ -95,7 +93,7 @@ This can also be done by configuring the `catalina.properties` file.
 The source code is available on GitHub : https://github.com/sylvainlaurent/JDBC-Performance-Logger
 
 ### How to build source
-Use Maven and a JDK >=7, and run `mvn clean package` in the root directory of the git repository. The binary distribution is then available in `jdbc-perf-logger-gui`. You need a JDK 8 to be able to run tests present in the module `jdbc-perf-logger-java8-tests`.
+Use Maven and a JDK >=8, and run `mvn clean package` in the root directory of the git repository. The binary distribution is then available in `jdbc-perf-logger-gui`.
 
 ### How to create a release
 `mvn release:prepare release:perform` and answer the questions about version number.
