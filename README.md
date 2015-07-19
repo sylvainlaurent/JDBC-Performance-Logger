@@ -1,3 +1,5 @@
+![Travis CI build status](https://travis-ci.org/sylvainlaurent/JDBC-Performance-Logger.svg?branch=master)
+
 # JDBC Performance Logger
 
 ## Purpose
