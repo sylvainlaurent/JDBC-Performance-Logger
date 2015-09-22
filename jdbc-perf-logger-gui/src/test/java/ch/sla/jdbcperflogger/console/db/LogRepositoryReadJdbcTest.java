@@ -38,15 +38,15 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
         final StatementExecutedLog statementExecutedLog = new StatementExecutedLog(stmtLog.getLogId(), 123, 567L,
                 "myexception");
         repositoryUpdate.updateLogAfterExecution(statementExecutedLog);
-        final ResultSetLog resultSetLog = new ResultSetLog(stmtLog.getLogId(), 321, 765);
+        final ResultSetLog resultSetLog = new ResultSetLog(stmtLog.getLogId(), 321L, 300L, 765);
         repositoryUpdate.updateLogWithResultSetLog(resultSetLog);
 
-        assertEquals(statementExecutedLog.getExecutionTimeNanos() + resultSetLog.getResultSetIterationTimeNanos(),
+        assertEquals(statementExecutedLog.getExecutionTimeNanos() + resultSetLog.getResultSetUsageDurationNanos(),
                 repositoryRead.getTotalExecAndFetchTimeNanos());
 
         {
             final LogSearchCriteria searchCriteria = new LogSearchCriteria();
-            assertEquals(statementExecutedLog.getExecutionTimeNanos() + resultSetLog.getResultSetIterationTimeNanos(),
+            assertEquals(statementExecutedLog.getExecutionTimeNanos() + resultSetLog.getResultSetUsageDurationNanos(),
                     repositoryRead.getTotalExecAndFetchTimeNanos(searchCriteria));
         }
         {
@@ -57,7 +57,7 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
         {
             final LogSearchCriteria searchCriteria = new LogSearchCriteria();
             searchCriteria.setFilter("myrawsql");
-            assertEquals(statementExecutedLog.getExecutionTimeNanos() + resultSetLog.getResultSetIterationTimeNanos(),
+            assertEquals(statementExecutedLog.getExecutionTimeNanos() + resultSetLog.getResultSetUsageDurationNanos(),
                     repositoryRead.getTotalExecAndFetchTimeNanos(searchCriteria));
             searchCriteria.setFilter("myrawsql2");
             assertEquals(0, repositoryRead.getTotalExecAndFetchTimeNanos(searchCriteria));
@@ -65,7 +65,7 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
         {
             final LogSearchCriteria searchCriteria = new LogSearchCriteria();
             searchCriteria.setMinDurationNanos(123L + 321L - 1);
-            assertEquals(statementExecutedLog.getExecutionTimeNanos() + resultSetLog.getResultSetIterationTimeNanos(),
+            assertEquals(statementExecutedLog.getExecutionTimeNanos() + resultSetLog.getResultSetUsageDurationNanos(),
                     repositoryRead.getTotalExecAndFetchTimeNanos(searchCriteria));
             searchCriteria.setMinDurationNanos(123L + 321L);
             assertEquals(0, repositoryRead.getTotalExecAndFetchTimeNanos(searchCriteria));
@@ -90,16 +90,18 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
                             resultSet.getInt(LogRepositoryConstants.STMT_TYPE_COLUMN));
                     assertEquals(2, resultSet.getLong(LogRepositoryConstants.EXEC_COUNT_COLUMN));
                     assertEquals(stmtLog1.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
-                    assertEquals(stmtLog1.getExecutionPlusFetchTimeNanos() + stmtLog2.getExecutionPlusFetchTimeNanos(),
-                            resultSet.getLong(LogRepositoryConstants.TOTAL_EXEC_PLUS_FETCH_TIME_COLUMN));
-                    assertEquals(stmtLog2.getExecutionPlusFetchTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.MAX_EXEC_PLUS_FETCH_TIME_COLUMN));
-                    assertEquals(stmtLog1.getExecutionPlusFetchTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.MIN_EXEC_PLUS_FETCH_TIME_COLUMN));
                     assertEquals(
-                            (stmtLog1.getExecutionPlusFetchTimeNanos() + stmtLog2.getExecutionPlusFetchTimeNanos())
-                                    / 2.0d,
-                            resultSet.getInt(LogRepositoryConstants.AVG_EXEC_PLUS_FETCH_TIME_COLUMN), 1.0d);
+                            stmtLog1.getExecutionPlusResultSetUsageTimeNanos()
+                                    + stmtLog2.getExecutionPlusResultSetUsageTimeNanos(),
+                            resultSet.getLong(LogRepositoryConstants.TOTAL_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                    assertEquals(stmtLog2.getExecutionPlusResultSetUsageTimeNanos(),
+                            resultSet.getInt(LogRepositoryConstants.MAX_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                    assertEquals(stmtLog1.getExecutionPlusResultSetUsageTimeNanos(),
+                            resultSet.getInt(LogRepositoryConstants.MIN_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                    assertEquals(
+                            (stmtLog1.getExecutionPlusResultSetUsageTimeNanos()
+                                    + stmtLog2.getExecutionPlusResultSetUsageTimeNanos()) / 2.0d,
+                            resultSet.getInt(LogRepositoryConstants.AVG_EXEC_PLUS_RSET_USAGE_TIME_COLUMN), 1.0d);
                 }
                 {
                     resultSet.next();
@@ -109,14 +111,14 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
                             resultSet.getInt(LogRepositoryConstants.STMT_TYPE_COLUMN));
                     assertEquals(1, resultSet.getLong(LogRepositoryConstants.EXEC_COUNT_COLUMN));
                     assertEquals(stmtLog.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
-                    assertEquals(stmtLog.getExecutionPlusFetchTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.TOTAL_EXEC_PLUS_FETCH_TIME_COLUMN));
-                    assertEquals(stmtLog.getExecutionPlusFetchTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.MAX_EXEC_PLUS_FETCH_TIME_COLUMN));
-                    assertEquals(stmtLog.getExecutionPlusFetchTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.MIN_EXEC_PLUS_FETCH_TIME_COLUMN));
-                    assertEquals(stmtLog.getExecutionPlusFetchTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.AVG_EXEC_PLUS_FETCH_TIME_COLUMN));
+                    assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
+                            resultSet.getInt(LogRepositoryConstants.TOTAL_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                    assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
+                            resultSet.getInt(LogRepositoryConstants.MAX_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                    assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
+                            resultSet.getInt(LogRepositoryConstants.MIN_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                    assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
+                            resultSet.getInt(LogRepositoryConstants.AVG_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
                 }
             }
         });
@@ -141,16 +143,18 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
                     assertEquals(stmtLog1.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
                     assertEquals(stmtLog1.getFilledSql(),
                             resultSet.getString(LogRepositoryConstants.FILLED_SQL_COLUMN));
-                    assertEquals(stmtLog1.getExecutionPlusFetchTimeNanos() + stmtLog2.getExecutionPlusFetchTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.TOTAL_EXEC_PLUS_FETCH_TIME_COLUMN));
-                    assertEquals(stmtLog2.getExecutionPlusFetchTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.MAX_EXEC_PLUS_FETCH_TIME_COLUMN));
-                    assertEquals(stmtLog1.getExecutionPlusFetchTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.MIN_EXEC_PLUS_FETCH_TIME_COLUMN));
                     assertEquals(
-                            (stmtLog1.getExecutionPlusFetchTimeNanos() + stmtLog2.getExecutionPlusFetchTimeNanos())
-                                    / 2.0d,
-                            resultSet.getInt(LogRepositoryConstants.AVG_EXEC_PLUS_FETCH_TIME_COLUMN), 1.0d);
+                            stmtLog1.getExecutionPlusResultSetUsageTimeNanos()
+                                    + stmtLog2.getExecutionPlusResultSetUsageTimeNanos(),
+                            resultSet.getInt(LogRepositoryConstants.TOTAL_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                    assertEquals(stmtLog2.getExecutionPlusResultSetUsageTimeNanos(),
+                            resultSet.getInt(LogRepositoryConstants.MAX_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                    assertEquals(stmtLog1.getExecutionPlusResultSetUsageTimeNanos(),
+                            resultSet.getInt(LogRepositoryConstants.MIN_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                    assertEquals(
+                            (stmtLog1.getExecutionPlusResultSetUsageTimeNanos()
+                                    + stmtLog2.getExecutionPlusResultSetUsageTimeNanos()) / 2.0d,
+                            resultSet.getInt(LogRepositoryConstants.AVG_EXEC_PLUS_RSET_USAGE_TIME_COLUMN), 1.0d);
                 }
                 {
                     resultSet.next();
@@ -161,14 +165,14 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
                     assertEquals(1, resultSet.getLong(LogRepositoryConstants.EXEC_COUNT_COLUMN));
                     assertEquals(stmtLog.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
                     assertEquals(stmtLog.getFilledSql(), resultSet.getString(LogRepositoryConstants.FILLED_SQL_COLUMN));
-                    assertEquals(stmtLog.getExecutionPlusFetchTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.TOTAL_EXEC_PLUS_FETCH_TIME_COLUMN));
-                    assertEquals(stmtLog.getExecutionPlusFetchTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.MAX_EXEC_PLUS_FETCH_TIME_COLUMN));
-                    assertEquals(stmtLog.getExecutionPlusFetchTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.MIN_EXEC_PLUS_FETCH_TIME_COLUMN));
-                    assertEquals(stmtLog.getExecutionPlusFetchTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.AVG_EXEC_PLUS_FETCH_TIME_COLUMN));
+                    assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
+                            resultSet.getInt(LogRepositoryConstants.TOTAL_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                    assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
+                            resultSet.getInt(LogRepositoryConstants.MAX_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                    assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
+                            resultSet.getInt(LogRepositoryConstants.MIN_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                    assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
+                            resultSet.getInt(LogRepositoryConstants.AVG_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
                 }
 
             }
@@ -312,7 +316,7 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
         insert3Logs();
 
         final LogSearchCriteria searchCriteria = new LogSearchCriteria();
-        searchCriteria.setSqlPassThroughFilter("avg_exec_plus_fetch_time >1000");
+        searchCriteria.setSqlPassThroughFilter("avg_EXEC_PLUS_RSET_USAGE_TIME >1000");
         repositoryRead.getStatementsGroupByRawSQL(searchCriteria, new ResultSetAnalyzer() {
             @Override
             public void analyze(final ResultSet resultSet) throws SQLException {
@@ -328,7 +332,7 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
         insert3Logs();
 
         final LogSearchCriteria searchCriteria = new LogSearchCriteria();
-        searchCriteria.setSqlPassThroughFilter("avg_exec_plus_fetch_time >1000");
+        searchCriteria.setSqlPassThroughFilter("avg_EXEC_PLUS_RSET_USAGE_TIME >1000");
         repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, new ResultSetAnalyzer() {
             @Override
             public void analyze(final ResultSet resultSet) throws SQLException {
@@ -468,7 +472,7 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
                     Thread.currentThread().getName(), 123, true);
             final StatementExecutedLog statementExecutedLog = new StatementExecutedLog(log.getLogId(), 2340L, 456L,
                     "myexception");
-            final ResultSetLog resultSetLog = new ResultSetLog(log.getLogId(), 789L, 21);
+            final ResultSetLog resultSetLog = new ResultSetLog(log.getLogId(), 789L, 700L, 21);
             fullLogs.add(new StatementFullyExecutedLog(log, statementExecutedLog, resultSetLog));
         }
         {

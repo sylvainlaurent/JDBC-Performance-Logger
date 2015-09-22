@@ -20,7 +20,7 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
  - support for multiple connections
  - the connection between the monitored java application (JDBC proxy driver) and the console can be initiated from either side
 - Logging of bound values of prepared statements, including the name of the set* method called to bind the value (very helpful to distinguish setDate and setTimestamp to understand [why Oracle does not use an index](http://docs.oracle.com/cd/E16655_01/java.121/e17657/apxref.htm#JJDBC28919) )
-- Separate measure of statement execution time and result set iteration time
+- Separate measure of statement execution time, results fetch time and result set usage time (includes result processing like creation of java object)
 - Measures connection creation and commit/rollback durations
 - Handling of batched statements
 - Logging of SQLExceptions

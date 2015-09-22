@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -83,28 +83,28 @@ public class LogExporter {
                     writer.print("/*");
                     writer.print(tstampFormat.format(timestamp));
                     writer.print(" exec=");
-                    writer.print(TimeUnit.NANOSECONDS.toMillis(resultSet
-                            .getLong(LogRepositoryConstants.EXEC_TIME_COLUMN)));
+                    writer.print(
+                            TimeUnit.NANOSECONDS.toMillis(resultSet.getLong(LogRepositoryConstants.EXEC_TIME_COLUMN)));
                     writer.print("ms ");
 
                     final int nbRows = resultSet.getInt(LogRepositoryConstants.NB_ROWS_COLUMN);
                     if (!resultSet.wasNull()) {
                         writer.print(nbRows);
                         writer.print(", row(s) fetched in ");
-                        writer.print(TimeUnit.NANOSECONDS.toMillis(resultSet
-                                .getLong(LogRepositoryConstants.FETCH_TIME_COLUMN)));
+                        writer.print(TimeUnit.NANOSECONDS
+                                .toMillis(resultSet.getLong(LogRepositoryConstants.FETCH_TIME_COLUMN)));
                         writer.print("ms ");
                     }
 
-                    final StatementType stmtType = StatementType.fromId(resultSet
-                            .getByte(LogRepositoryConstants.STMT_TYPE_COLUMN));
+                    final StatementType stmtType = StatementType
+                            .fromId(resultSet.getByte(LogRepositoryConstants.STMT_TYPE_COLUMN));
                     switch (stmtType) {
                     case NON_PREPARED_BATCH_EXECUTION:
                     case PREPARED_BATCH_EXECUTION:
                         writer.print(stmtType.name());
                         writer.println("*/");
-                        final DetailedViewStatementLog statementLog = logRepository.getStatementLog(resultSet
-                                .getLong("ID"));
+                        final DetailedViewStatementLog statementLog = logRepository
+                                .getStatementLog(resultSet.getLong("ID"));
                         if (statementLog != null) {
                             writer.println(getBatchedExecutions(statementLog));
                         }
@@ -145,7 +145,8 @@ public class LogExporter {
 
             final SimpleDateFormat tstampFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
             try {
-                writer.println("TIMESTAMP\tEXEC_TIME_S\tFETCH_TIME_S\tEXEC_PLUS_FETCH_TIME_S\tFETCHED_ROWS\tSTMT_TYPE\tRAW_STATEMENT\tFILLED_STATEMENT\tTHREAD_NAME\tCONNECTION_ID\tTIMEOUT\tERROR");
+                writer.println(
+                        "TIMESTAMP\tEXEC_TIME_S\tFETCH_TIME_S\tEXEC_PLUS_RSET_USAGE_TIME_S\tFETCHED_ROWS\tSTMT_TYPE\tRAW_STATEMENT\tFILLED_STATEMENT\tTHREAD_NAME\tCONNECTION_ID\tTIMEOUT\tERROR");
                 while (resultSet.next()) {
                     final Timestamp timestamp = resultSet.getTimestamp(LogRepositoryConstants.TSTAMP_COLUMN);
                     writer.print(tstampFormat.format(timestamp));
@@ -159,7 +160,7 @@ public class LogExporter {
                         writer.print(resultSet.getLong(LogRepositoryConstants.FETCH_TIME_COLUMN));
                         writer.print("e-9");
                         writer.print('\t');
-                        writer.print(resultSet.getLong(LogRepositoryConstants.EXEC_PLUS_FETCH_TIME_COLUMN));
+                        writer.print(resultSet.getLong(LogRepositoryConstants.EXEC_PLUS_RSET_USAGE_TIME));
                         writer.print("e-9");
                         writer.print('\t');
                         writer.print(nbRows);
@@ -171,8 +172,8 @@ public class LogExporter {
                         writer.print('\t');
                     }
 
-                    final StatementType stmtType = StatementType.fromId(resultSet
-                            .getByte(LogRepositoryConstants.STMT_TYPE_COLUMN));
+                    final StatementType stmtType = StatementType
+                            .fromId(resultSet.getByte(LogRepositoryConstants.STMT_TYPE_COLUMN));
                     writer.print('\t');
                     writer.print(stmtType.name());
                     writer.print('\t');

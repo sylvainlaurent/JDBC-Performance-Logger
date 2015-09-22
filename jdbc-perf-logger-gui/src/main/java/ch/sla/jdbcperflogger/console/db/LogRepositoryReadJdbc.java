@@ -15,18 +15,26 @@
  */
 package ch.sla.jdbcperflogger.console.db;
 
-import ch.sla.jdbcperflogger.StatementType;
-import ch.sla.jdbcperflogger.model.ConnectionInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static ch.sla.jdbcperflogger.console.db.LogRepositoryConstants.AVG_EXEC_PLUS_RSET_USAGE_TIME_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepositoryConstants.MAX_EXEC_PLUS_RSET_USAGE_TIME_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepositoryConstants.MIN_EXEC_PLUS_RSET_USAGE_TIME_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepositoryConstants.TOTAL_EXEC_PLUS_RSET_USAGE_TIME_COLUMN;
 
-import org.eclipse.jdt.annotation.NonNull;
-import org.eclipse.jdt.annotation.Nullable;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Properties;
 import java.util.UUID;
 
-import static ch.sla.jdbcperflogger.console.db.LogRepositoryConstants.*;
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import ch.sla.jdbcperflogger.StatementType;
+import ch.sla.jdbcperflogger.model.ConnectionInfo;
 
 public class LogRepositoryReadJdbc implements LogRepositoryRead {
 
@@ -54,9 +62,9 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
 
     @Override
     public void getStatements(final LogSearchCriteria searchCriteria, final ResultSetAnalyzer analyzer,
-                              final boolean withFilledSql) {
+            final boolean withFilledSql) {
         final StringBuilder sql = new StringBuilder("select id, tstamp, statementType, rawSql, " //
-                + "exec_plus_fetch_time, execution_time, fetch_time, "//
+                + "exec_plus_rset_usage_time, execution_time, rset_usage_time, fetch_time, "//
                 + "nbRows, threadName, connectionNumber, timeout, autoCommit, error ");
         if (withFilledSql) {
             sql.append(", " + LogRepositoryConstants.FILLED_SQL_COLUMN);
@@ -81,10 +89,14 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
     public void getStatementsGroupByRawSQL(final LogSearchCriteria searchCriteria, final ResultSetAnalyzer analyzer) {
         final StringBuilder sql = new StringBuilder(
                 "select * from (select min(id) as ID, statementType, rawSql, count(1) as exec_count, " //
-                        + "sum(executionDurationNanos+coalesce(fetchDurationNanos,0)) as " + TOTAL_EXEC_PLUS_FETCH_TIME_COLUMN + ", "//
-                        + "max(executionDurationNanos+coalesce(fetchDurationNanos,0)) as " + MAX_EXEC_PLUS_FETCH_TIME_COLUMN + ", " //
-                        + "min(executionDurationNanos+coalesce(fetchDurationNanos,0)) as " + MIN_EXEC_PLUS_FETCH_TIME_COLUMN + ", " //
-                        + "avg(executionDurationNanos+coalesce(fetchDurationNanos,0)) as " + AVG_EXEC_PLUS_FETCH_TIME_COLUMN + " " //
+                        + "sum(executionDurationNanos+coalesce(rsetUsageDurationNanos,0)) as "
+                        + TOTAL_EXEC_PLUS_RSET_USAGE_TIME_COLUMN + ", "//
+                        + "max(executionDurationNanos+coalesce(rsetUsageDurationNanos,0)) as "
+                        + MAX_EXEC_PLUS_RSET_USAGE_TIME_COLUMN + ", " //
+                        + "min(executionDurationNanos+coalesce(rsetUsageDurationNanos,0)) as "
+                        + MIN_EXEC_PLUS_RSET_USAGE_TIME_COLUMN + ", " //
+                        + "avg(executionDurationNanos+coalesce(rsetUsageDurationNanos,0)) as "
+                        + AVG_EXEC_PLUS_RSET_USAGE_TIME_COLUMN + " " //
                         + "from statement_log ");
         boolean whereAdded = false;
 
@@ -93,7 +105,7 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
         }
         sql.append("group by statementType, rawSql ");
         if (searchCriteria.getMinDurationNanos() != null) {
-            sql.append("having sum(executionDurationNanos++coalesce(fetchDurationNanos,0))>=? ");
+            sql.append("having sum(executionDurationNanos++coalesce(rsetUsageDurationNanos,0))>=? ");
         }
         sql.append(") ");
         if (searchCriteria.getSqlPassThroughFilter() != null) {
@@ -103,7 +115,7 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
             addWhereClause(sql, false, "statementType<>" + StatementType.TRANSACTION.getId());
         }
 
-        sql.append(" order by " + TOTAL_EXEC_PLUS_FETCH_TIME_COLUMN + " desc");
+        sql.append(" order by " + TOTAL_EXEC_PLUS_RSET_USAGE_TIME_COLUMN + " desc");
 
         try (PreparedStatement statement = connectionRead.prepareStatement(sql.toString())) {
             applyParametersForWhereClause(searchCriteria, statement);
@@ -117,20 +129,25 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
     }
 
     @Override
-    public void getStatementsGroupByFilledSQL(final LogSearchCriteria searchCriteria, final ResultSetAnalyzer analyzer) {
+    public void getStatementsGroupByFilledSQL(final LogSearchCriteria searchCriteria,
+            final ResultSetAnalyzer analyzer) {
         final StringBuilder sql = new StringBuilder(
                 "select * from (select min(id) as ID, statementType, rawSql, filledSql, count(1) as exec_count, " //
-                        + "sum(executionDurationNanos+coalesce(fetchDurationNanos,0)) as " + TOTAL_EXEC_PLUS_FETCH_TIME_COLUMN + ", "//
-                        + "max(executionDurationNanos+coalesce(fetchDurationNanos,0)) as " + MAX_EXEC_PLUS_FETCH_TIME_COLUMN + ", " //
-                        + "min(executionDurationNanos+coalesce(fetchDurationNanos,0)) as " + MIN_EXEC_PLUS_FETCH_TIME_COLUMN + ", " //
-                        + "avg(executionDurationNanos+coalesce(fetchDurationNanos,0)) as " + AVG_EXEC_PLUS_FETCH_TIME_COLUMN + " " //
+                        + "sum(executionDurationNanos+coalesce(rsetUsageDurationNanos,0)) as "
+                        + TOTAL_EXEC_PLUS_RSET_USAGE_TIME_COLUMN + ", "//
+                        + "max(executionDurationNanos+coalesce(rsetUsageDurationNanos,0)) as "
+                        + MAX_EXEC_PLUS_RSET_USAGE_TIME_COLUMN + ", " //
+                        + "min(executionDurationNanos+coalesce(rsetUsageDurationNanos,0)) as "
+                        + MIN_EXEC_PLUS_RSET_USAGE_TIME_COLUMN + ", " //
+                        + "avg(executionDurationNanos+coalesce(rsetUsageDurationNanos,0)) as "
+                        + AVG_EXEC_PLUS_RSET_USAGE_TIME_COLUMN + " " //
                         + "from statement_log ");
         if (searchCriteria.getFilter() != null) {
             sql.append("where (UPPER(rawSql) like ? or UPPER(filledSql) like ?)");
         }
         sql.append("group by statementType, rawSql, filledSql ");
         if (searchCriteria.getMinDurationNanos() != null) {
-            sql.append("having sum(executionDurationNanos++coalesce(fetchDurationNanos,0))>=?");
+            sql.append("having sum(executionDurationNanos++coalesce(rsetUsageDurationNanos,0))>=?");
         }
         sql.append(") ");
         if (searchCriteria.getSqlPassThroughFilter() != null) {
@@ -139,7 +156,7 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
         if (searchCriteria.isRemoveTransactionCompletions()) {
             addWhereClause(sql, false, "statementType<>" + StatementType.TRANSACTION.getId());
         }
-        sql.append(" order by " + TOTAL_EXEC_PLUS_FETCH_TIME_COLUMN + " desc");
+        sql.append(" order by " + TOTAL_EXEC_PLUS_RSET_USAGE_TIME_COLUMN + " desc");
 
         try (PreparedStatement statement = connectionRead.prepareStatement(sql.toString())) {
             applyParametersForWhereClause(searchCriteria, statement);
@@ -159,7 +176,7 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
             whereAdded = addWhereClause(sql, whereAdded, "(UPPER(rawSql) like ? or UPPER(filledSql) like ?) ");
         }
         if (searchCriteria.getMinDurationNanos() != null) {
-            whereAdded = addWhereClause(sql, whereAdded, "exec_plus_fetch_time>? ");
+            whereAdded = addWhereClause(sql, whereAdded, "exec_plus_rset_usage_time>? ");
         }
         if (searchCriteria.isRemoveTransactionCompletions()) {
             whereAdded = addWhereClause(sql, whereAdded, "statementType<>" + StatementType.TRANSACTION.getId() + " ");
@@ -181,8 +198,8 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
         return whereAdded;
     }
 
-    private void applyParametersForWhereClause(final LogSearchCriteria searchCriteria, final PreparedStatement statement)
-            throws SQLException {
+    private void applyParametersForWhereClause(final LogSearchCriteria searchCriteria,
+            final PreparedStatement statement) throws SQLException {
         final String filter = searchCriteria.getFilter();
         int i = 1;
         if (filter != null) {
@@ -260,7 +277,7 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
     @Override
     public long getTotalExecAndFetchTimeNanos() {
         try (PreparedStatement statement = connectionRead
-                .prepareStatement("select sum(exec_plus_fetch_time) from v_statement_log")) {
+                .prepareStatement("select sum(exec_plus_rset_usage_time) from v_statement_log")) {
             try (ResultSet resultSet = statement.executeQuery()) {
                 resultSet.next();
                 return resultSet.getLong(1);
@@ -272,7 +289,7 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
 
     @Override
     public long getTotalExecAndFetchTimeNanos(final LogSearchCriteria searchCriteria) {
-        String sql = "select sum(exec_plus_fetch_time) from v_statement_log ";
+        String sql = "select sum(exec_plus_rset_usage_time) from v_statement_log ";
         sql += getWhereClause(searchCriteria);
 
         try (PreparedStatement statement = connectionRead.prepareStatement(sql)) {

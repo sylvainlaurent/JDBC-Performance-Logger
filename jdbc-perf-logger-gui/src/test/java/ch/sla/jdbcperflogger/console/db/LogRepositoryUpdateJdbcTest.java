@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -63,8 +63,8 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
         assertEquals(connectionInfo.getUrl(), readLog.getConnectionInfo().getUrl());
         assertEquals(connectionInfo.getConnectionNumber(), readLog.getConnectionInfo().getConnectionNumber());
         assertEquals(connectionInfo.getCreationDate(), readLog.getConnectionInfo().getCreationDate());
-        assertEquals(connectionInfo.getConnectionCreationDuration(), readLog.getConnectionInfo()
-                .getConnectionCreationDuration());
+        assertEquals(connectionInfo.getConnectionCreationDuration(),
+                readLog.getConnectionInfo().getConnectionCreationDuration());
         assertEquals(connectionInfo.getConnectionProperties(), readLog.getConnectionInfo().getConnectionProperties());
         assertEquals(connectionInfo.getUuid(), readLog.getConnectionInfo().getUuid());
     }
@@ -85,7 +85,7 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
         final StatementExecutedLog statementExecutedLog = new StatementExecutedLog(stmtLog.getLogId(), 123, 567L,
                 "myexception");
         repositoryUpdate.updateLogAfterExecution(statementExecutedLog);
-        final ResultSetLog resultSetLog = new ResultSetLog(stmtLog.getLogId(), 321, 765);
+        final ResultSetLog resultSetLog = new ResultSetLog(stmtLog.getLogId(), 321L, 300L, 765);
         repositoryUpdate.updateLogWithResultSetLog(resultSetLog);
 
         repositoryRead.getStatements(new LogSearchCriteria(), new ResultSetAnalyzer() {
@@ -97,18 +97,20 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
                 assertEquals(stmtLog.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
                 assertEquals(stmtLog.isAutoCommit(), resultSet.getBoolean(LogRepositoryConstants.AUTOCOMMIT_COLUMN));
                 assertEquals(12, resultSet.getInt(LogRepositoryConstants.CONNECTION_NUMBER_COLUMN));
-                assertEquals(resultSetLog.getResultSetIterationTimeNanos(),
+                assertEquals(resultSetLog.getResultSetUsageDurationNanos(),
+                        resultSet.getInt(LogRepositoryConstants.RSET_USAGE_TIME));
+                assertEquals(resultSetLog.getFetchDurationNanos(),
                         resultSet.getInt(LogRepositoryConstants.FETCH_TIME_COLUMN));
                 assertEquals(statementExecutedLog.getExecutionTimeNanos(),
                         resultSet.getInt(LogRepositoryConstants.EXEC_TIME_COLUMN));
                 assertEquals(
-                        statementExecutedLog.getExecutionTimeNanos() + resultSetLog.getResultSetIterationTimeNanos(),
-                        resultSet.getInt(LogRepositoryConstants.EXEC_PLUS_FETCH_TIME_COLUMN));
+                        statementExecutedLog.getExecutionTimeNanos() + resultSetLog.getResultSetUsageDurationNanos(),
+                        resultSet.getInt(LogRepositoryConstants.EXEC_PLUS_RSET_USAGE_TIME));
                 assertEquals(resultSetLog.getNbRowsIterated(), resultSet.getInt(LogRepositoryConstants.NB_ROWS_COLUMN));
                 assertEquals(stmtLog.getThreadName(), resultSet.getString(LogRepositoryConstants.THREAD_NAME_COLUMN));
                 assertEquals(stmtLog.getTimeout(), resultSet.getInt(LogRepositoryConstants.TIMEOUT_COLUMN));
-                assertEquals(stmtLog.getTimestamp(), resultSet.getTimestamp(LogRepositoryConstants.TSTAMP_COLUMN)
-                        .getTime());
+                assertEquals(stmtLog.getTimestamp(),
+                        resultSet.getTimestamp(LogRepositoryConstants.TSTAMP_COLUMN).getTime());
                 assertEquals(stmtLog.getStatementType().getId(),
                         resultSet.getInt(LogRepositoryConstants.STMT_TYPE_COLUMN));
                 assertTrue(resultSet.getBoolean(LogRepositoryConstants.ERROR_COLUMN));
@@ -132,8 +134,8 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
         repositoryUpdate.setLastLostMessageTime(System.currentTimeMillis() - 1);
         for (int i = 1; i < 2 * LogRepositoryUpdateJdbc.NB_ROWS_MAX; i++) {
             final StatementLog newLog = new StatementLog(log.getConnectionUuid(), randomUUID(),
-                    System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myrawsql" + i, Thread
-                            .currentThread().getName(), i, i % 2 == 0);
+                    System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myrawsql" + i,
+                    Thread.currentThread().getName(), i, i % 2 == 0);
             repositoryUpdate.addStatementLog(newLog);
         }
         assertNotNull(repositoryUpdate.getLastLostMessageTime());
@@ -173,8 +175,8 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
         final StatementLog log = insert1Log();
 
         final List<String> sqlList = Arrays.asList("st1", "st2", "st3");
-        final BatchedNonPreparedStatementsLog batchedLogs = new BatchedNonPreparedStatementsLog(
-                log.getConnectionUuid(), randomUUID(), System.currentTimeMillis(), sqlList, "myThread", 13, true);
+        final BatchedNonPreparedStatementsLog batchedLogs = new BatchedNonPreparedStatementsLog(log.getConnectionUuid(),
+                randomUUID(), System.currentTimeMillis(), sqlList, "myThread", 13, true);
         repositoryUpdate.addBatchedNonPreparedStatementsLog(batchedLogs);
         assertEquals(2, countRowsInTable("statement_log"));
         assertEquals(3, countRowsInTable("batched_statement_log"));
@@ -203,18 +205,20 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
                 resultSet.next();
                 assertEquals(2, resultSet.getLong(ID_COLUMN));
                 assertEquals(batchedLogs.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
-                assertEquals(batchedLogs.isAutoCommit(), resultSet.getBoolean(LogRepositoryConstants.AUTOCOMMIT_COLUMN));
+                assertEquals(batchedLogs.isAutoCommit(),
+                        resultSet.getBoolean(LogRepositoryConstants.AUTOCOMMIT_COLUMN));
                 assertEquals(0, resultSet.getInt(LogRepositoryConstants.FETCH_TIME_COLUMN));
+                assertEquals(0, resultSet.getInt(LogRepositoryConstants.RSET_USAGE_TIME));
                 assertEquals(statementExecutedLog.getExecutionTimeNanos(),
                         resultSet.getInt(LogRepositoryConstants.EXEC_TIME_COLUMN));
                 assertEquals(statementExecutedLog.getExecutionTimeNanos(),
-                        resultSet.getInt(LogRepositoryConstants.EXEC_PLUS_FETCH_TIME_COLUMN));
+                        resultSet.getInt(LogRepositoryConstants.EXEC_PLUS_RSET_USAGE_TIME));
                 assertEquals(0, resultSet.getInt(LogRepositoryConstants.NB_ROWS_COLUMN));
                 assertEquals(batchedLogs.getThreadName(),
                         resultSet.getString(LogRepositoryConstants.THREAD_NAME_COLUMN));
                 assertEquals(batchedLogs.getTimeout(), resultSet.getInt(LogRepositoryConstants.TIMEOUT_COLUMN));
-                assertEquals(batchedLogs.getTimestamp(), resultSet.getTimestamp(LogRepositoryConstants.TSTAMP_COLUMN)
-                        .getTime());
+                assertEquals(batchedLogs.getTimestamp(),
+                        resultSet.getTimestamp(LogRepositoryConstants.TSTAMP_COLUMN).getTime());
                 assertEquals(batchedLogs.getStatementType().getId(),
                         resultSet.getInt(LogRepositoryConstants.STMT_TYPE_COLUMN));
                 assertTrue(resultSet.getBoolean(LogRepositoryConstants.ERROR_COLUMN));
@@ -259,19 +263,19 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
         final List<StatementFullyExecutedLog> fullLogs = new ArrayList<>();
         {
             final StatementLog log = new StatementLog(connectionInfo.getUuid(), randomUUID(),
-                    System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myrawsql", Thread
-                            .currentThread().getName(), 123, true);
+                    System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myrawsql",
+                    Thread.currentThread().getName(), 123, true);
             final StatementExecutedLog statementExecutedLog = new StatementExecutedLog(log.getLogId(), 234L, 456L,
                     "myexception");
             fullLogs.add(new StatementFullyExecutedLog(log, statementExecutedLog, null));
         }
         {
             final StatementLog log = new StatementLog(connectionInfo.getUuid(), randomUUID(),
-                    System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myrawsql", Thread
-                            .currentThread().getName(), 123, true);
+                    System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myrawsql",
+                    Thread.currentThread().getName(), 123, true);
             final StatementExecutedLog statementExecutedLog = new StatementExecutedLog(log.getLogId(), 234L, 456L,
                     "myexception");
-            final ResultSetLog resultSetLog = new ResultSetLog(log.getLogId(), 789L, 21);
+            final ResultSetLog resultSetLog = new ResultSetLog(log.getLogId(), 789L, 700L, 21);
             fullLogs.add(new StatementFullyExecutedLog(log, statementExecutedLog, resultSetLog));
         }
 
@@ -288,21 +292,27 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
 
                     assertEquals(1, resultSet.getLong(ID_COLUMN));
                     assertEquals(stmtLog.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
-                    assertEquals(stmtLog.isAutoCommit(), resultSet.getBoolean(LogRepositoryConstants.AUTOCOMMIT_COLUMN));
+                    assertEquals(stmtLog.isAutoCommit(),
+                            resultSet.getBoolean(LogRepositoryConstants.AUTOCOMMIT_COLUMN));
                     assertEquals(12, resultSet.getInt(LogRepositoryConstants.CONNECTION_NUMBER_COLUMN));
+
+                    resultSet.getLong(LogRepositoryConstants.RSET_USAGE_TIME);
+                    assertTrue(resultSet.wasNull());
+
                     resultSet.getLong(LogRepositoryConstants.FETCH_TIME_COLUMN);
                     assertTrue(resultSet.wasNull());
+
                     assertEquals(stmtLog.getExecutionTimeNanos(),
                             resultSet.getLong(LogRepositoryConstants.EXEC_TIME_COLUMN));
                     assertEquals(stmtLog.getExecutionTimeNanos(),
-                            resultSet.getLong(LogRepositoryConstants.EXEC_PLUS_FETCH_TIME_COLUMN));
+                            resultSet.getLong(LogRepositoryConstants.EXEC_PLUS_RSET_USAGE_TIME));
                     resultSet.getInt(LogRepositoryConstants.NB_ROWS_COLUMN);
                     assertTrue(resultSet.wasNull());
                     assertEquals(stmtLog.getThreadName(),
                             resultSet.getString(LogRepositoryConstants.THREAD_NAME_COLUMN));
                     assertEquals(stmtLog.getTimeout(), resultSet.getInt(LogRepositoryConstants.TIMEOUT_COLUMN));
-                    assertEquals(stmtLog.getTimestamp(), resultSet.getTimestamp(LogRepositoryConstants.TSTAMP_COLUMN)
-                            .getTime());
+                    assertEquals(stmtLog.getTimestamp(),
+                            resultSet.getTimestamp(LogRepositoryConstants.TSTAMP_COLUMN).getTime());
                     assertEquals(stmtLog.getStatementType().getId(),
                             resultSet.getInt(LogRepositoryConstants.STMT_TYPE_COLUMN));
                     assertTrue(resultSet.getBoolean(LogRepositoryConstants.ERROR_COLUMN));
@@ -313,21 +323,24 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
 
                     assertEquals(2, resultSet.getLong(ID_COLUMN));
                     assertEquals(stmtLog.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
-                    assertEquals(stmtLog.isAutoCommit(), resultSet.getBoolean(LogRepositoryConstants.AUTOCOMMIT_COLUMN));
+                    assertEquals(stmtLog.isAutoCommit(),
+                            resultSet.getBoolean(LogRepositoryConstants.AUTOCOMMIT_COLUMN));
                     assertEquals(12, resultSet.getInt(LogRepositoryConstants.CONNECTION_NUMBER_COLUMN));
-                    assertEquals(stmtLog.getResultSetIterationTimeNanos().longValue(),
+                    assertEquals(stmtLog.getResultSetUsageDurationNanos().longValue(),
+                            resultSet.getLong(LogRepositoryConstants.RSET_USAGE_TIME));
+                    assertEquals(stmtLog.getFetchDurationNanos().longValue(),
                             resultSet.getLong(LogRepositoryConstants.FETCH_TIME_COLUMN));
                     assertEquals(stmtLog.getExecutionTimeNanos(),
                             resultSet.getLong(LogRepositoryConstants.EXEC_TIME_COLUMN));
-                    assertEquals(stmtLog.getExecutionTimeNanos() + stmtLog.getResultSetIterationTimeNanos(),
-                            resultSet.getLong(LogRepositoryConstants.EXEC_PLUS_FETCH_TIME_COLUMN));
+                    assertEquals(stmtLog.getExecutionTimeNanos() + stmtLog.getResultSetUsageDurationNanos(),
+                            resultSet.getLong(LogRepositoryConstants.EXEC_PLUS_RSET_USAGE_TIME));
                     assertEquals(stmtLog.getNbRowsIterated().intValue(),
                             resultSet.getInt(LogRepositoryConstants.NB_ROWS_COLUMN));
                     assertEquals(stmtLog.getThreadName(),
                             resultSet.getString(LogRepositoryConstants.THREAD_NAME_COLUMN));
                     assertEquals(stmtLog.getTimeout(), resultSet.getInt(LogRepositoryConstants.TIMEOUT_COLUMN));
-                    assertEquals(stmtLog.getTimestamp(), resultSet.getTimestamp(LogRepositoryConstants.TSTAMP_COLUMN)
-                            .getTime());
+                    assertEquals(stmtLog.getTimestamp(),
+                            resultSet.getTimestamp(LogRepositoryConstants.TSTAMP_COLUMN).getTime());
                     assertEquals(stmtLog.getStatementType().getId(),
                             resultSet.getInt(LogRepositoryConstants.STMT_TYPE_COLUMN));
                     assertTrue(resultSet.getBoolean(LogRepositoryConstants.ERROR_COLUMN));

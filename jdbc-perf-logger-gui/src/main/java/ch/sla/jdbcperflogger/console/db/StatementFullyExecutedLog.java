@@ -1,12 +1,13 @@
 package ch.sla.jdbcperflogger.console.db;
 
+import java.util.UUID;
+
+import org.eclipse.jdt.annotation.Nullable;
+
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.model.ResultSetLog;
 import ch.sla.jdbcperflogger.model.StatementExecutedLog;
 import ch.sla.jdbcperflogger.model.StatementLog;
-
-import org.eclipse.jdt.annotation.Nullable;
-import java.util.UUID;
 
 public class StatementFullyExecutedLog {
     private final StatementLog statementLog;
@@ -15,7 +16,7 @@ public class StatementFullyExecutedLog {
     private final ResultSetLog resultSetLog;
 
     public StatementFullyExecutedLog(final StatementLog statementLog, final StatementExecutedLog statementExecutedLog,
-                                     @Nullable final ResultSetLog resultSetLog) {
+            @Nullable final ResultSetLog resultSetLog) {
         this.statementLog = statementLog;
         this.statementExecutedLog = statementExecutedLog;
         this.resultSetLog = resultSetLog;
@@ -65,8 +66,8 @@ public class StatementFullyExecutedLog {
         return statementExecutedLog.getExecutionTimeNanos();
     }
 
-    public long getExecutionPlusFetchTimeNanos() {
-        return statementExecutedLog.getExecutionTimeNanos() + getResultSetIterationTimeNanosDefault0();
+    public long getExecutionPlusResultSetUsageTimeNanos() {
+        return statementExecutedLog.getExecutionTimeNanos() + getResultSetUsageDurationNanosDefault0();
     }
 
     @Nullable
@@ -80,19 +81,26 @@ public class StatementFullyExecutedLog {
     }
 
     @Nullable
-    public Long getResultSetIterationTimeNanos() {
+    public Long getResultSetUsageDurationNanos() {
         // extracted to local variable to make eclipse null-analysis happy...
         final ResultSetLog resultSetLog2 = resultSetLog;
-        return resultSetLog2 != null ? resultSetLog2.getResultSetIterationTimeNanos() : null;
+        return resultSetLog2 != null ? resultSetLog2.getResultSetUsageDurationNanos() : null;
     }
 
-    public long getResultSetIterationTimeNanosDefault0() {
-        Long nanos = getResultSetIterationTimeNanos();
+    public long getResultSetUsageDurationNanosDefault0() {
+        final Long nanos = getResultSetUsageDurationNanos();
         if (nanos != null) {
             return nanos.longValue();
         } else {
             return 0L;
         }
+    }
+
+    @Nullable
+    public Long getFetchDurationNanos() {
+        // extracted to local variable to make eclipse null-analysis happy...
+        final ResultSetLog resultSetLog2 = resultSetLog;
+        return resultSetLog2 != null ? resultSetLog2.getFetchDurationNanos() : null;
     }
 
     @Nullable

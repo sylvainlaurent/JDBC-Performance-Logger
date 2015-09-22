@@ -15,6 +15,8 @@
  */
 package ch.sla.jdbcperflogger.logger;
 
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
@@ -162,12 +164,14 @@ public class PerfLogger {
     }
 
     public static void logClosedResultSet(final UUID logId, final long resultSetIterationTimeNanos,
-            final int nbRowsIterated) {
+            final long fetchDurationNanos, final int nbRowsIterated) {
         if (LOGGER_CLOSED_RESULTSET.isDebugEnabled()) {
-            LOGGER_CLOSED_RESULTSET.debug(TimeUnit.NANOSECONDS.toMillis(resultSetIterationTimeNanos)
-                    + "ms to use and close ResultSet, iterating " + nbRowsIterated + " rows for statement #" + logId);
+            LOGGER_CLOSED_RESULTSET.debug(NANOSECONDS.toMillis(resultSetIterationTimeNanos)
+                    + "ms to use and close ResultSet, " + NANOSECONDS.toMillis(fetchDurationNanos)
+                    + "ms in calls to rset.next(), iterating " + nbRowsIterated + " rows for statement #" + logId);
         }
-        PerfLoggerRemoting.postLog(new ResultSetLog(logId, resultSetIterationTimeNanos, nbRowsIterated));
+        PerfLoggerRemoting
+                .postLog(new ResultSetLog(logId, resultSetIterationTimeNanos, fetchDurationNanos, nbRowsIterated));
     }
 
     public static void logTransactionComplete(final UUID connectionUuid, final long startTimeStamp,

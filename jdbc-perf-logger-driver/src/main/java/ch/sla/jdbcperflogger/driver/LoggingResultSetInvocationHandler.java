@@ -30,6 +30,7 @@ public class LoggingResultSetInvocationHandler implements InvocationHandler {
     private final long fetchStartTime;
     private boolean closed;
     private int nbRowsIterated;
+    private long fetchDurationNanos;
 
     LoggingResultSetInvocationHandler(final ResultSet rset, final UUID logId) {
         wrappedResultSet = rset;
@@ -41,17 +42,20 @@ public class LoggingResultSetInvocationHandler implements InvocationHandler {
     @Nullable
     public Object invoke(@Nullable final Object proxy, final Method method, @Nullable final Object[] args)
             throws Throwable {
-
+        final long methodStartTime = System.nanoTime();
         final Object result = Utils.invokeUnwrapException(wrappedResultSet, method, args);
+        final long oneRowFetchDurationNanos = System.nanoTime() - methodStartTime;
 
         final String methodName = method.getName();
         if (args == null || args.length == 0) {
             if ("close".equals(methodName)) {
                 if (!closed) {
                     closed = true;
-                    PerfLogger.logClosedResultSet(logId, System.nanoTime() - fetchStartTime, nbRowsIterated);
+                    PerfLogger.logClosedResultSet(logId, System.nanoTime() - fetchStartTime, fetchDurationNanos,
+                            nbRowsIterated);
                 }
             } else if ("next".equals(methodName)) {
+                fetchDurationNanos += oneRowFetchDurationNanos;
                 if (Boolean.TRUE.equals(result)) {
                     nbRowsIterated++;
                 }

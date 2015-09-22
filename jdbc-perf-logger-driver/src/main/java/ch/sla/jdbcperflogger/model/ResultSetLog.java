@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright 2013 Sylvain LAURENT
- *     
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,12 +23,15 @@ public class ResultSetLog implements LogMessage {
 
     private final UUID logId;
 
-    private final long resultSetIterationTimeNanos;
+    private final long resultSetUsageDurationNanos;
+    private final long fetchDurationNanos;
     private final int nbRowsIterated;
 
-    public ResultSetLog(final UUID logId, final long resultSetIterationTimeNanos, final int nbRowsIterated) {
+    public ResultSetLog(final UUID logId, final long resultSetIterationTimeNanos, final long fetchDurationNanos,
+            final int nbRowsIterated) {
         this.logId = logId;
-        this.resultSetIterationTimeNanos = resultSetIterationTimeNanos;
+        this.resultSetUsageDurationNanos = resultSetIterationTimeNanos;
+        this.fetchDurationNanos = fetchDurationNanos;
         this.nbRowsIterated = nbRowsIterated;
     }
 
@@ -36,8 +39,12 @@ public class ResultSetLog implements LogMessage {
         return logId;
     }
 
-    public long getResultSetIterationTimeNanos() {
-        return resultSetIterationTimeNanos;
+    public long getResultSetUsageDurationNanos() {
+        return resultSetUsageDurationNanos;
+    }
+
+    public long getFetchDurationNanos() {
+        return fetchDurationNanos;
     }
 
     public int getNbRowsIterated() {
@@ -48,7 +55,8 @@ public class ResultSetLog implements LogMessage {
     public String toString() {
         return "ResultSetLog["//
                 + "logId=" + logId//
-                + ", resultSetIterationTimeNanos=" + resultSetIterationTimeNanos//
+                + ", resultSetUsageDurationNanos=" + resultSetUsageDurationNanos//
+                + ", fetchDurationNanos=" + fetchDurationNanos//
                 + ", nbRowsIterated=" + nbRowsIterated//
                 + "]";
     }

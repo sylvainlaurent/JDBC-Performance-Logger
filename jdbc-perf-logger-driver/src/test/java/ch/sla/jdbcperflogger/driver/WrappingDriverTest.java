@@ -233,6 +233,15 @@ public class WrappingDriverTest {
             assertEquals("select * from test where key_id=123 /*setLong*/",
                     ((StatementLog) logRecorder.lastLogMessage(2)).getFilledSql());
 
+            {
+                final ResultSet query = statement.executeQuery();
+                Thread.sleep(55);
+                query.close();
+                final ResultSetLog resultSetLog = (ResultSetLog) logRecorder.lastLogMessage(0);
+                assertEquals(0, resultSetLog.getFetchDurationNanos());
+                assertTrue(resultSetLog.getResultSetUsageDurationNanos() >= 55);
+            }
+
             statement.close();
             // check that calling close() twice is ok
             statement.close();

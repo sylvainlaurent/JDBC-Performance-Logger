@@ -96,11 +96,11 @@ public class CustomTable extends JTable {
                 final Long minDurationNanoToHighlight2 = minDurationNanoToHighlight;
                 if (minDurationNanoToHighlight2 != null) {
                     Long duration = (Long) model.getValueAt(modelIndex,
-                            LogRepositoryConstants.EXEC_PLUS_FETCH_TIME_COLUMN);
+                            LogRepositoryConstants.EXEC_PLUS_RSET_USAGE_TIME);
                     if (duration == null) {
                         // in case we are in group by mode
                         final BigDecimal val = (BigDecimal) model.getValueAt(modelIndex,
-                                LogRepositoryConstants.TOTAL_EXEC_PLUS_FETCH_TIME_COLUMN);
+                                LogRepositoryConstants.TOTAL_EXEC_PLUS_RSET_USAGE_TIME_COLUMN);
                         if (val != null) {
                             duration = val.longValue();
                         }
