@@ -23,7 +23,6 @@
     <dependency>
       <groupId>com.github.sylvainlaurent.jdbcperflogger</groupId>
       <artifactId>jdbc-perf-logger-driver</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

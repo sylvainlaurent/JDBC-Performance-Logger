@@ -25,6 +25,7 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.text.MessageFormat;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -44,7 +45,7 @@ public class WrappingDriver implements Driver {
     public final static String URL_PREFIX = "jdbcperflogger:";
     private final static Logger LOGGER = Logger.getLogger(WrappingDriver.class);
 
-    private final static WrappingDriver INSTANCE = new WrappingDriver();
+    public final static WrappingDriver INSTANCE = new WrappingDriver();
     private final static Map<String, Driver> underlyingDrivers = new ConcurrentHashMap<String, Driver>();
     private static boolean registered;
 
@@ -116,10 +117,41 @@ public class WrappingDriver implements Driver {
             // unknown driver, just use the DriverManager to attempt to locate it
             underlyingDriver = DriverManager.getDriver(unWrappedUrl);
         }
+        final Driver finalUnderlyingDriver = underlyingDriver;
+        final Connection connection = wrapConnection(unWrappedUrl, info, new Callable<Connection>() {
+            @Override
+            public Connection call() throws Exception {
+                return finalUnderlyingDriver.connect(unWrappedUrl, info);
+            }
+        });
 
+        return connection;
+    }
+
+    public @Nullable Connection wrapConnection(final String url, final @Nullable Properties info,
+            final Callable<Connection> underlyingConnectionCreator) throws SQLException {
         final long startNanos = System.nanoTime();
 
-        Connection connection = underlyingDriver.connect(unWrappedUrl, info);
+        Connection connection;
+        try {
+            connection = underlyingConnectionCreator.call();
+        } catch (final Exception e) {
+            if (e.getCause() instanceof SQLException) {
+                throw (SQLException) e.getCause();
+            } else {
+                throw new SQLException(e);
+            }
+        }
+        if (connection == null) {
+            // short-circuit, the underlying driver was not the right one
+            return null;
+        }
+        if (Proxy.isProxyClass(connection.getClass())
+                && Proxy.getInvocationHandler(connection).getClass() == LoggingConnectionInvocationHandler.class) {
+            // the connection may have already been wrapped if the caller asks for a jdbcperflogger: prefixed url while
+            // using the java agent at the same time. In that case, just return the connection without wrapping it again
+            return connection;
+        }
 
         final long connectionCreationDuration = System.nanoTime() - startNanos;
 
@@ -133,12 +165,11 @@ public class WrappingDriver implements Driver {
         }
 
         final LoggingConnectionInvocationHandler connectionInvocationHandler = new LoggingConnectionInvocationHandler(
-                connectionCounter.incrementAndGet(), connection, unWrappedUrl, cleanedConnectionProperties);
+                connectionCounter.incrementAndGet(), connection, url, cleanedConnectionProperties);
         connection = (Connection) Proxy.newProxyInstance(WrappingDriver.class.getClassLoader(),
                 Utils.extractAllInterfaces(connection.getClass()), connectionInvocationHandler);
 
         PerfLoggerRemoting.connectionCreated(connectionInvocationHandler, connectionCreationDuration);
-
         return connection;
     }
 
@@ -168,6 +199,7 @@ public class WrappingDriver implements Driver {
         return false;
     }
 
+    @Override
     public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {
         throw new SQLFeatureNotSupportedException();
     }

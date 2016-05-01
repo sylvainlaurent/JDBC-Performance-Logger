@@ -33,6 +33,7 @@
   <properties>
     <java.version>1.6</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <spring-boot.version>1.2.5.RELEASE</spring-boot.version>
     <slf4j.version>1.7.12</slf4j.version>
   </properties>
@@ -43,10 +44,16 @@
     <module>jdbc-perf-logger-spring-boot-starter-test</module>
     <module>jdbc-perf-logger-driver</module>
     <module>jdbc-perf-logger-gui</module>
+    <module>jdbc-perf-logger-agent</module>
   </modules>
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>com.github.sylvainlaurent.jdbcperflogger</groupId>
+        <artifactId>jdbc-perf-logger-driver</artifactId>
+        <version>${project.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
