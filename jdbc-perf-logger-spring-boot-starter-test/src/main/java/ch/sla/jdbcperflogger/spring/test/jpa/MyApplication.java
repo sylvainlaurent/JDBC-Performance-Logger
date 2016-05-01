@@ -15,11 +15,11 @@ public class MyApplication implements CommandLineRunner {
     private PersonRepository repository;
 
     @Override
-    public void run(String... args) throws Exception {
-        System.err.println(this.repository.findAll());
+    public void run(@SuppressWarnings("null") final String... args) throws Exception {
+        System.err.println(repository.findAll());
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(final String[] args) throws Exception {
         SpringApplication.run(MyApplication.class, args);
     }
 
