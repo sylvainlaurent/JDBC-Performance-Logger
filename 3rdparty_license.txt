@@ -15,3 +15,4 @@ Among those, the binary distribution redistributes the following :
 - Firesoft RSyntaxArea
 - SLF4J
 - Icons from the Tango Desktop Project
+- Byte Buddy

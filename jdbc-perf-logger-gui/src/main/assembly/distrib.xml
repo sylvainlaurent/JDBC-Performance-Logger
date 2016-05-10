@@ -31,10 +31,10 @@
       </includes>
     </fileSet>
     <fileSet>
-      <directory>../jdbc-perf-logger-driver/target/</directory>
+      <directory>../jdbc-perf-logger-agent/target/</directory>
       <outputDirectory>/lib</outputDirectory>
       <includes>
-        <include>*-depsincluded.jar</include>
+        <include>jdbc-perf-logger-agent-*.jar</include>
       </includes>
     </fileSet>
   </fileSets>

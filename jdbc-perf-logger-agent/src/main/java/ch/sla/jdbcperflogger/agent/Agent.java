@@ -62,7 +62,7 @@ public class Agent {
         // TODO: intercept javax.sql.DataSource, javax.sql.PooledConnection.getConnection()...
 
         loaded = true;
-        System.out.print("OK");
+        System.out.println("OK");
     }
 
     public static boolean isLoaded() {

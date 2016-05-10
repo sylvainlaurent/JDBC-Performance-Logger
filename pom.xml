@@ -51,6 +51,11 @@
     <dependencies>
       <dependency>
         <groupId>com.github.sylvainlaurent.jdbcperflogger</groupId>
+        <artifactId>jdbc-perf-logger-agent</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.sylvainlaurent.jdbcperflogger</groupId>
         <artifactId>jdbc-perf-logger-driver</artifactId>
         <version>${project.version}</version>
       </dependency>

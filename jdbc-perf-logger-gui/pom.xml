@@ -24,6 +24,12 @@
     </dependency>
     <dependency>
       <groupId>com.github.sylvainlaurent.jdbcperflogger</groupId>
+      <artifactId>jdbc-perf-logger-agent</artifactId>
+      <!-- declared as provided so that the agent module is built before the gui but we don't want it in the classpath -->
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.sylvainlaurent.jdbcperflogger</groupId>
       <artifactId>jdbc-perf-logger-driver</artifactId>
     </dependency>
     <dependency>

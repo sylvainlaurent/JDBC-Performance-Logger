@@ -28,6 +28,7 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 - Displays the `autoCommit` status of each statement (since 0.6.0)
 - Supports new java 8 methods like `executeLargeUpdate` (since 0.6.2)
 - Auto configuration for [Spring Boot](http://projects.spring.io/spring-boot/) (since 0.7.2)
+- Java agent (since 0.8.0)
 
 ## Requirements
 - java 6 or later for the driver
@@ -41,17 +42,38 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 ```xml
 <dependency>
     <groupId>com.github.sylvainlaurent.jdbcperflogger</groupId>
+    <artifactId>jdbc-perf-logger-agent</artifactId>
+    <version>...</version>
+</dependency>
+```
+or
+
+```xml
+<dependency>
+    <groupId>com.github.sylvainlaurent.jdbcperflogger</groupId>
     <artifactId>jdbc-perf-logger-driver</artifactId>
     <version>...</version>
 </dependency>
 ```
 
 ## How to setup the JDBC Driver
-- If using Spring-Boot see [README.md](jdbc-perf-logger-spring-boot-starter/README.md)
+The driver can be setup in different ways:
+
+### As a java agent (recommended/most simple way)
+Just launch the JVM with `-javaagent:path/to/jdbc-perf-logger-agent-x.y.z.jar`
+
+The agent jar file is available in the `lib` directory of the zip or tar.gz distribution or as a maven artifact as shown above.
+
+### Using spring-boot
+See [README.md](jdbc-perf-logger-spring-boot-starter/README.md)
+
+### Manual configuration
 - If using maven, add the `<dependency>` snippet above (replacing the version with the latest one) to your `pom.xml`
 - If NOT using maven, add `jdbc-perf-logger-driver` jar file to the classpath of the JDBC-client application (the file can be found in the `lib` directory of the binary distribution)
 - Change the driver class name to `ch.sla.jdbcperflogger.driver.WrappingDriver`
 - Prefix your current JDBC URL with `jdbcperflogger:`, example: `jdbcperflogger:jdbc:h2:mem:` or `jdbcperflogger:jdbc:oracle:thin:@myhost:1521:orcl`
+
+### Advanced configuration
 - (optional) add a `jdbcperflogger.xml` file to the classpath (see the [example file](/jdbc-perf-logger-gui/src/main/config/example-jdbcperflogger.xml/) for indications). If both the driver and console are used on the same machine, there's nothing to do: the driver will try to connect to the console on localhost:4561. 
 - (optional) the location of the config file can be overriden with the System property `jdbcperflogger.config.location`. Example : `java -Djdbcperflogger.config.location=/Users/me/myjdbcperflogger.xml ....`
 
@@ -72,9 +94,11 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 - Only the first ResultSet of queries is logged (`Statement.getMoreResults()` works but no effort has been put to log the fetching of those ResultSets)
 
 ## Potential ClassLoader issues
-Here are the rules to observe :
-- The jdbc-perf-logger must be able to use your bare JDBC driver
-- The DataSource you use must be able to use the jdbc-perf-logger driver classes
+**There should not be any problem when using the "java agent way".**
+
+For the "driver way", here are the rules to observe :
+- The jdbc-perf-logger-driver must be able to use your bare JDBC driver
+- The DataSource you use must be able to use the jdbc-perf-logger-driver classes
 
 Here are the most common cases with Tomcat :
 - Tomcat _shared.loader_ includes
@@ -93,7 +117,7 @@ This can also be done by configuring the `catalina.properties` file.
 The source code is available on GitHub : https://github.com/sylvainlaurent/JDBC-Performance-Logger
 
 ### How to build source
-Use Maven and a JDK >=8, and run `mvn clean package` in the root directory of the git repository. The binary distribution is then available in `jdbc-perf-logger-gui`.
+Use Maven and a JDK >=8, and run `mvn clean verify` in the root directory of the git repository. The binary distribution is then available in `jdbc-perf-logger-gui`.
 
 ### How to create a release
 `mvn release:prepare release:perform` and answer the questions about version number.
