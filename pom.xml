@@ -1,10 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.github.sylvainlaurent.jdbcperflogger</groupId>
   <artifactId>jdbc-perf-logger</artifactId>
-  <version>0.8.0-SNAPSHOT</version>
+  <version>0.8.0</version>
   <packaging>pom</packaging>
   <name>JDBC Performance Logger Parent</name>
   <description>Parent/Reactor project for JDBC Performance Logger</description>
@@ -27,7 +26,7 @@
     <url>https://github.com/sylvainlaurent/JDBC-Performance-Logger</url>
     <connection>scm:git:https://github.com/sylvainlaurent/JDBC-Performance-Logger.git</connection>
     <developerConnection>scm:git:https://github.com/sylvainlaurent/JDBC-Performance-Logger.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>0.8.0</tag>
   </scm>
 
   <properties>
