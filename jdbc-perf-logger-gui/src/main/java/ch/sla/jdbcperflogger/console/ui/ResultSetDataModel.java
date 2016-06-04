@@ -19,8 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.eclipse.jdt.annotation.Nullable;
 import javax.swing.table.AbstractTableModel;
+
+import org.eclipse.jdt.annotation.Nullable;
 
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.console.db.LogRepositoryConstants;
