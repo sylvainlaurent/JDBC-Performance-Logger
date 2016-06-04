@@ -1,6 +1,7 @@
 package ch.sla.jdbcperflogger.console.db;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 
 @NonNullByDefault({})
 public class LogSearchCriteria {
@@ -13,7 +14,7 @@ public class LogSearchCriteria {
         return filter;
     }
 
-    public void setFilter(final String filter) {
+    public void setFilter(final @Nullable String filter) {
         this.filter = filter;
     }
 
@@ -21,7 +22,7 @@ public class LogSearchCriteria {
         return minDurationNanos;
     }
 
-    public void setMinDurationNanos(final Long minDurationNanos) {
+    public void setMinDurationNanos(final @Nullable Long minDurationNanos) {
         this.minDurationNanos = minDurationNanos;
     }
 
@@ -41,7 +42,7 @@ public class LogSearchCriteria {
         return sqlPassThroughFilter;
     }
 
-    public void setSqlPassThroughFilter(final String sqlPassThroughFilter) {
+    public void setSqlPassThroughFilter(final @Nullable String sqlPassThroughFilter) {
         this.sqlPassThroughFilter = sqlPassThroughFilter;
     }
 

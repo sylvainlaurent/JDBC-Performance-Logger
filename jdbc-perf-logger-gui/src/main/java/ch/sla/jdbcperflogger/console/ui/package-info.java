@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 @NonNullByDefault
+@javax.annotation.ParametersAreNonnullByDefault
 package ch.sla.jdbcperflogger.console.ui;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
