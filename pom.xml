@@ -36,7 +36,6 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <spring-boot.version>1.2.5.RELEASE</spring-boot.version>
     <slf4j.version>1.7.12</slf4j.version>
-    <m2e.jdt.annotationpath>/external-annotations/annotations</m2e.jdt.annotationpath>
   </properties>
 
   <modules>
@@ -108,7 +107,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>2.3.2</version>
+          <version>3.5.1</version>
           <configuration>
             <source>${java.version}</source>
             <target>${java.version}</target>
@@ -229,6 +228,73 @@
           </plugin>
         </plugins>
       </build>
+    </profile>
+    <profile>
+      <id>not-m2e</id>
+      <activation>
+        <property>
+          <name>!m2e.version</name>
+        </property>
+      </activation>
+      <properties>
+        <tycho-version>0.25.0</tycho-version>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>com.github.sylvainlaurent</groupId>
+          <artifactId>eclipse-external-annotations</artifactId>
+          <version>0.0.1-SNAPSHOT</version>
+          <scope>provided</scope>
+        </dependency>
+      </dependencies>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-compiler-plugin</artifactId>
+              <executions>
+                <execution>
+                  <!-- check nullability using jdt compiler, only for compile, not for testCompile -->
+                  <id>compile</id>
+                  <phase>compile</phase>
+                  <goals>
+                    <goal>compile</goal>
+                  </goals>
+                  <configuration>
+                    <compilerId>jdt</compilerId>
+                    <compilerArgs>
+                      <!-- <arg>-properties ${project.basedir}/.settings/org.eclipse.jdt.core.prefs</arg> -->
+                      <arg>-properties</arg>
+                      <arg>${project.basedir}/.settings/org.eclipse.jdt.core.prefs</arg>
+                      <arg>-annotationpath</arg>
+                      <arg>CLASSPATH</arg>
+                    </compilerArgs>
+                  </configuration>
+                </execution>
+              </executions>
+              <dependencies>
+                <dependency>
+                  <groupId>org.eclipse.tycho</groupId>
+                  <artifactId>tycho-compiler-jdt</artifactId>
+                  <version>${tycho-version}</version>
+                </dependency>
+              </dependencies>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+    <profile>
+      <id>m2e</id>
+      <activation>
+        <property>
+          <name>m2e.version</name>
+        </property>
+      </activation>
+      <properties>
+        <m2e.jdt.annotationpath>/eclipse-external-annotations/src/main/resources</m2e.jdt.annotationpath>
+      </properties>
     </profile>
   </profiles>
 </project>
