@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Savepoint;
 import java.sql.Statement;
+import java.sql.DatabaseMetaData;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -87,6 +88,10 @@ public class LoggingConnectionInvocationHandler implements InvocationHandler {
                 return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(),
                         Utils.extractAllInterfaces(result.getClass()), new LoggingPreparedStatementInvocationHandler(
                                 connectionUuid, (PreparedStatement) result, (String) args[0], databaseType));
+            } else if ("getMetaData".equals(methodName) ) {
+                return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(),
+                        Utils.extractAllInterfaces(result.getClass()), new LoggingDatabaseMetaDataInvocationHandler(
+                                connectionUuid, (DatabaseMetaData) result, databaseType));
             }
 
         }

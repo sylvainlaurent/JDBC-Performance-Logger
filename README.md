@@ -2,6 +2,21 @@
 
 # JDBC Performance Logger
 
+## Updates by R. Calaba
+
+- added DatabaseMetaData Logging Capabilities - integrated new Logging Wrapper in class LoggingDatabaseMetaDataInvocationHandler.java 
+- added sample configuration for Apache Hive JDBC Driver - in the file 
+- TODO:
+- enhance logging of 
+- add override hooks for metadata retrieval for Hive Partition Fields
+
+- After successful Build using mvn clean verify the folder JDBC-Performance-Logger\jdbc-perf-logger-gui\target\appassembler contains binary distributon of the JDBC Driver
+- To add support for Hive JDBC:
+ - copy your Hive JDBC Driver jar files (all) to the Folder JDBC-Performance-Logger\jdbc-perf-logger-gui\target\appassembler\lib
+ - copy file JDBC-Performance-Logger\jdbc-perf-logger-gui\target\appassembler\etc\example-jdbcperflogger.xml to JDBC-Performance-Logger\jdbc-perf-logger-gui\target\appassembler\lib\jdbcperflogger.xml
+ - when registering the Wrapper Driver in your JDBC tool - also register the Hive JDBC Driver but use the Wrapper Class as the Driver ; also add the directory JDBC-Performance-Logger\jdbc-perf-logger-gui\target\appassembler\lib\ containing the jdbcperflogger.xml to the classpath
+ 
+
 ## Purpose
 Measuring performance of SQL statements executed through JDBC.
 
