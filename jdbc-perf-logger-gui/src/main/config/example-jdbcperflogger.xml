@@ -20,5 +20,9 @@
       <prefix>jdbc:mysql:</prefix>
       <driver-class-name>com.mysql.jdbc.Driver</driver-class-name>
     </jdbc-driver>
+    <jdbc-driver>
+      <prefix>jdbc:hive2:</prefix>
+      <driver-class-name>org.apache.hive.jdbc.HiveDriver</driver-class-name>
+    </jdbc-driver>
   </jdbc-drivers>
 </jdbc-perf-logger>

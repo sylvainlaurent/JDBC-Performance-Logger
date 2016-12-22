@@ -25,7 +25,8 @@ public enum StatementType {
     PREPARED_QUERY_STMT(4), //
     PREPARED_BATCH_EXECUTION(5), //
     NON_PREPARED_BATCH_EXECUTION(6), //
-    TRANSACTION(7);
+    TRANSACTION(7), //
+    METADATA(8);
 
     private static StatementType[] vals;
 
@@ -36,7 +37,7 @@ public enum StatementType {
     }
 
     static {
-        vals = new StatementType[8];
+        vals = new StatementType[9];
         for (final StatementType type : EnumSet.allOf(StatementType.class)) {
             vals[type.id] = type;
         }
