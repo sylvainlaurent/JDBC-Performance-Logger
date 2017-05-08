@@ -115,7 +115,14 @@ public class WrappingDriver implements Driver {
         }
         if (underlyingDriver == null) {
             // unknown driver, just use the DriverManager to attempt to locate it
-            underlyingDriver = DriverManager.getDriver(unWrappedUrl);
+            try {
+                underlyingDriver = DriverManager.getDriver(unWrappedUrl);
+            } catch (final SQLException e) {
+                throw new SQLException("Cannot get underlying JDBC driver for [" + unWrappedUrl
+                        + "]. The underlying driver must be either registered with the DriverManager or listed "
+                        + "in a jdbcperflogger.xml file, see documentation.",
+                        e);
+            }
         }
         final Driver finalUnderlyingDriver = underlyingDriver;
         final Connection connection = wrapConnection(unWrappedUrl, info, new Callable<Connection>() {
