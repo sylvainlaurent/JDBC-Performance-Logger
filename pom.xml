@@ -35,6 +35,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <spring-boot.version>1.2.5.RELEASE</spring-boot.version>
     <slf4j.version>1.7.12</slf4j.version>
+    <m2e.jdt.annotationpath>/eclipse-external-annotations/src/main/resources</m2e.jdt.annotationpath>
   </properties>
 
   <modules>
