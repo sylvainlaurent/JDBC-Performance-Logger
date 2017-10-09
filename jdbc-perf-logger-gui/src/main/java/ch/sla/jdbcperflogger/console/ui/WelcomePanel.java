@@ -114,7 +114,7 @@ public class WelcomePanel extends JPanel {
         }
         lookAndFeelsCombobox.setRenderer(new DefaultListCellRenderer() {
             @Override
-            public Component getListCellRendererComponent(@Nullable final JList<?> list, @Nullable final Object value,
+            public Component getListCellRendererComponent(final JList<?> list, @Nullable final Object value,
                     final int index, final boolean isSelected, final boolean cellHasFocus) {
                 if (value == null) {
                     return super.getListCellRendererComponent(list, "(default)", index, isSelected, cellHasFocus);

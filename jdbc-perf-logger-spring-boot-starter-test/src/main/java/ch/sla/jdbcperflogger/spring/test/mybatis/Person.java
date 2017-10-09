@@ -2,7 +2,7 @@ package ch.sla.jdbcperflogger.spring.test.mybatis;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 
-@NonNullByDefault(false)
+@NonNullByDefault({})
 class Person {
     private Long id;
     private String firstName;

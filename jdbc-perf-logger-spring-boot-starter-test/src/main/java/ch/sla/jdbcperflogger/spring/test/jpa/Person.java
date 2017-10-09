@@ -6,7 +6,7 @@ import javax.persistence.Id;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 
-@NonNullByDefault(false)
+@NonNullByDefault({})
 @Entity
 class Person {
     @Id

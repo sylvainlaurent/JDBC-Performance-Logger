@@ -15,7 +15,7 @@ public class MyApplication implements CommandLineRunner {
     private PersonRepository repository;
 
     @Override
-    public void run(@SuppressWarnings("null") final String... args) throws Exception {
+    public void run(final String... args) throws Exception {
         System.err.println(repository.findAll());
     }
 
