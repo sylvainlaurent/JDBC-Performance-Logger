@@ -139,7 +139,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
         try {
             final ResultSet resultSet = (ResultSet) Utils.invokeUnwrapExceptionReturnNonNull(wrappedStatement, method,
                     null);
-            return (ResultSet) Proxy.newProxyInstance(LoggingPreparedStatementInvocationHandler.class.getClassLoader(),
+            return (ResultSet) Proxy.newProxyInstance(resultSet.getClass().getClassLoader(),
                     Utils.extractAllInterfaces(resultSet.getClass()),
                     new LoggingResultSetInvocationHandler(resultSet, logId));
         } catch (final Throwable e) {

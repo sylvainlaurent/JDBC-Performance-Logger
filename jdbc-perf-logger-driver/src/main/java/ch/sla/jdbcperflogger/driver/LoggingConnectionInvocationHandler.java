@@ -80,11 +80,11 @@ public class LoggingConnectionInvocationHandler implements InvocationHandler {
         final Object result = Utils.invokeUnwrapException(wrappedConnection, method, args);
         if (result != null) {
             if ("createStatement".equals(methodName)) {
-                return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(),
+                return Proxy.newProxyInstance(result.getClass().getClassLoader(),
                         Utils.extractAllInterfaces(result.getClass()),
                         new LoggingStatementInvocationHandler(connectionUuid, (Statement) result, databaseType));
             } else if (("prepareStatement".equals(methodName) || "prepareCall".equals(methodName)) && args != null) {
-                return Proxy.newProxyInstance(LoggingConnectionInvocationHandler.class.getClassLoader(),
+                return Proxy.newProxyInstance(result.getClass().getClassLoader(),
                         Utils.extractAllInterfaces(result.getClass()), new LoggingPreparedStatementInvocationHandler(
                                 connectionUuid, (PreparedStatement) result, (String) args[0], databaseType));
             }

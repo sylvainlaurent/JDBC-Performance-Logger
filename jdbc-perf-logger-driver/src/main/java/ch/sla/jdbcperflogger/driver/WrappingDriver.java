@@ -173,7 +173,7 @@ public class WrappingDriver implements Driver {
 
         final LoggingConnectionInvocationHandler connectionInvocationHandler = new LoggingConnectionInvocationHandler(
                 connectionCounter.incrementAndGet(), connection, url, cleanedConnectionProperties);
-        connection = (Connection) Proxy.newProxyInstance(WrappingDriver.class.getClassLoader(),
+        connection = (Connection) Proxy.newProxyInstance(connection.getClass().getClassLoader(),
                 Utils.extractAllInterfaces(connection.getClass()), connectionInvocationHandler);
 
         PerfLoggerRemoting.connectionCreated(connectionInvocationHandler, connectionCreationDuration);

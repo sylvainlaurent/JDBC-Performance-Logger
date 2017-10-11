@@ -106,7 +106,7 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
             throws Throwable {
         final ResultSet resultSet = (ResultSet) Utils.invokeUnwrapExceptionReturnNonNull(wrappedStatement, method,
                 args);
-        return (ResultSet) Proxy.newProxyInstance(LoggingStatementInvocationHandler.class.getClassLoader(),
+        return (ResultSet) Proxy.newProxyInstance(resultSet.getClass().getClassLoader(),
                 Utils.extractAllInterfaces(resultSet.getClass()),
                 new LoggingResultSetInvocationHandler(resultSet, logId));
     }
