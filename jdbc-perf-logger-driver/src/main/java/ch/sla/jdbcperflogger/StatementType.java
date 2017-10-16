@@ -31,7 +31,7 @@ public enum StatementType {
 
     private final int id;
 
-    private StatementType(final int id) {
+    StatementType(final int id) {
         this.id = id;
     }
 

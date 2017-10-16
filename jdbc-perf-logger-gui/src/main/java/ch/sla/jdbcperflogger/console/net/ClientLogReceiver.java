@@ -42,8 +42,8 @@ public class ClientLogReceiver extends AbstractLogReceiver {
             logPersister.start();
             while (!disposed) {
                 try {
-                    LOGGER.debug("Trying to connect to {}:{}", new Object[] { targetRemoteAddress.getHostName(),
-                            targetRemoteAddress, targetRemoteAddress.getPort() });
+                    LOGGER.debug("Trying to connect to {}:{}", targetRemoteAddress.getHostName(),
+                            targetRemoteAddress, targetRemoteAddress.getPort());
                     final Socket socket = new Socket(targetRemoteAddress.getHostName(), targetRemoteAddress.getPort());
                     LOGGER.info("Connected to remote {}", targetRemoteAddress);
                     handleConnection(socket, logPersister);

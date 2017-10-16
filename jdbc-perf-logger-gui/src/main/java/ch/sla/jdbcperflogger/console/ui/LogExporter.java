@@ -49,17 +49,14 @@ public class LogExporter {
 
     String getBatchedExecutions(final DetailedViewStatementLog statementLog) {
         final StringBuilder strBuilder = new StringBuilder();
-        logRepository.getBatchStatementExecutions(statementLog.getLogId(), new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                while (resultSet.next()) {
-                    strBuilder.append("/* #");
-                    strBuilder.append(resultSet.getInt(1));
-                    strBuilder.append(" */ ");
-                    final String sql = resultSet.getString(2) + ";";
-                    strBuilder.append(sql);
-                    strBuilder.append("\n");
-                }
+        logRepository.getBatchStatementExecutions(statementLog.getLogId(), resultSet -> {
+            while (resultSet.next()) {
+                strBuilder.append("/* #");
+                strBuilder.append(resultSet.getInt(1));
+                strBuilder.append(" */ ");
+                final String sql = resultSet.getString(2) + ";";
+                strBuilder.append(sql);
+                strBuilder.append("\n");
             }
         });
         return strBuilder.toString();

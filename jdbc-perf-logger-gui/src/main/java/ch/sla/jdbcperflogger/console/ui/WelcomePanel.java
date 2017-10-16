@@ -20,8 +20,6 @@ import java.awt.Cursor;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -48,9 +46,6 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import org.eclipse.jdt.annotation.Nullable;
 
@@ -123,16 +118,13 @@ public class WelcomePanel extends JPanel {
                 return super.getListCellRendererComponent(list, lfInfo.getName(), index, isSelected, cellHasFocus);
             }
         });
-        lookAndFeelsCombobox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(@Nullable final ActionEvent e) {
-                @Nullable
-                final LookAndFeelInfo selectedLf = (LookAndFeelInfo) lookAndFeelsCombobox.getSelectedItem();
-                PerfLoggerGuiMain.savePreferredLookAndFeel(selectedLf != null ? selectedLf.getClassName() : null);
+        lookAndFeelsCombobox.addActionListener(e -> {
+            @Nullable
+            final LookAndFeelInfo selectedLf = (LookAndFeelInfo) lookAndFeelsCombobox.getSelectedItem();
+            PerfLoggerGuiMain.savePreferredLookAndFeel(selectedLf != null ? selectedLf.getClassName() : null);
 
-                JOptionPane.showMessageDialog(WelcomePanel.this,
-                        "You need to relaunch the application to apply the new look and feel.");
-            }
+            JOptionPane.showMessageDialog(WelcomePanel.this,
+                    "You need to relaunch the application to apply the new look and feel.");
         });
 
         final JPanel serverModePanel = new JPanel();
@@ -182,12 +174,7 @@ public class WelcomePanel extends JPanel {
         clientModePanel.setLayout(gbl_clientModePanel);
 
         final JButton btnConnect = new JButton("Connect");
-        btnConnect.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(@Nullable final ActionEvent e) {
-                connect(clientConnectionCreator);
-            }
-        });
+        btnConnect.addActionListener(e -> connect(clientConnectionCreator));
 
         final JLabel lblHost = new JLabel("Host");
         final GridBagConstraints gbc_lblHost = new GridBagConstraints();
@@ -268,20 +255,16 @@ public class WelcomePanel extends JPanel {
             }
         });
         recentConnectionsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        recentConnectionsList.addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(@Nullable final ListSelectionEvent e) {
-                assert e != null;
-                if (e.getValueIsAdjusting()) {
-                    return;
-                }
-                final HostPort hostPort = getSelectedRecentConnection();
-                if (hostPort != null) {
-                    txtTargetHost.setText(hostPort.getHost());
-                    txtTargetPort.setText(Integer.toString(hostPort.getPort()));
-                }
+        recentConnectionsList.addListSelectionListener(e -> {
+            assert e != null;
+            if (e.getValueIsAdjusting()) {
+                return;
             }
-
+            final HostPort hostPort = getSelectedRecentConnection();
+            if (hostPort != null) {
+                txtTargetHost.setText(hostPort.getHost());
+                txtTargetPort.setText(Integer.toString(hostPort.getPort()));
+            }
         });
         recentConnectionsList.addMouseListener(new MouseAdapter() {
             @Override
@@ -317,14 +300,10 @@ public class WelcomePanel extends JPanel {
         String txt = "<p>Web site: <a href=\"" + WEB_SITE_ADDRESS + "\">" + WEB_SITE_ADDRESS + "</a></p>";
         txt += "<p>Version: " + GuiUtils.getAppVersion() + "</p>";
         aboutTextPane.setText(txt);
-        aboutTextPane.addHyperlinkListener(new HyperlinkListener() {
-            @Override
-            public void hyperlinkUpdate(@Nullable final HyperlinkEvent e) {
-                if (e != null && e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                    GuiUtils.openWebSite(e.getURL().toString());
-                }
+        aboutTextPane.addHyperlinkListener(e -> {
+            if (e != null && e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                GuiUtils.openWebSite(e.getURL().toString());
             }
-
         });
         final GridBagConstraints gbc_aboutTextPane = new GridBagConstraints();
         gbc_aboutTextPane.insets = new Insets(0, 0, 0, 5);

@@ -153,7 +153,7 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
     protected Object internalExecuteBatchInternal(final Method method, final @Nullable Object[] args, final UUID logId)
             throws Throwable {
         Throwable exc = null;
-        Long updateCount = null;
+        long updateCount = -1;
         final long start = System.nanoTime();
         try {
             final Object result = Utils.invokeUnwrapException(wrappedStatement, method, args);
@@ -163,14 +163,14 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
                 for (int i = 0; i < nbRows.length; i++) {
                     totalRows += nbRows[i];
                 }
-                updateCount = Long.valueOf(totalRows);
+                updateCount = totalRows;
             } else if (result instanceof long[]) {// java8
                 final long[] nbRows = (long[]) result;
                 long totalRows = 0;
                 for (int i = 0; i < nbRows.length; i++) {
                     totalRows += nbRows[i];
                 }
-                updateCount = Long.valueOf(totalRows);
+                updateCount = totalRows;
             }
             return result;
         } catch (final Throwable e) {
