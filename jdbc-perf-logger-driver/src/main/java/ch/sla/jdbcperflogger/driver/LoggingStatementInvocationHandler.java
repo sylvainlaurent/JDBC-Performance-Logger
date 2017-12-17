@@ -18,6 +18,7 @@ package ch.sla.jdbcperflogger.driver;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -86,8 +87,9 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
     protected final ResultSet internalExecuteQuery(final Method method, final Object[] args) throws Throwable {
         final UUID logId = UUID.randomUUID();
         final long start = System.nanoTime();
+        final Connection connection = wrappedStatement.getConnection();
         PerfLogger.logBeforeStatement(connectionId, logId, (String) args[0], StatementType.NON_PREPARED_QUERY_STMT,
-                wrappedStatement.getQueryTimeout(), wrappedStatement.getConnection().getAutoCommit());
+                wrappedStatement.getQueryTimeout(), connection.getAutoCommit(), connection.getTransactionIsolation());
         Throwable exc = null;
         try {
             return getAndWrapResultSet(method, args, logId);
@@ -114,8 +116,9 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
     @Nullable
     protected final Object internalExecute(final Method method, final Object[] args) throws Throwable {
         final UUID logId = UUID.randomUUID();
+        final Connection connection = wrappedStatement.getConnection();
         PerfLogger.logBeforeStatement(connectionId, logId, (String) args[0], StatementType.BASE_NON_PREPARED_STMT,
-                wrappedStatement.getQueryTimeout(), wrappedStatement.getConnection().getAutoCommit());
+                wrappedStatement.getQueryTimeout(), connection.getAutoCommit(), connection.getTransactionIsolation());
         Throwable exc = null;
         Long updateCount = null;
         final long start = System.nanoTime();
@@ -138,8 +141,9 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
     @Nullable
     protected Object internalExecuteBatch(final Method method, final Object @Nullable [] args) throws Throwable {
         final UUID logId = UUID.randomUUID();
+        final Connection connection = wrappedStatement.getConnection();
         PerfLogger.logNonPreparedBatchedStatements(connectionId, logId, batchedNonPreparedStmtExecutions, databaseType,
-                wrappedStatement.getQueryTimeout(), wrappedStatement.getConnection().getAutoCommit());
+                wrappedStatement.getQueryTimeout(), connection.getAutoCommit(), connection.getTransactionIsolation());
         try {
             return internalExecuteBatchInternal(method, args, logId);
         } finally {

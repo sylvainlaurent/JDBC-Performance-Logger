@@ -50,6 +50,10 @@ public class StatementFullyExecutedLog {
         return statementLog.isAutoCommit();
     }
 
+    public int getTransactionIsolation() {
+        return statementLog.getTransactionIsolation();
+    }
+
     public String getRawSql() {
         return statementLog.getRawSql();
     }

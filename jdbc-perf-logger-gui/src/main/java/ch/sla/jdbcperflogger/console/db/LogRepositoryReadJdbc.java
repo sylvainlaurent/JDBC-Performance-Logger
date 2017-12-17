@@ -65,7 +65,7 @@ public class LogRepositoryReadJdbc implements LogRepositoryRead {
             final boolean withFilledSql) {
         final StringBuilder sql = new StringBuilder("select id, tstamp, statementType, rawSql, " //
                 + "exec_plus_rset_usage_time, execution_time, rset_usage_time, fetch_time, "//
-                + "nbRows, threadName, connectionNumber, timeout, autoCommit, error ");
+                + "nbRows, threadName, connectionNumber, timeout, autoCommit, transaction_Isolation, error ");
         if (withFilledSql) {
             sql.append(", " + LogRepositoryConstants.FILLED_SQL_COLUMN);
         }
