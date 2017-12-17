@@ -30,9 +30,10 @@ public class AbstractBeforeStatementExecutionLog implements LogMessage {
     private final String threadName;
     private final int timeout;
     private final boolean autoCommit;
+    private final int transactionIsolation;
 
     public AbstractBeforeStatementExecutionLog(final UUID connectionId, final UUID logId, final long timestamp,
-            final StatementType statementType, final String threadName, final int timeout, final boolean autoCommit) {
+                                               final StatementType statementType, final String threadName, final int timeout, final boolean autoCommit, int transactionIsolation) {
         connectionUuid = connectionId;
         this.logId = logId;
         this.timestamp = timestamp;
@@ -40,6 +41,7 @@ public class AbstractBeforeStatementExecutionLog implements LogMessage {
         this.threadName = threadName;
         this.timeout = timeout;
         this.autoCommit = autoCommit;
+        this.transactionIsolation = transactionIsolation;
     }
 
     public UUID getConnectionUuid() {
@@ -70,4 +72,7 @@ public class AbstractBeforeStatementExecutionLog implements LogMessage {
         return autoCommit;
     }
 
+    public int getTransactionIsolation() {
+        return transactionIsolation;
+    }
 }

@@ -1,11 +1,13 @@
 package ch.sla.jdbcperflogger.console.db;
 
 import static ch.sla.jdbcperflogger.console.db.LogRepositoryConstants.ID_COLUMN;
+import static java.sql.Connection.TRANSACTION_READ_UNCOMMITTED;
 import static java.util.UUID.randomUUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -344,7 +346,7 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
 
         final List<String> sqlList = Arrays.asList("st1", "st2", "st3");
         final BatchedPreparedStatementsLog batchedLogs = new BatchedPreparedStatementsLog(log.getConnectionUuid(),
-                randomUUID(), System.currentTimeMillis(), "myRaw stmt", sqlList, "myThread", 13, true);
+                randomUUID(), System.currentTimeMillis(), "myRaw stmt", sqlList, "myThread", 13, true, 1);
         repositoryUpdate.addBatchedPreparedStatementsLog(batchedLogs);
         assertEquals(2, countRowsInTable("statement_log"));
         assertEquals(3, countRowsInTable("batched_statement_log"));
@@ -385,7 +387,7 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
         {
             final StatementLog log = new StatementLog(connectionInfo.getUuid(), randomUUID(),
                     System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myrawsql", "myfilledsql",
-                    Thread.currentThread().getName(), 123, true);
+                    Thread.currentThread().getName(), 123, true, TRANSACTION_READ_UNCOMMITTED);
             final StatementExecutedLog statementExecutedLog = new StatementExecutedLog(log.getLogId(), 234L, 4560L,
                     "myexception");
             fullLogs.add(new StatementFullyExecutedLog(log, statementExecutedLog, null));
@@ -393,7 +395,7 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
         {
             final StatementLog log = new StatementLog(connectionInfo.getUuid(), randomUUID(),
                     System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myrawsql", "myfilledsql",
-                    Thread.currentThread().getName(), 123, true);
+                    Thread.currentThread().getName(), 123, true, TRANSACTION_READ_UNCOMMITTED);
             final StatementExecutedLog statementExecutedLog = new StatementExecutedLog(log.getLogId(), 2340L, 456L,
                     "myexception");
             final ResultSetLog resultSetLog = new ResultSetLog(log.getLogId(), 789L, 700L, 21);
@@ -402,7 +404,7 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
         {
             final StatementLog log = new StatementLog(connectionInfo.getUuid(), randomUUID(),
                     System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myRawsql2", "myfilledsql2",
-                    Thread.currentThread().getName(), 0, true);
+                    Thread.currentThread().getName(), 0, true, TRANSACTION_READ_UNCOMMITTED);
             @SuppressWarnings("null")
             final StatementExecutedLog statementExecutedLog = new StatementExecutedLog(log.getLogId(), 12L, null, null);
             fullLogs.add(new StatementFullyExecutedLog(log, statementExecutedLog, null));

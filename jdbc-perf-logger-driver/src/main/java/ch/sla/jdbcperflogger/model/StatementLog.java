@@ -29,8 +29,8 @@ public class StatementLog extends AbstractBeforeStatementExecutionLog {
 
     public StatementLog(final UUID connectionId, final UUID logId, final long timestamp,
             final StatementType statementType, final String sql, final String threadName, final int timeout,
-            final boolean autoCommit) {
-        super(connectionId, logId, timestamp, statementType, threadName, timeout, autoCommit);
+            final boolean autoCommit, final int transactionIsolation) {
+        super(connectionId, logId, timestamp, statementType, threadName, timeout, autoCommit, transactionIsolation);
         rawSql = sql;
         filledSql = sql;
         preparedStatement = false;
@@ -38,8 +38,8 @@ public class StatementLog extends AbstractBeforeStatementExecutionLog {
 
     public StatementLog(final UUID connectionId, final UUID logId, final long timestamp,
             final StatementType statementType, final String rawSql, final String filledSql, final String threadName,
-            final int timeout, final boolean autoCommit) {
-        super(connectionId, logId, timestamp, statementType, threadName, timeout, autoCommit);
+            final int timeout, final boolean autoCommit, int transactionIsolation) {
+        super(connectionId, logId, timestamp, statementType, threadName, timeout, autoCommit, transactionIsolation);
         this.rawSql = rawSql;
         this.filledSql = filledSql;
         preparedStatement = true;
@@ -66,6 +66,7 @@ public class StatementLog extends AbstractBeforeStatementExecutionLog {
                 + ", threadName=" + getThreadName()//
                 + ", timeout=" + getTimeout()//
                 + ", autocommit=" + isAutoCommit()//
+                + ", getTransactionIsolation=" + getTransactionIsolation()//
                 + ", rawSql=" + rawSql//
                 + ", filledSql=" + filledSql//
                 + ", preparedStatement=" + preparedStatement//

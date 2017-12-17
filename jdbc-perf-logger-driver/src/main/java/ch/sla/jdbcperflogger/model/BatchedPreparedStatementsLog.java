@@ -31,8 +31,8 @@ public class BatchedPreparedStatementsLog extends AbstractBeforeStatementExecuti
 
     public BatchedPreparedStatementsLog(final UUID connectionId, final UUID logId, final long timestamp,
             final String rawSql, final List<String> sqlList, final String threadName, final int timeout,
-            final boolean autoCommit) {
-        super(connectionId, logId, timestamp, StatementType.PREPARED_BATCH_EXECUTION, threadName, timeout, autoCommit);
+            final boolean autoCommit, final int transactionIsolation) {
+        super(connectionId, logId, timestamp, StatementType.PREPARED_BATCH_EXECUTION, threadName, timeout, autoCommit, transactionIsolation);
         this.rawSql = rawSql;
         this.sqlList = Collections.unmodifiableList(new ArrayList<String>(sqlList));
     }
@@ -55,6 +55,7 @@ public class BatchedPreparedStatementsLog extends AbstractBeforeStatementExecuti
                 + ", threadName=" + getThreadName()//
                 + ", timeout=" + getTimeout()//
                 + ", autocommit=" + isAutoCommit()//
+                + ", transactionIsolation=" + getTransactionIsolation()//
                 + "]";
     }
 

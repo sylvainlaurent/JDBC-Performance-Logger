@@ -1,9 +1,11 @@
 package ch.sla.jdbcperflogger.console.db;
 
+import static java.sql.Connection.TRANSACTION_NONE;
 import static java.util.UUID.randomUUID;
 import static org.eclipse.jdt.annotation.DefaultLocation.PARAMETER;
 import static org.eclipse.jdt.annotation.DefaultLocation.RETURN_TYPE;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -48,7 +50,7 @@ public class AbstractLogRepositoryTest {
     protected StatementLog insert1Log(final ConnectionInfo connectionInfo) {
 
         final StatementLog log = new StatementLog(connectionInfo.getUuid(), randomUUID(), System.currentTimeMillis(),
-                StatementType.BASE_NON_PREPARED_STMT, "myrawsql", Thread.currentThread().getName(), 123, true);
+                StatementType.BASE_NON_PREPARED_STMT, "myrawsql", Thread.currentThread().getName(), 123, true, TRANSACTION_NONE);
         repositoryUpdate.addStatementLog(log);
         return log;
     }

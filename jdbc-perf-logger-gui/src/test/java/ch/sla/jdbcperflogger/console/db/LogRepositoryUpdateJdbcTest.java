@@ -16,6 +16,7 @@
 package ch.sla.jdbcperflogger.console.db;
 
 import static ch.sla.jdbcperflogger.console.db.LogRepositoryConstants.ID_COLUMN;
+import static ch.sla.jdbcperflogger.console.db.LogRepositoryConstants.TRANSACTION_ISOLATION_COLUMN;
 import static java.util.UUID.randomUUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -91,6 +92,7 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
             assertEquals(1, resultSet.getLong(ID_COLUMN));
             assertEquals(stmtLog.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
             assertEquals(stmtLog.isAutoCommit(), resultSet.getBoolean(LogRepositoryConstants.AUTOCOMMIT_COLUMN));
+            assertEquals(stmtLog.getTransactionIsolation(), resultSet.getInt(TRANSACTION_ISOLATION_COLUMN));
             assertEquals(12, resultSet.getInt(LogRepositoryConstants.CONNECTION_NUMBER_COLUMN));
             assertEquals(resultSetLog.getResultSetUsageDurationNanos(),
                     resultSet.getInt(LogRepositoryConstants.RSET_USAGE_TIME));
@@ -129,7 +131,7 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
         for (int i = 1; i < 2 * LogRepositoryUpdateJdbc.NB_ROWS_MAX; i++) {
             final StatementLog newLog = new StatementLog(log.getConnectionUuid(), randomUUID(),
                     System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myrawsql" + i,
-                    Thread.currentThread().getName(), i, i % 2 == 0);
+                    Thread.currentThread().getName(), i, i % 2 == 0, i % 4);
             repositoryUpdate.addStatementLog(newLog);
         }
         assertNotNull(repositoryUpdate.getLastLostMessageTime());
@@ -152,11 +154,11 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
     public void testDelete() {
         final StatementLog log1 = insert1Log();
         final StatementLog log2 = new StatementLog(log1.getConnectionUuid(), randomUUID(), System.currentTimeMillis(),
-                StatementType.BASE_NON_PREPARED_STMT, "myrawsql2", Thread.currentThread().getName(), 2, false);
+                StatementType.BASE_NON_PREPARED_STMT, "myrawsql2", Thread.currentThread().getName(), 2, false, 1);
         repositoryUpdate.addStatementLog(log2);
 
         final StatementLog log3 = new StatementLog(log1.getConnectionUuid(), randomUUID(), System.currentTimeMillis(),
-                StatementType.BASE_NON_PREPARED_STMT, "myrawsql3", Thread.currentThread().getName(), 3, false);
+                StatementType.BASE_NON_PREPARED_STMT, "myrawsql3", Thread.currentThread().getName(), 3, false, 1);
         repositoryUpdate.addStatementLog(log3);
 
         assertEquals(3, countRowsInTable("statement_log"));
@@ -170,7 +172,7 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
 
         final List<String> sqlList = Arrays.asList("st1", "st2", "st3");
         final BatchedNonPreparedStatementsLog batchedLogs = new BatchedNonPreparedStatementsLog(log.getConnectionUuid(),
-                randomUUID(), System.currentTimeMillis(), sqlList, "myThread", 13, true);
+                randomUUID(), System.currentTimeMillis(), sqlList, "myThread", 13, true, 1);
         repositoryUpdate.addBatchedNonPreparedStatementsLog(batchedLogs);
         assertEquals(2, countRowsInTable("statement_log"));
         assertEquals(3, countRowsInTable("batched_statement_log"));
@@ -182,7 +184,7 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
 
         final List<String> sqlList = Arrays.asList("st1", "st2", "st3");
         final BatchedPreparedStatementsLog batchedLogs = new BatchedPreparedStatementsLog(log.getConnectionUuid(),
-                randomUUID(), System.currentTimeMillis(), "myRaw stmt", sqlList, "myThread", 13, true);
+                randomUUID(), System.currentTimeMillis(), "myRaw stmt", sqlList, "myThread", 13, true, 1);
         repositoryUpdate.addBatchedPreparedStatementsLog(batchedLogs);
         assertEquals(2, countRowsInTable("statement_log"));
         assertEquals(3, countRowsInTable("batched_statement_log"));
@@ -198,6 +200,8 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
             assertEquals(batchedLogs.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
             assertEquals(batchedLogs.isAutoCommit(),
                     resultSet.getBoolean(LogRepositoryConstants.AUTOCOMMIT_COLUMN));
+            assertEquals(batchedLogs.getTransactionIsolation(),
+                    resultSet.getInt(TRANSACTION_ISOLATION_COLUMN));
             assertEquals(0, resultSet.getInt(LogRepositoryConstants.FETCH_TIME_COLUMN));
             assertEquals(0, resultSet.getInt(LogRepositoryConstants.RSET_USAGE_TIME));
             assertEquals(statementExecutedLog.getExecutionTimeNanos(),
@@ -255,7 +259,7 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
         {
             final StatementLog log = new StatementLog(connectionInfo.getUuid(), randomUUID(),
                     System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myrawsql",
-                    Thread.currentThread().getName(), 123, true);
+                    Thread.currentThread().getName(), 123, true, 1);
             final StatementExecutedLog statementExecutedLog = new StatementExecutedLog(log.getLogId(), 234L, 456L,
                     "myexception");
             fullLogs.add(new StatementFullyExecutedLog(log, statementExecutedLog, null));
@@ -263,7 +267,7 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
         {
             final StatementLog log = new StatementLog(connectionInfo.getUuid(), randomUUID(),
                     System.currentTimeMillis(), StatementType.BASE_NON_PREPARED_STMT, "myrawsql",
-                    Thread.currentThread().getName(), 123, true);
+                    Thread.currentThread().getName(), 123, true, 1);
             final StatementExecutedLog statementExecutedLog = new StatementExecutedLog(log.getLogId(), 234L, 456L,
                     "myexception");
             final ResultSetLog resultSetLog = new ResultSetLog(log.getLogId(), 789L, 700L, 21);
@@ -282,6 +286,8 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
                 assertEquals(stmtLog.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
                 assertEquals(stmtLog.isAutoCommit(),
                         resultSet.getBoolean(LogRepositoryConstants.AUTOCOMMIT_COLUMN));
+                assertEquals(stmtLog.getTransactionIsolation(),
+                        resultSet.getInt(TRANSACTION_ISOLATION_COLUMN));
                 assertEquals(12, resultSet.getInt(LogRepositoryConstants.CONNECTION_NUMBER_COLUMN));
 
                 resultSet.getLong(LogRepositoryConstants.RSET_USAGE_TIME);
@@ -313,6 +319,8 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
                 assertEquals(stmtLog.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
                 assertEquals(stmtLog.isAutoCommit(),
                         resultSet.getBoolean(LogRepositoryConstants.AUTOCOMMIT_COLUMN));
+                assertEquals(stmtLog.getTransactionIsolation(),
+                        resultSet.getInt(TRANSACTION_ISOLATION_COLUMN));
                 assertEquals(12, resultSet.getInt(LogRepositoryConstants.CONNECTION_NUMBER_COLUMN));
                 assertEquals(stmtLog.getResultSetUsageDurationNanos().longValue(),
                         resultSet.getLong(LogRepositoryConstants.RSET_USAGE_TIME));

@@ -31,16 +31,12 @@ import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import ch.sla.jdbcperflogger.console.db.*;
 import org.eclipse.jdt.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.sla.jdbcperflogger.StatementType;
-import ch.sla.jdbcperflogger.console.db.DetailedViewStatementLog;
-import ch.sla.jdbcperflogger.console.db.LogRepositoryRead;
-import ch.sla.jdbcperflogger.console.db.LogRepositoryUpdate;
-import ch.sla.jdbcperflogger.console.db.LogSearchCriteria;
-import ch.sla.jdbcperflogger.console.db.ResultSetAnalyzer;
 import ch.sla.jdbcperflogger.console.net.AbstractLogReceiver;
 import ch.sla.jdbcperflogger.model.ConnectionInfo;
 
@@ -495,8 +491,13 @@ public class PerfLoggerController {
                     final List<Object[]> tempRows = new ArrayList<>();
                     try {
                         for (int i = 1; i <= columnCount; i++) {
-                            tempColumnNames.add(resultSetMetaData.getColumnLabel(i).toUpperCase());
-                            tempColumnTypes.add(Class.forName(resultSetMetaData.getColumnClassName(i)));
+                            String columnLabel = resultSetMetaData.getColumnLabel(i);
+                            tempColumnNames.add(columnLabel.toUpperCase());
+                            if (LogRepositoryConstants.TRANSACTION_ISOLATION_COLUMN.equals(columnLabel)) {
+                                tempColumnTypes.add(String.class);
+                            } else {
+                                tempColumnTypes.add(Class.forName(resultSetMetaData.getColumnClassName(i)));
+                            }
                         }
 
                         while (resultSet.next()) {
