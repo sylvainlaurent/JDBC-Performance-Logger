@@ -234,11 +234,12 @@ public class LogRepositoryUpdateJdbcTest extends AbstractLogRepositoryTest {
 
     @Test
     public void testlastLostMessageTime() {
-        final Long l = repositoryUpdate.getLastLostMessageTime();
+        Long l = repositoryUpdate.getLastLostMessageTime();
         assertNull(l);
         repositoryUpdate.setLastLostMessageTime(123L);
         assertEquals(123L, repositoryUpdate.getLastLostMessageTime().longValue());
         repositoryUpdate.setLastLostMessageTime(null);
+        l = repositoryUpdate.getLastLostMessageTime();
         assertNull(l);
     }
 
