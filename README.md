@@ -31,9 +31,7 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 - Java agent (since 0.8.0)
 
 ## Requirements
-- java 6 or later for the driver
-- java 8 or later for the GUI 
-- java 8 to build
+- java 8 (since 0.9)
 
 ## How to download
 - The package containing both the console and driver is available here : https://github.com/sylvainlaurent/JDBC-Performance-Logger/releases
@@ -86,7 +84,7 @@ See [README.md](jdbc-perf-logger-spring-boot-starter/README.md)
 
 ## Tested databases
 - H2 (lightly, used for our own unit tests)
-- Oracle 10.2/11.2
+- Oracle 10.2/11.2/12.1
 - MySQL 5.1
 
 ## Current limitations

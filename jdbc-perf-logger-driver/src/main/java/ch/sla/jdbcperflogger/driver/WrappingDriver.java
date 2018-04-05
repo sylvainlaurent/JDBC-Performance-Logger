@@ -18,6 +18,7 @@ package ch.sla.jdbcperflogger.driver;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.Driver;
+import java.sql.DriverAction;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
@@ -56,7 +57,8 @@ public class WrappingDriver implements Driver {
     public static synchronized Driver load() {
         if (!registered) {
             try {
-                DriverManager.registerDriver(INSTANCE);
+                LOGGER.debug("classloader is " + INSTANCE.getClass().getClassLoader());
+                DriverManager.registerDriver(INSTANCE, WrappingDriverAction.ACTION_INSTANCE);
             } catch (final SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -68,9 +70,10 @@ public class WrappingDriver implements Driver {
     public static synchronized void unload() {
         if (registered) {
             try {
+                // flag as deregistered even before actually deregistering to avoid infinite recursion
+                registered = false;
                 DriverManager.deregisterDriver(INSTANCE);
                 // TODO : properly stop threads and sockets
-                registered = false;
             } catch (final SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -125,9 +128,9 @@ public class WrappingDriver implements Driver {
             }
         }
         final Driver finalUnderlyingDriver = underlyingDriver;
-        final Connection connection = wrapConnection(unWrappedUrl, info, new Callable<Connection>() {
+        final Connection connection = wrapConnection(unWrappedUrl, info, new Callable<@Nullable Connection>() {
             @Override
-            public Connection call() throws Exception {
+            public @Nullable Connection call() throws Exception {
                 return finalUnderlyingDriver.connect(unWrappedUrl, info);
             }
         });
@@ -136,7 +139,7 @@ public class WrappingDriver implements Driver {
     }
 
     public @Nullable Connection wrapConnection(final String url, final @Nullable Properties info,
-            final Callable<Connection> underlyingConnectionCreator) throws SQLException {
+            final Callable<@Nullable Connection> underlyingConnectionCreator) throws SQLException {
         final long startNanos = System.nanoTime();
 
         Connection connection;
@@ -206,12 +209,23 @@ public class WrappingDriver implements Driver {
         return false;
     }
 
+    @Override
     public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {
         throw new SQLFeatureNotSupportedException();
     }
 
     private String extractUrlForWrappedDriver(final String url) {
         return url.substring(URL_PREFIX.length());
+    }
+
+    private static class WrappingDriverAction implements DriverAction {
+        static WrappingDriverAction ACTION_INSTANCE = new WrappingDriverAction();
+
+        @Override
+        public void deregister() {
+            WrappingDriver.unload();
+        }
+
     }
 
 }

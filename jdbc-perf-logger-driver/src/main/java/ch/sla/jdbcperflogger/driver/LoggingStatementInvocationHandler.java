@@ -56,7 +56,7 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
 
     @Override
     @Nullable
-    public Object invoke(final @Nullable Object _proxy, final Method method, final @Nullable Object[] args)
+    public Object invoke(final @Nullable Object _proxy, final Method method, final Object @Nullable [] args)
             throws Throwable {
 
         final Object result;
@@ -102,7 +102,7 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
 
     }
 
-    private ResultSet getAndWrapResultSet(final Method method, final @Nullable Object[] args, final UUID logId)
+    private ResultSet getAndWrapResultSet(final Method method, final Object @Nullable [] args, final UUID logId)
             throws Throwable {
         final ResultSet resultSet = (ResultSet) Utils.invokeUnwrapExceptionReturnNonNull(wrappedStatement, method,
                 args);
@@ -136,7 +136,7 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
     }
 
     @Nullable
-    protected Object internalExecuteBatch(final Method method, @Nullable final Object[] args) throws Throwable {
+    protected Object internalExecuteBatch(final Method method, final Object @Nullable [] args) throws Throwable {
         final UUID logId = UUID.randomUUID();
         PerfLogger.logNonPreparedBatchedStatements(connectionId, logId, batchedNonPreparedStmtExecutions, databaseType,
                 wrappedStatement.getQueryTimeout(), wrappedStatement.getConnection().getAutoCommit());
@@ -150,7 +150,7 @@ public class LoggingStatementInvocationHandler implements InvocationHandler {
     }
 
     @Nullable
-    protected Object internalExecuteBatchInternal(final Method method, final @Nullable Object[] args, final UUID logId)
+    protected Object internalExecuteBatchInternal(final Method method, final Object @Nullable [] args, final UUID logId)
             throws Throwable {
         Throwable exc = null;
         long updateCount = -1;

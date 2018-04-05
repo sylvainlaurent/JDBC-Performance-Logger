@@ -1,5 +1,6 @@
 package ch.sla.jdbcperflogger.agent;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -57,7 +58,8 @@ public class AgentIT {
                 childClassLoader);
         final Driver driver = driverClass.newInstance();
 
-        final Connection connection = driver.connect("jdbc:derby:memory:myDB;create=true", new Properties());
+        final Connection connection = requireNonNull(
+                driver.connect("jdbc:derby:memory:myDB;create=true", new Properties()));
         assertTrue("is proxy", Proxy.isProxyClass(connection.getClass()));
         assertEquals(LoggingConnectionInvocationHandler.class, Proxy.getInvocationHandler(connection).getClass());
 
