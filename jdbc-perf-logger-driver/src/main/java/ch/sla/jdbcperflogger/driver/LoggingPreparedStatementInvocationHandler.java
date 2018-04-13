@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -27,40 +28,17 @@ import java.util.UUID;
 import org.eclipse.jdt.annotation.Nullable;
 
 import ch.sla.jdbcperflogger.DatabaseType;
-import ch.sla.jdbcperflogger.Logger;
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.logger.PerfLogger;
 import ch.sla.jdbcperflogger.model.PreparedStatementValuesHolder;
 import ch.sla.jdbcperflogger.model.SqlTypedValue;
 
 public class LoggingPreparedStatementInvocationHandler extends LoggingStatementInvocationHandler {
-    private static final String JAVA_SQL_SQL_TYPE = "java.sql.SQLType";
     private static final String CLEAR_PARAMETERS = "clearParameters";
-    private static final Logger LOGGER = Logger.getLogger(LoggingPreparedStatementInvocationHandler.class);
-
-    @Nullable
-    private static final Method getVendorTypeNumberMethod;// for java 8
 
     private final String rawSql;
     private final PreparedStatementValuesHolder paramValues = new PreparedStatementValuesHolder();
     private final List<Object> batchedPreparedOrNonPreparedStmtExecutions = new ArrayList<Object>();
-
-    static {
-        // we use tempMethod to be able to keep getVendorTypeNumberMethod final
-        Method tempMethod = null;
-        try {
-            final Class<?> sqlTypeClass = Class.forName(JAVA_SQL_SQL_TYPE);
-            tempMethod = sqlTypeClass.getMethod("getVendorTypeNumber");
-        } catch (final ClassNotFoundException e) {
-            LOGGER.debug("not running under java 8");
-        } catch (final SecurityException e) {
-            LOGGER.warn("Error getting getVendorTypeNumber method from java.sql.SQLType");
-        } catch (final NoSuchMethodException e) {
-            LOGGER.warn("Error getting getVendorTypeNumber method from java.sql.SQLType");
-        } finally {
-            getVendorTypeNumberMethod = tempMethod;
-        }
-    }
 
     LoggingPreparedStatementInvocationHandler(final UUID connectionId, final PreparedStatement statement,
             final String rawSql, final DatabaseType databaseType) {
@@ -70,7 +48,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
 
     @Override
     @Nullable
-    public Object invoke(final @Nullable Object proxy, final Method method, @Nullable final Object[] args)
+    public Object invoke(final @Nullable Object proxy, final Method method, final Object @Nullable [] args)
             throws Throwable {
 
         final Object result;
@@ -109,16 +87,8 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
                         Integer sqlType = null;
                         if (argType[2] == Integer.TYPE) {
                             sqlType = (Integer) args[2];
-                        } else {
-                            // use a local variable to keep eclipse null-analysis happy
-                            final Method tempMethod = getVendorTypeNumberMethod;
-                            if (tempMethod != null && argType[2].getName().equals(JAVA_SQL_SQL_TYPE)
-                                    && args[2] != null) {
-                                // for java 8... we cannot directly reference the new SQLType at compile time to retain
-                                // compatibility with java <8
-
-                                sqlType = (Integer) tempMethod.invoke(args[2]);
-                            }
+                        } else if (argType[2] == SQLType.class) {
+                            sqlType = ((SQLType) args[2]).getVendorTypeNumber();
                         }
                         paramValues.put((Serializable) args[0], new SqlTypedValue(args[1], sqlType));
                     }
@@ -154,7 +124,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
     }
 
     @Nullable
-    protected Object internalExecutePrepared(final Method method, @Nullable final Object[] args) throws Throwable {
+    protected Object internalExecutePrepared(final Method method, final Object @Nullable [] args) throws Throwable {
         final UUID logId = UUID.randomUUID();
         final long start = System.nanoTime();
         PerfLogger.logBeforePreparedStatement(connectionId, logId, rawSql, paramValues,
@@ -180,7 +150,7 @@ public class LoggingPreparedStatementInvocationHandler extends LoggingStatementI
 
     @Override
     @Nullable
-    protected Object internalExecuteBatch(final Method method, @Nullable final Object[] args) throws Throwable {
+    protected Object internalExecuteBatch(final Method method, final Object @Nullable [] args) throws Throwable {
         final UUID logId = UUID.randomUUID();
         PerfLogger.logPreparedBatchedStatements(connectionId, logId, rawSql, batchedPreparedOrNonPreparedStmtExecutions,
                 databaseType, wrappedStatement.getQueryTimeout(), wrappedStatement.getConnection().getAutoCommit());

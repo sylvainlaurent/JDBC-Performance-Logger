@@ -13,9 +13,15 @@
       <artifactId>jdbc-perf-logger-driver</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.eclipse.jdt</groupId>
+      <artifactId>org.eclipse.jdt.annotation</artifactId>
+      <!-- Annotations are not required on the classpath to use the agent -->
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>net.bytebuddy</groupId>
       <artifactId>byte-buddy</artifactId>
-      <version>1.3.18</version>
+      <version>1.6.14</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

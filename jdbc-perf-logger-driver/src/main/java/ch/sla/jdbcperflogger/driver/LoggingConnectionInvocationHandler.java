@@ -51,7 +51,7 @@ public class LoggingConnectionInvocationHandler implements InvocationHandler {
 
     @Override
     @Nullable
-    public Object invoke(@Nullable final Object proxy, final Method method, @Nullable final Object[] args)
+    public Object invoke(@Nullable final Object proxy, final Method method, final Object @Nullable [] args)
             throws Throwable {
 
         final String methodName = method.getName();

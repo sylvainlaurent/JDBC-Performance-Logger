@@ -423,8 +423,7 @@ public class WrappingDriverJava8Test {
 
     @Test(expected = SQLException.class)
     public void testException() throws Exception {
-        final Statement statement = connection.createStatement();
-        try {
+        try (Statement statement = connection.createStatement()) {
             statement.execute("create table test (key_id int)");
 
             statement.execute("create table test (key_id int)");
@@ -438,8 +437,6 @@ public class WrappingDriverJava8Test {
             assertEquals("create table test (key_id int)",
                     ((StatementLog) logRecorder.lastLogMessage(1)).getFilledSql());
             throw exc;
-        } finally {
-            statement.close();
         }
     }
 

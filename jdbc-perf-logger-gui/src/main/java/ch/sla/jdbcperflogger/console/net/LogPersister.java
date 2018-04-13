@@ -55,7 +55,7 @@ class LogPersister extends Thread implements AutoCloseable {
     @Override
     public void run() {
         final List<LogMessage> drainedLogs = new ArrayList<>(1000);
-        final List<StatementFullyExecutedLog> statementFullyExecutedLogs = new ArrayList<StatementFullyExecutedLog>(
+        final List<StatementFullyExecutedLog> statementFullyExecutedLogs = new ArrayList<>(
                 100);
 
         while (!disposed) {

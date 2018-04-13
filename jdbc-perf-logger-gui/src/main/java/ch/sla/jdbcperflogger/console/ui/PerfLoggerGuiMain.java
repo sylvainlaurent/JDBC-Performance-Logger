@@ -18,9 +18,7 @@ package ch.sla.jdbcperflogger.console.ui;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
@@ -57,19 +55,15 @@ public class PerfLoggerGuiMain implements IClientConnectionDelegate {
      */
     public static void main(final String[] args) {
         LOGGER.debug("PerfLoggerGuiMain starting...");
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                installLookAndFeel();
+        SwingUtilities.invokeLater(() -> {
+            installLookAndFeel();
 
-                try {
-                    final PerfLoggerGuiMain window = new PerfLoggerGuiMain();
-                    window.frmJdbcPerformanceLogger.setVisible(true);
-                } catch (final Exception e) {
-                    e.printStackTrace();
-                }
+            try {
+                final PerfLoggerGuiMain window = new PerfLoggerGuiMain();
+                window.frmJdbcPerformanceLogger.setVisible(true);
+            } catch (final Exception e) {
+                e.printStackTrace();
             }
-
         });
     }
 
@@ -135,13 +129,7 @@ public class PerfLoggerGuiMain implements IClientConnectionDelegate {
     @Override
     public void close(final PerfLoggerController perfLoggerController) {
         frmJdbcPerformanceLogger.removeTab(perfLoggerController.getPanel());
-        final Iterator<Entry<String, PerfLoggerController>> iterator = connectionsToLogController.entrySet().iterator();
-        while (iterator.hasNext()) {
-            final Entry<String, PerfLoggerController> entry = iterator.next();
-            if (entry.getValue() == perfLoggerController) {
-                iterator.remove();
-            }
-        }
+        connectionsToLogController.entrySet().removeIf(entry -> entry.getValue() == perfLoggerController);
     }
 
     private PerfLoggerController connectToClient(final String targetHost, final int targetPort) {

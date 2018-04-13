@@ -2,11 +2,15 @@ package ch.sla.jdbcperflogger.console.db;
 
 import java.util.UUID;
 
+import lombok.Getter;
+import lombok.ToString;
 import org.eclipse.jdt.annotation.Nullable;
 
 import ch.sla.jdbcperflogger.StatementType;
 import ch.sla.jdbcperflogger.model.ConnectionInfo;
 
+@Getter
+@ToString
 public class DetailedViewStatementLog {
     private final UUID logId;
     private final long timestamp;
@@ -30,40 +34,6 @@ public class DetailedViewStatementLog {
         this.filledSql = filledSql;
         this.threadName = threadName;
         sqlException = exception;
-    }
-
-    public UUID getLogId() {
-        return logId;
-    }
-
-    public ConnectionInfo getConnectionInfo() {
-        return connectionInfo;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    @Nullable
-    public StatementType getStatementType() {
-        return statementType;
-    }
-
-    public String getRawSql() {
-        return rawSql;
-    }
-
-    public String getFilledSql() {
-        return filledSql;
-    }
-
-    public String getThreadName() {
-        return threadName;
-    }
-
-    @Nullable
-    public String getSqlException() {
-        return sqlException;
     }
 
 }
