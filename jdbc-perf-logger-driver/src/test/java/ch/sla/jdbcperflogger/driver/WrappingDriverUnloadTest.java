@@ -51,16 +51,25 @@ public class WrappingDriverUnloadTest {
 
     protected void assertPortIsAvailable(final Integer port) {
         ServerSocket s = null;
-        boolean portAvailable = true;
-        try {
-            s = new ServerSocket(port);
-        } catch (final IOException e) {
-            portAvailable = false;
-        } finally {
-            if (s != null) {
+        boolean portAvailable = false;
+        int retries = 0;
+        while (!portAvailable && retries < 10) {
+            try {
+                s = new ServerSocket(port);
+                portAvailable = true;
+            } catch (final IOException e) {
+                portAvailable = false;
                 try {
-                    s.close();
-                } catch (final IOException e) {
+                    Thread.sleep(500);
+                } catch (final InterruptedException e1) {
+                }
+                retries++;
+            } finally {
+                if (s != null) {
+                    try {
+                        s.close();
+                    } catch (final IOException e) {
+                    }
                 }
             }
         }
