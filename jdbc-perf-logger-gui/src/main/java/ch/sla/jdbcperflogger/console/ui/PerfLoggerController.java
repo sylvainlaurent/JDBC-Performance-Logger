@@ -17,9 +17,7 @@ package ch.sla.jdbcperflogger.console.ui;
 
 import java.io.File;
 import java.sql.Date;
-import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -479,12 +477,7 @@ public class PerfLoggerController {
                 txt.append(DateFormat.getTimeInstance().format(new Date(lastLostMessageTime)));
             }
 
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    perfLoggerPanel.lblStatus.setText(txt.toString());
-                }
-            });
+            SwingUtilities.invokeLater(() -> perfLoggerPanel.lblStatus.setText(txt.toString()));
         }
 
         void forceRefresh() {
@@ -493,57 +486,48 @@ public class PerfLoggerController {
 
         void doRefreshData(final SelectLogRunner selectLogRunner) {
             try {
-                selectLogRunner.doSelect(new ResultSetAnalyzer() {
-                    @Override
-                    public void analyze(final ResultSet resultSet) throws SQLException {
-                        final ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-                        final int columnCount = resultSetMetaData.getColumnCount();
+                selectLogRunner.doSelect(resultSet -> {
+                    final ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+                    final int columnCount = resultSetMetaData.getColumnCount();
 
-                        final List<String> tempColumnNames = new ArrayList<>();
-                        final List<Class<?>> tempColumnTypes = new ArrayList<>();
-                        final List<Object[]> tempRows = new ArrayList<>();
-                        try {
-                            for (int i = 1; i <= columnCount; i++) {
-                                tempColumnNames.add(resultSetMetaData.getColumnLabel(i).toUpperCase());
-                                tempColumnTypes.add(Class.forName(resultSetMetaData.getColumnClassName(i)));
-                            }
-
-                            while (resultSet.next()) {
-                                final Object[] row = new Object[columnCount];
-                                for (int i = 1; i <= columnCount; i++) {
-                                    row[i - 1] = resultSet.getObject(i);
-                                }
-                                tempRows.add(row);
-                            }
-                        } catch (final ClassNotFoundException e) {
-                            throw new RuntimeException(e);
+                    final List<String> tempColumnNames = new ArrayList<>();
+                    final List<Class<?>> tempColumnTypes = new ArrayList<>();
+                    final List<Object[]> tempRows = new ArrayList<>();
+                    try {
+                        for (int i = 1; i <= columnCount; i++) {
+                            tempColumnNames.add(resultSetMetaData.getColumnLabel(i).toUpperCase());
+                            tempColumnTypes.add(Class.forName(resultSetMetaData.getColumnClassName(i)));
                         }
 
-                        SwingUtilities.invokeLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (lastSelectFromRepositoryIsInError) {
-                                    perfLoggerPanel.txtFieldRawSql.setText("");
-                                }
-                                lastSelectFromRepositoryIsInError = false;
-                                perfLoggerPanel.setData(tempRows, tempColumnNames, tempColumnTypes,
-                                        tableStructureChanged);
-                                tableStructureChanged = false;
+                        while (resultSet.next()) {
+                            final Object[] row = new Object[columnCount];
+                            for (int i = 1; i <= columnCount; i++) {
+                                row[i - 1] = resultSet.getObject(i);
                             }
-                        });
+                            tempRows.add(row);
+                        }
+                    } catch (final ClassNotFoundException e) {
+                        throw new RuntimeException(e);
                     }
+
+                    SwingUtilities.invokeLater(() -> {
+                        if (lastSelectFromRepositoryIsInError) {
+                            perfLoggerPanel.txtFieldRawSql.setText("");
+                        }
+                        lastSelectFromRepositoryIsInError = false;
+                        perfLoggerPanel.setData(tempRows, tempColumnNames, tempColumnTypes,
+                                tableStructureChanged);
+                        tableStructureChanged = false;
+                    });
                 });
             } catch (final Exception ex) {
                 LOGGER.debug("error retrieving log statements", ex);
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        lastSelectFromRepositoryIsInError = true;
-                        perfLoggerPanel.txtFieldRawSql.setText(ex.getMessage());
-                        perfLoggerPanel.setData(new ArrayList<Object[]>(), new ArrayList<String>(),
-                                new ArrayList<Class<?>>(), true);
-                        tableStructureChanged = true;
-                    }
+                SwingUtilities.invokeLater(() -> {
+                    lastSelectFromRepositoryIsInError = true;
+                    perfLoggerPanel.txtFieldRawSql.setText(ex.getMessage());
+                    perfLoggerPanel.setData(new ArrayList<>(), new ArrayList<>(),
+                            new ArrayList<>(), true);
+                    tableStructureChanged = true;
                 });
             }
         }

@@ -6,12 +6,15 @@ import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.sql.Driver;
 
+import org.eclipse.jdt.annotation.Nullable;
+
 import ch.sla.jdbcperflogger.driver.WrappingDriver;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType.Builder;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.matcher.ElementMatchers;
+import net.bytebuddy.utility.JavaModule;
 
 public class Agent {
     protected static final String PREFIX = "[jdbc-perf-logger-agent]";
@@ -32,8 +35,9 @@ public class Agent {
         new AgentBuilder.Default()//
                 .with(new AgentBuilder.Listener.Adapter() {
                     @Override
-                    public void onError(final String typeName, final ClassLoader classLoader,
-                            final Throwable throwable) {
+                    public void onError(final String typeName, final @Nullable ClassLoader classLoader,
+                            final @Nullable JavaModule module,
+                            final boolean loaded1, final Throwable throwable) {
                         System.err.println(PREFIX + " ERROR " + typeName);
                         throwable.printStackTrace(System.err);
                     }
@@ -48,12 +52,13 @@ public class Agent {
 
                     @Override
                     public Builder<?> transform(final Builder<?> builder, final TypeDescription typeDescription,
-                            final ClassLoader classLoader) {
+                            final @Nullable ClassLoader classLoader, final @Nullable JavaModule module) {
                         System.out.println(PREFIX + " Transforming " + typeDescription + " for interception");
                         return builder//
                                 .method(named("connect"))//
-                                .intercept(MethodDelegation.to(new DriverInterceptor())
-                                        .filter(ElementMatchers.isMethod().and(named("connect"))))//
+                                .intercept(MethodDelegation.withDefaultConfiguration()
+                                        .filter(ElementMatchers.isMethod().and(named("connect")))
+                                        .to(new DriverInterceptor()))//
                         ;
                     }
                 })//

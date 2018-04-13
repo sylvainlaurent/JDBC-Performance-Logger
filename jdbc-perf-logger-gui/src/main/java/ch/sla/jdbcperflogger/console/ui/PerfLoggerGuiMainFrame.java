@@ -18,9 +18,7 @@ package ch.sla.jdbcperflogger.console.ui;
 import java.awt.BorderLayout;
 import java.awt.Component;
 
-import javax.swing.JFrame;
-import javax.swing.JTabbedPane;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 
 @SuppressWarnings("serial")
 public class PerfLoggerGuiMainFrame extends JFrame {
@@ -33,7 +31,7 @@ public class PerfLoggerGuiMainFrame extends JFrame {
     public PerfLoggerGuiMainFrame() {
         this.setTitle("JDBC Performance Logger");
         // TODO handle clean exit
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         tabbedPane = new JTabbedPane(SwingConstants.TOP);
         this.getContentPane().add(tabbedPane, BorderLayout.CENTER);

@@ -50,7 +50,7 @@ public final class Utils {
     }
 
     @Nullable
-    static Object invokeUnwrapException(final Object target, final Method method, @Nullable final Object[] args)
+    static Object invokeUnwrapException(final Object target, final Method method, final Object @Nullable [] args)
             throws Throwable {
         try {
             return method.invoke(target, args);
@@ -60,7 +60,7 @@ public final class Utils {
     }
 
     static Object invokeUnwrapExceptionReturnNonNull(final Object target, final Method method,
-            @Nullable final Object[] args) throws Throwable {
+            final Object @Nullable [] args) throws Throwable {
         try {
             final Object result = method.invoke(target, args);
             assert result != null;

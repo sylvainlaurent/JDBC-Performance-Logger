@@ -40,7 +40,7 @@ public class LoggingResultSetInvocationHandler implements InvocationHandler {
 
     @Override
     @Nullable
-    public Object invoke(@Nullable final Object proxy, final Method method, @Nullable final Object[] args)
+    public Object invoke(@Nullable final Object proxy, final Method method, final Object @Nullable [] args)
             throws Throwable {
         final long methodStartTime = System.nanoTime();
         final Object result = Utils.invokeUnwrapException(wrappedResultSet, method, args);

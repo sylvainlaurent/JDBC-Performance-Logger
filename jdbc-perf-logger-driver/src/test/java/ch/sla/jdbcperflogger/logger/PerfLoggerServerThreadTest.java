@@ -2,14 +2,10 @@ package ch.sla.jdbcperflogger.logger;
 
 import java.io.IOException;
 
-import org.eclipse.jdt.annotation.Nullable;
-
 import org.junit.Assert;
 import org.junit.Test;
 
 public class PerfLoggerServerThreadTest {
-    @Nullable
-    private ClassLoader classLoaderInsideThread;
 
     @Test
     public void testCCL() throws InterruptedException, IOException {
@@ -20,7 +16,7 @@ public class PerfLoggerServerThreadTest {
 
             final PerfLoggerServerThread thread = PerfLoggerServerThread.spawn(0);
             Thread.sleep(1000);
-            classLoaderInsideThread = thread.getContextClassLoader();
+            final ClassLoader classLoaderInsideThread = thread.getContextClassLoader();
             thread.serverSocket.close();
             thread.done = true;
             thread.interrupt();

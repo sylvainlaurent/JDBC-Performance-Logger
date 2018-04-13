@@ -6,8 +6,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -77,49 +75,45 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
     public void testgetStatementsGroupByRawSQL_noCriteria() {
         final List<StatementFullyExecutedLog> fullLogs = insert3Logs();
 
-        repositoryRead.getStatementsGroupByRawSQL(new LogSearchCriteria(), new ResultSetAnalyzer() {
-
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                {
-                    resultSet.next();
-                    final StatementFullyExecutedLog stmtLog1 = fullLogs.get(0);
-                    final StatementFullyExecutedLog stmtLog2 = fullLogs.get(1);
-                    assertEquals(1, resultSet.getLong(ID_COLUMN));
-                    assertEquals(stmtLog1.getStatementType().getId(),
-                            resultSet.getInt(LogRepositoryConstants.STMT_TYPE_COLUMN));
-                    assertEquals(2, resultSet.getLong(LogRepositoryConstants.EXEC_COUNT_COLUMN));
-                    assertEquals(stmtLog1.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
-                    assertEquals(
-                            stmtLog1.getExecutionPlusResultSetUsageTimeNanos()
-                                    + stmtLog2.getExecutionPlusResultSetUsageTimeNanos(),
-                            resultSet.getLong(LogRepositoryConstants.TOTAL_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
-                    assertEquals(stmtLog2.getExecutionPlusResultSetUsageTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.MAX_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
-                    assertEquals(stmtLog1.getExecutionPlusResultSetUsageTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.MIN_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
-                    assertEquals(
-                            (stmtLog1.getExecutionPlusResultSetUsageTimeNanos()
-                                    + stmtLog2.getExecutionPlusResultSetUsageTimeNanos()) / 2.0d,
-                            resultSet.getInt(LogRepositoryConstants.AVG_EXEC_PLUS_RSET_USAGE_TIME_COLUMN), 1.0d);
-                }
-                {
-                    resultSet.next();
-                    final StatementFullyExecutedLog stmtLog = fullLogs.get(2);
-                    assertEquals(3, resultSet.getLong(ID_COLUMN));
-                    assertEquals(stmtLog.getStatementType().getId(),
-                            resultSet.getInt(LogRepositoryConstants.STMT_TYPE_COLUMN));
-                    assertEquals(1, resultSet.getLong(LogRepositoryConstants.EXEC_COUNT_COLUMN));
-                    assertEquals(stmtLog.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
-                    assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.TOTAL_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
-                    assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.MAX_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
-                    assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.MIN_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
-                    assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.AVG_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
-                }
+        repositoryRead.getStatementsGroupByRawSQL(new LogSearchCriteria(), resultSet -> {
+            {
+                resultSet.next();
+                final StatementFullyExecutedLog stmtLog1 = fullLogs.get(0);
+                final StatementFullyExecutedLog stmtLog2 = fullLogs.get(1);
+                assertEquals(1, resultSet.getLong(ID_COLUMN));
+                assertEquals(stmtLog1.getStatementType().getId(),
+                        resultSet.getInt(LogRepositoryConstants.STMT_TYPE_COLUMN));
+                assertEquals(2, resultSet.getLong(LogRepositoryConstants.EXEC_COUNT_COLUMN));
+                assertEquals(stmtLog1.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
+                assertEquals(
+                        stmtLog1.getExecutionPlusResultSetUsageTimeNanos()
+                                + stmtLog2.getExecutionPlusResultSetUsageTimeNanos(),
+                        resultSet.getLong(LogRepositoryConstants.TOTAL_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                assertEquals(stmtLog2.getExecutionPlusResultSetUsageTimeNanos(),
+                        resultSet.getInt(LogRepositoryConstants.MAX_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                assertEquals(stmtLog1.getExecutionPlusResultSetUsageTimeNanos(),
+                        resultSet.getInt(LogRepositoryConstants.MIN_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                assertEquals(
+                        (stmtLog1.getExecutionPlusResultSetUsageTimeNanos()
+                                + stmtLog2.getExecutionPlusResultSetUsageTimeNanos()) / 2.0d,
+                        resultSet.getInt(LogRepositoryConstants.AVG_EXEC_PLUS_RSET_USAGE_TIME_COLUMN), 1.0d);
+            }
+            {
+                resultSet.next();
+                final StatementFullyExecutedLog stmtLog = fullLogs.get(2);
+                assertEquals(3, resultSet.getLong(ID_COLUMN));
+                assertEquals(stmtLog.getStatementType().getId(),
+                        resultSet.getInt(LogRepositoryConstants.STMT_TYPE_COLUMN));
+                assertEquals(1, resultSet.getLong(LogRepositoryConstants.EXEC_COUNT_COLUMN));
+                assertEquals(stmtLog.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
+                assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
+                        resultSet.getInt(LogRepositoryConstants.TOTAL_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
+                        resultSet.getInt(LogRepositoryConstants.MAX_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
+                        resultSet.getInt(LogRepositoryConstants.MIN_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
+                        resultSet.getInt(LogRepositoryConstants.AVG_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
             }
         });
     }
@@ -128,54 +122,50 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
     public void testgetStatementsGroupByFilledSQL_noCriteria() {
         final List<StatementFullyExecutedLog> fullLogs = insert3Logs();
 
-        repositoryRead.getStatementsGroupByFilledSQL(new LogSearchCriteria(), new ResultSetAnalyzer() {
-
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                {
-                    resultSet.next();
-                    final StatementFullyExecutedLog stmtLog1 = fullLogs.get(0);
-                    final StatementFullyExecutedLog stmtLog2 = fullLogs.get(1);
-                    assertEquals(1, resultSet.getLong(ID_COLUMN));
-                    assertEquals(stmtLog1.getStatementType().getId(),
-                            resultSet.getInt(LogRepositoryConstants.STMT_TYPE_COLUMN));
-                    assertEquals(2, resultSet.getLong(LogRepositoryConstants.EXEC_COUNT_COLUMN));
-                    assertEquals(stmtLog1.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
-                    assertEquals(stmtLog1.getFilledSql(),
-                            resultSet.getString(LogRepositoryConstants.FILLED_SQL_COLUMN));
-                    assertEquals(
-                            stmtLog1.getExecutionPlusResultSetUsageTimeNanos()
-                                    + stmtLog2.getExecutionPlusResultSetUsageTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.TOTAL_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
-                    assertEquals(stmtLog2.getExecutionPlusResultSetUsageTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.MAX_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
-                    assertEquals(stmtLog1.getExecutionPlusResultSetUsageTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.MIN_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
-                    assertEquals(
-                            (stmtLog1.getExecutionPlusResultSetUsageTimeNanos()
-                                    + stmtLog2.getExecutionPlusResultSetUsageTimeNanos()) / 2.0d,
-                            resultSet.getInt(LogRepositoryConstants.AVG_EXEC_PLUS_RSET_USAGE_TIME_COLUMN), 1.0d);
-                }
-                {
-                    resultSet.next();
-                    final StatementFullyExecutedLog stmtLog = fullLogs.get(2);
-                    assertEquals(3, resultSet.getLong(ID_COLUMN));
-                    assertEquals(stmtLog.getStatementType().getId(),
-                            resultSet.getInt(LogRepositoryConstants.STMT_TYPE_COLUMN));
-                    assertEquals(1, resultSet.getLong(LogRepositoryConstants.EXEC_COUNT_COLUMN));
-                    assertEquals(stmtLog.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
-                    assertEquals(stmtLog.getFilledSql(), resultSet.getString(LogRepositoryConstants.FILLED_SQL_COLUMN));
-                    assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.TOTAL_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
-                    assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.MAX_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
-                    assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.MIN_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
-                    assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
-                            resultSet.getInt(LogRepositoryConstants.AVG_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
-                }
-
+        repositoryRead.getStatementsGroupByFilledSQL(new LogSearchCriteria(), resultSet -> {
+            {
+                resultSet.next();
+                final StatementFullyExecutedLog stmtLog1 = fullLogs.get(0);
+                final StatementFullyExecutedLog stmtLog2 = fullLogs.get(1);
+                assertEquals(1, resultSet.getLong(ID_COLUMN));
+                assertEquals(stmtLog1.getStatementType().getId(),
+                        resultSet.getInt(LogRepositoryConstants.STMT_TYPE_COLUMN));
+                assertEquals(2, resultSet.getLong(LogRepositoryConstants.EXEC_COUNT_COLUMN));
+                assertEquals(stmtLog1.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
+                assertEquals(stmtLog1.getFilledSql(),
+                        resultSet.getString(LogRepositoryConstants.FILLED_SQL_COLUMN));
+                assertEquals(
+                        stmtLog1.getExecutionPlusResultSetUsageTimeNanos()
+                                + stmtLog2.getExecutionPlusResultSetUsageTimeNanos(),
+                        resultSet.getInt(LogRepositoryConstants.TOTAL_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                assertEquals(stmtLog2.getExecutionPlusResultSetUsageTimeNanos(),
+                        resultSet.getInt(LogRepositoryConstants.MAX_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                assertEquals(stmtLog1.getExecutionPlusResultSetUsageTimeNanos(),
+                        resultSet.getInt(LogRepositoryConstants.MIN_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                assertEquals(
+                        (stmtLog1.getExecutionPlusResultSetUsageTimeNanos()
+                                + stmtLog2.getExecutionPlusResultSetUsageTimeNanos()) / 2.0d,
+                        resultSet.getInt(LogRepositoryConstants.AVG_EXEC_PLUS_RSET_USAGE_TIME_COLUMN), 1.0d);
             }
+            {
+                resultSet.next();
+                final StatementFullyExecutedLog stmtLog = fullLogs.get(2);
+                assertEquals(3, resultSet.getLong(ID_COLUMN));
+                assertEquals(stmtLog.getStatementType().getId(),
+                        resultSet.getInt(LogRepositoryConstants.STMT_TYPE_COLUMN));
+                assertEquals(1, resultSet.getLong(LogRepositoryConstants.EXEC_COUNT_COLUMN));
+                assertEquals(stmtLog.getRawSql(), resultSet.getString(LogRepositoryConstants.RAW_SQL_COLUMN));
+                assertEquals(stmtLog.getFilledSql(), resultSet.getString(LogRepositoryConstants.FILLED_SQL_COLUMN));
+                assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
+                        resultSet.getInt(LogRepositoryConstants.TOTAL_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
+                        resultSet.getInt(LogRepositoryConstants.MAX_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
+                        resultSet.getInt(LogRepositoryConstants.MIN_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+                assertEquals(stmtLog.getExecutionPlusResultSetUsageTimeNanos(),
+                        resultSet.getInt(LogRepositoryConstants.AVG_EXEC_PLUS_RSET_USAGE_TIME_COLUMN));
+            }
+
         });
     }
 
@@ -185,40 +175,26 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
 
         final LogSearchCriteria searchCriteria = new LogSearchCriteria();
         searchCriteria.setFilter("toto");
-        repositoryRead.getStatementsGroupByRawSQL(searchCriteria, new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                assertFalse(resultSet.next());
-            }
-        });
+        repositoryRead.getStatementsGroupByRawSQL(searchCriteria, resultSet -> assertFalse(resultSet.next()));
         searchCriteria.setFilter("MYRAWSQL");
-        repositoryRead.getStatementsGroupByRawSQL(searchCriteria, new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                // check only 2 grouped rows
-                assertTrue(resultSet.next());
-                assertTrue(resultSet.next());
-                assertFalse(resultSet.next());
-            }
+        repositoryRead.getStatementsGroupByRawSQL(searchCriteria, resultSet -> {
+            // check only 2 grouped rows
+            assertTrue(resultSet.next());
+            assertTrue(resultSet.next());
+            assertFalse(resultSet.next());
         });
         searchCriteria.setFilter("myrawsql2");
-        repositoryRead.getStatementsGroupByRawSQL(searchCriteria, new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                // check only 1 grouped row
-                assertTrue(resultSet.next());
-                assertFalse(resultSet.next());
-            }
+        repositoryRead.getStatementsGroupByRawSQL(searchCriteria, resultSet -> {
+            // check only 1 grouped row
+            assertTrue(resultSet.next());
+            assertFalse(resultSet.next());
         });
         searchCriteria.setFilter("myfilled");
-        repositoryRead.getStatementsGroupByRawSQL(searchCriteria, new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                // check only 2 grouped row
-                assertTrue(resultSet.next());
-                assertTrue(resultSet.next());
-                assertFalse(resultSet.next());
-            }
+        repositoryRead.getStatementsGroupByRawSQL(searchCriteria, resultSet -> {
+            // check only 2 grouped row
+            assertTrue(resultSet.next());
+            assertTrue(resultSet.next());
+            assertFalse(resultSet.next());
         });
     }
 
@@ -228,40 +204,26 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
 
         final LogSearchCriteria searchCriteria = new LogSearchCriteria();
         searchCriteria.setFilter("toto");
-        repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                assertFalse(resultSet.next());
-            }
-        });
+        repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, resultSet -> assertFalse(resultSet.next()));
         searchCriteria.setFilter("MYRAWSQL");
-        repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                // check only 2 grouped rows
-                assertTrue(resultSet.next());
-                assertTrue(resultSet.next());
-                assertFalse(resultSet.next());
-            }
+        repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, resultSet -> {
+            // check only 2 grouped rows
+            assertTrue(resultSet.next());
+            assertTrue(resultSet.next());
+            assertFalse(resultSet.next());
         });
         searchCriteria.setFilter("myrawsql2");
-        repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                // check only 1 grouped row
-                assertTrue(resultSet.next());
-                assertFalse(resultSet.next());
-            }
+        repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, resultSet -> {
+            // check only 1 grouped row
+            assertTrue(resultSet.next());
+            assertFalse(resultSet.next());
         });
         searchCriteria.setFilter("myfilled");
-        repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                // check only 2 grouped row
-                assertTrue(resultSet.next());
-                assertTrue(resultSet.next());
-                assertFalse(resultSet.next());
-            }
+        repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, resultSet -> {
+            // check only 2 grouped row
+            assertTrue(resultSet.next());
+            assertTrue(resultSet.next());
+            assertFalse(resultSet.next());
         });
     }
 
@@ -271,21 +233,13 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
 
         final LogSearchCriteria searchCriteria = new LogSearchCriteria();
         searchCriteria.setMinDurationNanos(1000L);
-        repositoryRead.getStatementsGroupByRawSQL(searchCriteria, new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                // check only 1 grouped row
-                assertTrue(resultSet.next());
-                assertFalse(resultSet.next());
-            }
+        repositoryRead.getStatementsGroupByRawSQL(searchCriteria, resultSet -> {
+            // check only 1 grouped row
+            assertTrue(resultSet.next());
+            assertFalse(resultSet.next());
         });
         searchCriteria.setMinDurationNanos(10000L);
-        repositoryRead.getStatementsGroupByRawSQL(searchCriteria, new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                assertFalse(resultSet.next());
-            }
-        });
+        repositoryRead.getStatementsGroupByRawSQL(searchCriteria, resultSet -> assertFalse(resultSet.next()));
     }
 
     @Test
@@ -294,21 +248,13 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
 
         final LogSearchCriteria searchCriteria = new LogSearchCriteria();
         searchCriteria.setMinDurationNanos(1000L);
-        repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                // check only 1 grouped row
-                assertTrue(resultSet.next());
-                assertFalse(resultSet.next());
-            }
+        repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, resultSet -> {
+            // check only 1 grouped row
+            assertTrue(resultSet.next());
+            assertFalse(resultSet.next());
         });
         searchCriteria.setMinDurationNanos(10000L);
-        repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                assertFalse(resultSet.next());
-            }
-        });
+        repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, resultSet -> assertFalse(resultSet.next()));
     }
 
     @Test
@@ -317,13 +263,10 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
 
         final LogSearchCriteria searchCriteria = new LogSearchCriteria();
         searchCriteria.setSqlPassThroughFilter("avg_EXEC_PLUS_RSET_USAGE_TIME >1000");
-        repositoryRead.getStatementsGroupByRawSQL(searchCriteria, new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                // check only 1 grouped row
-                assertTrue(resultSet.next());
-                assertFalse(resultSet.next());
-            }
+        repositoryRead.getStatementsGroupByRawSQL(searchCriteria, resultSet -> {
+            // check only 1 grouped row
+            assertTrue(resultSet.next());
+            assertFalse(resultSet.next());
         });
     }
 
@@ -333,13 +276,10 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
 
         final LogSearchCriteria searchCriteria = new LogSearchCriteria();
         searchCriteria.setSqlPassThroughFilter("avg_EXEC_PLUS_RSET_USAGE_TIME >1000");
-        repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                // check only 1 grouped row
-                assertTrue(resultSet.next());
-                assertFalse(resultSet.next());
-            }
+        repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, resultSet -> {
+            // check only 1 grouped row
+            assertTrue(resultSet.next());
+            assertFalse(resultSet.next());
         });
     }
 
@@ -354,26 +294,20 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
 
         final LogSearchCriteria searchCriteria = new LogSearchCriteria();
         searchCriteria.setRemoveTransactionCompletions(false);
-        repositoryRead.getStatementsGroupByRawSQL(searchCriteria, new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                // check only 3 grouped rows
-                assertTrue(resultSet.next());
-                assertTrue(resultSet.next());
-                assertTrue(resultSet.next());
-                assertFalse(resultSet.next());
-            }
+        repositoryRead.getStatementsGroupByRawSQL(searchCriteria, resultSet -> {
+            // check only 3 grouped rows
+            assertTrue(resultSet.next());
+            assertTrue(resultSet.next());
+            assertTrue(resultSet.next());
+            assertFalse(resultSet.next());
         });
 
         searchCriteria.setRemoveTransactionCompletions(true);
-        repositoryRead.getStatementsGroupByRawSQL(searchCriteria, new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                // check only 2 grouped rows
-                assertTrue(resultSet.next());
-                assertTrue(resultSet.next());
-                assertFalse(resultSet.next());
-            }
+        repositoryRead.getStatementsGroupByRawSQL(searchCriteria, resultSet -> {
+            // check only 2 grouped rows
+            assertTrue(resultSet.next());
+            assertTrue(resultSet.next());
+            assertFalse(resultSet.next());
         });
     }
 
@@ -387,26 +321,20 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
 
         final LogSearchCriteria searchCriteria = new LogSearchCriteria();
         searchCriteria.setRemoveTransactionCompletions(false);
-        repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                // check only 3 grouped rows
-                assertTrue(resultSet.next());
-                assertTrue(resultSet.next());
-                assertTrue(resultSet.next());
-                assertFalse(resultSet.next());
-            }
+        repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, resultSet -> {
+            // check only 3 grouped rows
+            assertTrue(resultSet.next());
+            assertTrue(resultSet.next());
+            assertTrue(resultSet.next());
+            assertFalse(resultSet.next());
         });
 
         searchCriteria.setRemoveTransactionCompletions(true);
-        repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, new ResultSetAnalyzer() {
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                // check only 2 grouped rows
-                assertTrue(resultSet.next());
-                assertTrue(resultSet.next());
-                assertFalse(resultSet.next());
-            }
+        repositoryRead.getStatementsGroupByFilledSQL(searchCriteria, resultSet -> {
+            // check only 2 grouped rows
+            assertTrue(resultSet.next());
+            assertTrue(resultSet.next());
+            assertFalse(resultSet.next());
         });
     }
 
@@ -426,27 +354,23 @@ public class LogRepositoryReadJdbcTest extends AbstractLogRepositoryTest {
                 "myexception");
         repositoryUpdate.updateLogAfterExecution(statementExecutedLog);
 
-        repositoryRead.getBatchStatementExecutions(batchedLogs.getLogId(), new ResultSetAnalyzer() {
-
-            @Override
-            public void analyze(final ResultSet resultSet) throws SQLException {
-                {
-                    assertTrue(resultSet.next());
-                    assertEquals(0, resultSet.getInt(LogRepositoryConstants.BATCHED_STMT_ORDER));
-                    assertEquals("st1", resultSet.getString(LogRepositoryConstants.FILLED_SQL_COLUMN));
-                }
-                {
-                    assertTrue(resultSet.next());
-                    assertEquals(1, resultSet.getInt(LogRepositoryConstants.BATCHED_STMT_ORDER));
-                    assertEquals("st2", resultSet.getString(LogRepositoryConstants.FILLED_SQL_COLUMN));
-                }
-                {
-                    assertTrue(resultSet.next());
-                    assertEquals(2, resultSet.getInt(LogRepositoryConstants.BATCHED_STMT_ORDER));
-                    assertEquals("st3", resultSet.getString(LogRepositoryConstants.FILLED_SQL_COLUMN));
-                }
-                assertFalse(resultSet.next());
+        repositoryRead.getBatchStatementExecutions(batchedLogs.getLogId(), resultSet -> {
+            {
+                assertTrue(resultSet.next());
+                assertEquals(0, resultSet.getInt(LogRepositoryConstants.BATCHED_STMT_ORDER));
+                assertEquals("st1", resultSet.getString(LogRepositoryConstants.FILLED_SQL_COLUMN));
             }
+            {
+                assertTrue(resultSet.next());
+                assertEquals(1, resultSet.getInt(LogRepositoryConstants.BATCHED_STMT_ORDER));
+                assertEquals("st2", resultSet.getString(LogRepositoryConstants.FILLED_SQL_COLUMN));
+            }
+            {
+                assertTrue(resultSet.next());
+                assertEquals(2, resultSet.getInt(LogRepositoryConstants.BATCHED_STMT_ORDER));
+                assertEquals("st3", resultSet.getString(LogRepositoryConstants.FILLED_SQL_COLUMN));
+            }
+            assertFalse(resultSet.next());
         });
     }
 
