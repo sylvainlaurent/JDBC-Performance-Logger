@@ -29,20 +29,23 @@ public class WrappingDriverUnloadTest {
     @Test
     public void testUnload() throws Exception {
         WrappingDriver.load();
+        try {
+            final int clientPort = DriverConfig.INSTANCE.getClientAddresses().get(0).getPort();
+            final ServerSocket logReceiver = new ServerSocket(clientPort);
+            final Socket accept = logReceiver.accept();
+            final int remotePort = accept.getPort();
+            accept.close();
+            logReceiver.close();
 
-        final int clientPort = DriverConfig.INSTANCE.getClientAddresses().get(0).getPort();
-        final ServerSocket logReceiver = new ServerSocket(clientPort);
-        final Socket accept = logReceiver.accept();
-        final int remotePort = accept.getPort();
-        accept.close();
-        logReceiver.close();
-
-        WrappingDriver.unload();
-        assertPortIsAvailable(clientPort);
-        assertPortIsAvailable(remotePort);
-        final Integer serverPort = DriverConfig.INSTANCE.getServerPort();
-        if (null != serverPort) {
-            assertPortIsAvailable(serverPort);
+            WrappingDriver.unload();
+            assertPortIsAvailable(clientPort);
+            assertPortIsAvailable(remotePort);
+            final Integer serverPort = DriverConfig.INSTANCE.getServerPort();
+            if (null != serverPort) {
+                assertPortIsAvailable(serverPort);
+            }
+        } finally {
+            WrappingDriver.load();
         }
     }
 
