@@ -60,6 +60,7 @@ public class WrappingDriver implements Driver {
             } catch (final SQLException e) {
                 throw new RuntimeException(e);
             }
+            PerfLoggerRemoting.start();
             registered = true;
         }
         return INSTANCE;
@@ -69,10 +70,11 @@ public class WrappingDriver implements Driver {
         if (registered) {
             try {
                 DriverManager.deregisterDriver(INSTANCE);
-                // TODO : properly stop threads and sockets
-                registered = false;
             } catch (final SQLException e) {
                 throw new RuntimeException(e);
+            } finally {
+                PerfLoggerRemoting.stop();
+                registered = false;
             }
         }
     }

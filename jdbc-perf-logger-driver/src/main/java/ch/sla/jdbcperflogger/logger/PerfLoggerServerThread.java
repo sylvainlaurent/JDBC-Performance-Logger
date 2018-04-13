@@ -15,6 +15,7 @@
  */
 package ch.sla.jdbcperflogger.logger;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -23,11 +24,11 @@ import java.security.PrivilegedAction;
 
 import ch.sla.jdbcperflogger.Logger;
 
-class PerfLoggerServerThread extends Thread {
+class PerfLoggerServerThread extends Thread implements Closeable {
     private final static Logger LOGGER = Logger.getLogger(PerfLoggerServerThread.class);
 
     ServerSocket serverSocket;
-    boolean done;
+    volatile boolean done;
 
     static PerfLoggerServerThread spawn(final int serverPort) {
         // avoid Classloader leaks
@@ -84,5 +85,15 @@ class PerfLoggerServerThread extends Thread {
                 LOGGER.error("error while closing socket", e);
             }
         }
+    }
+
+    @Override
+    public void close() {
+        try {
+            serverSocket.close();
+        } catch (final IOException e) {
+            LOGGER.error("error closing socket at " + serverSocket.getLocalPort(), e);
+        }
+        done = true;
     }
 }
