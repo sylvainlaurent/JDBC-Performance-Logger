@@ -35,26 +35,27 @@ public class PerfLoggerRemoting {
 
     final static Set<LogSender> senders = new CopyOnWriteArraySet<LogSender>();
     final static Map<LoggingConnectionInvocationHandler, ConnectionInfo> connectionToInfo = new WeakHashMap<LoggingConnectionInvocationHandler, ConnectionInfo>();
-    final static List<Closeable> createdThreads = new ArrayList<Closeable>();
+    final static List<Closeable> remotingThreads = new ArrayList<Closeable>();
 
-    public static void start() {
+    public static synchronized void start() {
         final Integer serverPort = DriverConfig.INSTANCE.getServerPort();
         if (serverPort != null) {
-            createdThreads.add(PerfLoggerServerThread.spawn(serverPort));
+            remotingThreads.add(PerfLoggerServerThread.spawn(serverPort));
         }
         for (final InetSocketAddress clientAddress : DriverConfig.INSTANCE.getClientAddresses()) {
-            createdThreads.add(PerfLoggerClientThread.spawn(clientAddress));
+            remotingThreads.add(PerfLoggerClientThread.spawn(clientAddress));
         }
     }
 
-    public static void stop() {
-        for (final Closeable thread : createdThreads) {
+    public static synchronized void stop() {
+        for (final Closeable thread : remotingThreads) {
             try {
                 thread.close();
             } catch (final IOException e) {
                 // ignore
             }
         }
+        remotingThreads.clear();
     }
 
     private PerfLoggerRemoting() {

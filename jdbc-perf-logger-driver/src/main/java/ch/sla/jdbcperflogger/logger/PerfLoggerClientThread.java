@@ -90,12 +90,12 @@ class PerfLoggerClientThread extends Thread implements Closeable {
 
     @Override
     public void close() {
+        done = true;
         try {
             socket.close();
         } catch (final IOException e) {
             LOGGER.info("Error closing socket at port" + socket.getLocalPort());
         }
-        done = true;
     }
 
     private void quietSleep(final int seconds) {

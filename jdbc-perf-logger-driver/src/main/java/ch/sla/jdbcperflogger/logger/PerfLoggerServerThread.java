@@ -89,11 +89,11 @@ class PerfLoggerServerThread extends Thread implements Closeable {
 
     @Override
     public void close() {
+        done = true;
         try {
             serverSocket.close();
         } catch (final IOException e) {
             LOGGER.error("error closing socket at " + serverSocket.getLocalPort(), e);
         }
-        done = true;
     }
 }

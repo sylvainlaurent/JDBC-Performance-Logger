@@ -15,65 +15,81 @@
  */
 package ch.sla.jdbcperflogger.driver;
 
+import static org.awaitility.Awaitility.await;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
+import org.eclipse.jdt.annotation.NonNull;
 import org.junit.Test;
 
 import ch.sla.jdbcperflogger.DriverConfig;
 
 public class WrappingDriverUnloadTest {
 
+    private static final int WAIT_TIME = 1;
+
+    @SuppressWarnings("null")
     @Test
     public void testUnload() throws Exception {
+        final Integer serverPort = DriverConfig.INSTANCE.getServerPort();
+        final int clientPort = DriverConfig.INSTANCE.getClientAddresses().get(0).getPort();
+        final ServerSocket logReceiver = new ServerSocket(clientPort);
+
         WrappingDriver.load();
+
         try {
-            final int clientPort = DriverConfig.INSTANCE.getClientAddresses().get(0).getPort();
-            final ServerSocket logReceiver = new ServerSocket(clientPort);
-            final Socket accept = logReceiver.accept();
-            final int remotePort = accept.getPort();
-            accept.close();
+            await().atMost(WAIT_TIME, TimeUnit.SECONDS).until(portInUse(serverPort));
+
+            final Socket client = logReceiver.accept();
+            final int remotePort = client.getPort();
+
+            await().atMost(WAIT_TIME, TimeUnit.SECONDS).until(portInUse(clientPort));
+            await().atMost(WAIT_TIME, TimeUnit.SECONDS).until(portInUse(remotePort));
+
+            client.close();
             logReceiver.close();
 
             WrappingDriver.unload();
-            assertPortIsAvailable(clientPort);
-            assertPortIsAvailable(remotePort);
-            final Integer serverPort = DriverConfig.INSTANCE.getServerPort();
-            if (null != serverPort) {
-                assertPortIsAvailable(serverPort);
-            }
+            await().atMost(WAIT_TIME, TimeUnit.SECONDS).until(portNotInUse(clientPort));
+            await().atMost(WAIT_TIME, TimeUnit.SECONDS).until(portNotInUse(serverPort));
+            await().atMost(WAIT_TIME, TimeUnit.SECONDS).until(portNotInUse(remotePort));
         } finally {
             WrappingDriver.load();
+            await().atMost(WAIT_TIME, TimeUnit.SECONDS).until(portInUse(serverPort));
         }
     }
 
-    protected void assertPortIsAvailable(final Integer port) {
-        ServerSocket s = null;
-        boolean portAvailable = false;
-        int retries = 0;
-        while (!portAvailable && retries < 10) {
-            try {
-                s = new ServerSocket(port);
-                portAvailable = true;
-            } catch (final IOException e) {
-                portAvailable = false;
-                try {
-                    Thread.sleep(500);
-                } catch (final InterruptedException e1) {
-                }
-                retries++;
-            } finally {
-                if (s != null) {
-                    try {
-                        s.close();
-                    } catch (final IOException e) {
-                    }
-                }
+    protected Callable<Boolean> portInUse(final int port) {
+        return new Callable<Boolean>() {
+
+            @Override
+            public @NonNull Boolean call() throws Exception {
+                return !canOpenPort(port);
             }
+        };
+    }
+
+    protected Callable<Boolean> portNotInUse(final int port) {
+        return new Callable<Boolean>() {
+
+            @Override
+            public @NonNull Boolean call() throws Exception {
+                return canOpenPort(port);
+            }
+        };
+    }
+
+    protected boolean canOpenPort(final int port) {
+        try (
+                ServerSocket serverSocket = new ServerSocket(port)) {
+            return true;
+        } catch (final IOException e) {
+            return false;
         }
-        Assert.assertTrue("Port " + port + " must be closed after WrappingDriver.unload()!", portAvailable);
     }
 
 }
