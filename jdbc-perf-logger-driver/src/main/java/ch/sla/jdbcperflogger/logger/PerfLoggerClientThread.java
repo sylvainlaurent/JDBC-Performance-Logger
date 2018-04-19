@@ -15,6 +15,7 @@
  */
 package ch.sla.jdbcperflogger.logger;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -24,14 +25,16 @@ import java.util.concurrent.TimeUnit;
 
 import ch.sla.jdbcperflogger.Logger;
 
-class PerfLoggerClientThread extends Thread {
+class PerfLoggerClientThread extends Thread implements Closeable {
     private final static Logger LOGGER = Logger.getLogger(PerfLoggerClientThread.class);
 
     private static final int CONNECT_TIMEOUT_MS = 30000;
 
-    boolean done;
+    volatile boolean done;
 
     private final InetSocketAddress socketAddress;
+
+    private Socket socket;
 
     static PerfLoggerClientThread spawn(final InetSocketAddress socketAddress) {
         // avoid Classloader leaks
@@ -63,7 +66,6 @@ class PerfLoggerClientThread extends Thread {
     @Override
     public void run() {
         while (!done) {
-            final Socket socket;
             try {
                 final InetSocketAddress resolvedAddress = new InetSocketAddress(socketAddress.getHostName(),
                         socketAddress.getPort());
@@ -82,6 +84,17 @@ class PerfLoggerClientThread extends Thread {
             } catch (final IOException e) {
                 LOGGER.info("Error in connection with " + socketAddress + ", will try again later", e);
             }
+        }
+        LOGGER.debug("Client for " + socketAddress + "closed");
+    }
+
+    @Override
+    public void close() {
+        done = true;
+        try {
+            socket.close();
+        } catch (final IOException e) {
+            LOGGER.info("Error closing socket at port" + socket.getLocalPort());
         }
     }
 

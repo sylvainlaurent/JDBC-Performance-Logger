@@ -15,8 +15,12 @@
  */
 package ch.sla.jdbcperflogger.logger;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -31,16 +35,27 @@ public class PerfLoggerRemoting {
 
     final static Set<LogSender> senders = new CopyOnWriteArraySet<LogSender>();
     final static Map<LoggingConnectionInvocationHandler, ConnectionInfo> connectionToInfo = new WeakHashMap<LoggingConnectionInvocationHandler, ConnectionInfo>();
+    final static List<Closeable> remotingThreads = new ArrayList<Closeable>();
 
-    static {
+    public static synchronized void start() {
         final Integer serverPort = DriverConfig.INSTANCE.getServerPort();
         if (serverPort != null) {
-            PerfLoggerServerThread.spawn(serverPort);
+            remotingThreads.add(PerfLoggerServerThread.spawn(serverPort));
         }
-
         for (final InetSocketAddress clientAddress : DriverConfig.INSTANCE.getClientAddresses()) {
-            PerfLoggerClientThread.spawn(clientAddress);
+            remotingThreads.add(PerfLoggerClientThread.spawn(clientAddress));
         }
+    }
+
+    public static synchronized void stop() {
+        for (final Closeable thread : remotingThreads) {
+            try {
+                thread.close();
+            } catch (final IOException e) {
+                // ignore
+            }
+        }
+        remotingThreads.clear();
     }
 
     private PerfLoggerRemoting() {
