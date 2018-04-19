@@ -23,7 +23,6 @@ import java.net.Socket;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import org.eclipse.jdt.annotation.NonNull;
 import org.junit.Test;
 
 import ch.sla.jdbcperflogger.DriverConfig;
@@ -64,23 +63,11 @@ public class WrappingDriverUnloadTest {
     }
 
     protected Callable<Boolean> portInUse(final int port) {
-        return new Callable<Boolean>() {
-
-            @Override
-            public @NonNull Boolean call() throws Exception {
-                return !canOpenPort(port);
-            }
-        };
+        return () -> !canOpenPort(port);
     }
 
     protected Callable<Boolean> portNotInUse(final int port) {
-        return new Callable<Boolean>() {
-
-            @Override
-            public @NonNull Boolean call() throws Exception {
-                return canOpenPort(port);
-            }
-        };
+        return () -> canOpenPort(port);
     }
 
     protected boolean canOpenPort(final int port) {
