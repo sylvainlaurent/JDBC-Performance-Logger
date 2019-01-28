@@ -1,3 +1,4 @@
 # Auto Configure
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-ch.sla.jdbcperflogger.spring.TomcatDataSourcePostProcessor
+ch.sla.jdbcperflogger.spring.TomcatDataSourcePostProcessor,\
+ch.sla.jdbcperflogger.spring.HikariDataSourcePostProcessor
