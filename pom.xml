@@ -189,7 +189,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>1.4</version>
+        <version>3.0.0-M2</version>
         <executions>
           <execution>
             <id>enforce-versions</id>
@@ -198,7 +198,11 @@
             </goals>
             <configuration>
               <rules>
-                <requireUpperBoundDeps />
+                <requireUpperBoundDeps>
+                  <excludes>
+                    <exclude>org.slf4j:slf4j-api</exclude>
+                  </excludes>
+                </requireUpperBoundDeps>
               </rules>
             </configuration>
           </execution>
