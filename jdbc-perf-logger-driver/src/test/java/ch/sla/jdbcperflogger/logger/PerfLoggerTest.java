@@ -138,9 +138,15 @@ public class PerfLoggerTest {
         String result ="insert into  /* removed one ? */emp (?,?,'/*test*/')/*ending comment*/";
         Assert.assertEquals("insert into  emp (?,?,'/*test*/')", PerfLogger.removeComments(result));
     }
+
     @Test
     public void removeCommentsWithStringNoClosed(){
         String result ="insert into  /* removed one ?*/emp (?,?,'/*test*/)/*ending comment*/";
         Assert.assertEquals(result, PerfLogger.removeComments(result));
+    }
+    @Test
+    public void removeCommentsWitDBMSHints(){
+        String result ="SELECT /*+ FIRST_ROWS(10) */ * FROM employees;";
+        Assert.assertEquals("SELECT  * FROM employees;", PerfLogger.removeComments(result));
     }
 }

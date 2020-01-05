@@ -3,6 +3,7 @@ package ch.sla.jdbcperflogger.spring.test.jpa;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.hibernate.jpa.internal.EntityManagerImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,6 +17,9 @@ import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting;
 import ch.sla.jdbcperflogger.logger.RecordingLogSender;
 import ch.sla.jdbcperflogger.model.StatementLog;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = MyApplication.class)
 public class MyApplicationTest {
@@ -23,6 +27,9 @@ public class MyApplicationTest {
 
     @Autowired
     private JdbcTemplate template;
+
+    @Autowired
+    EntityManager entityManager;
 
     private final RecordingLogSender logRecorder = new RecordingLogSender();
 
@@ -42,5 +49,16 @@ public class MyApplicationTest {
         assertEquals(new Integer(1), template.queryForObject(SELECT_COUNT_FROM_PERSON, Integer.class));
         final StatementLog log = (StatementLog) logRecorder.lastLogMessage(2);
         assertTrue(log.getRawSql().contains(SELECT_COUNT_FROM_PERSON));
+    }
+
+    @Test
+    public void testWithComments(){
+        String comments = "first param ?, second param in comment ?";
+        //should use named param
+        Query query = entityManager.createQuery("SELECT p from Person p where p.firstName =  ? ",Person.class).setParameter(1,"David").setHint("org.hibernate.comment", comments);
+        query.getResultList();
+        final StatementLog log = (StatementLog) logRecorder.lastLogMessage(2);
+        System.out.println(log.getFilledSql());
+        assertTrue(log.getRawSql().contains(comments));
     }
 }
