@@ -184,9 +184,10 @@ public class PerfLogger {
 
     static String fillParameters(final String sql, final PreparedStatementValuesHolder pstmtValues,
             final DatabaseType databaseType) {
-        Matcher matcher = PSTMT_PARAMETERS_PATTERN.matcher(sql);
+        String removedComments = removeComments(sql);
+        Matcher matcher = PSTMT_PARAMETERS_PATTERN.matcher(removedComments);
         int i = 0;
-        final StringBuffer strBuf = new StringBuffer((int) (sql.length() * 1.5));
+        final StringBuffer strBuf = new StringBuffer((int) (removedComments.length() * 1.5));
         while (matcher.find()) {
             i++;
             final SqlTypedValue sqlTypedValue = pstmtValues.get(i);
@@ -274,5 +275,45 @@ public class PerfLogger {
         }
         strBuilder.append("*/");
         return strBuilder.toString();
+    }
+    public static String removeComments(String result){
+        if(result == null || "".equals(result) || result.length() < 4)
+            return result;
+        //do a try catch the comments are never closed or empty string, should not happen,
+        try {
+            boolean inString = false;
+            StringBuffer cleanedStatement = new StringBuffer();
+            for (int i = 0; i < result.length(); i++) {
+                //take care of the escape char
+                if (result.charAt(i) == '\'' && ((i - 1) > 0 && result.charAt(i - 1) != '\\')) {
+                    inString = !inString;
+                }
+                if (!inString) {
+                    if (isStartingComment(result, i)) {
+                        i = i + 2;
+                        while (!isEndComment(result, i)) {
+                            i++;
+                        }
+                        i = i + 2;
+                    }
+                }
+                if (i < result.length()) {
+                    cleanedStatement.append(result.charAt(i));
+
+                }
+            }
+
+            return cleanedStatement.toString();
+        }
+        catch (StringIndexOutOfBoundsException e) {
+            return result;
+        }
+    }
+
+    private static boolean isStartingComment(String result, int i) {
+        return result.charAt(i)== '/' &&  result.charAt(i+1)== '*';
+    }
+    private static boolean isEndComment(String result, int i) {
+        return result.charAt(i)== '*' &&  result.charAt(i+1)== '/';
     }
 }
