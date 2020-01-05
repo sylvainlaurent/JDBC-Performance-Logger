@@ -32,7 +32,7 @@ public class PerfLoggerTest {
     public void testfillParametersWithPrefixComments() throws Exception {
         testfillParameters("/* select\n" +
                 "        generatedAlias0 \n" +
-                "    from\n" +
+                "    from 'into comment' \n" +
                 "        Person as generatedAlias0 \n" +
                 "    where\n" +
                 "        generatedAlias0.firstName=:param0 */");
@@ -119,9 +119,28 @@ public class PerfLoggerTest {
         Assert.assertEquals(result, PerfLogger.removeComments(result));
     }
     @Test
+    public void removeCommentsWithoutCommentsWithString(){
+        String result ="insert into  emp (?,?,'test')";
+        Assert.assertEquals(result, PerfLogger.removeComments(result));
+    }
+    @Test
+    public void removeCommentsWithoutCommentsWithStringAndComments(){
+        String result ="/* removed one */insert into  emp (?,?,'test')";
+        Assert.assertEquals("insert into  emp (?,?,'test')", PerfLogger.removeComments(result));
+    }
+    @Test
     public void removeCommentsWithoutEmpty(){
         String result ="";
         Assert.assertEquals(result, PerfLogger.removeComments(result));
     }
-
+    @Test
+    public void removeCommentsWithString(){
+        String result ="insert into  /* removed one */emp (?,?,'/*test*/')/*ending comment*/";
+        Assert.assertEquals("insert into  emp (?,?,'/*test*/')", PerfLogger.removeComments(result));
+    }
+    @Test
+    public void removeCommentsWithStringNoClosed(){
+        String result ="insert into  /* removed one */emp (?,?,'/*test*/)/*ending comment*/";
+        Assert.assertEquals(result, PerfLogger.removeComments(result));
+    }
 }

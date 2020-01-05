@@ -285,7 +285,7 @@ public class PerfLogger {
             StringBuffer cleanedStatement = new StringBuffer();
             for (int i = 0; i < result.length(); i++) {
                 //take care of the escape char
-                if (result.charAt(i) == '\'' && ((i - 1) > 0 && result.charAt(i - 1) != '\\')) {
+                if (result.charAt(i) == '\'') {
                     inString = !inString;
                 }
                 if (!inString) {
@@ -302,6 +302,7 @@ public class PerfLogger {
 
                 }
             }
+            if(inString) return result;
 
             return cleanedStatement.toString();
         }
