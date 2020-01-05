@@ -135,12 +135,12 @@ public class PerfLoggerTest {
     }
     @Test
     public void removeCommentsWithString(){
-        String result ="insert into  /* removed one */emp (?,?,'/*test*/')/*ending comment*/";
+        String result ="insert into  /* removed one ? */emp (?,?,'/*test*/')/*ending comment*/";
         Assert.assertEquals("insert into  emp (?,?,'/*test*/')", PerfLogger.removeComments(result));
     }
     @Test
     public void removeCommentsWithStringNoClosed(){
-        String result ="insert into  /* removed one */emp (?,?,'/*test*/)/*ending comment*/";
+        String result ="insert into  /* removed one ?*/emp (?,?,'/*test*/)/*ending comment*/";
         Assert.assertEquals(result, PerfLogger.removeComments(result));
     }
 }
