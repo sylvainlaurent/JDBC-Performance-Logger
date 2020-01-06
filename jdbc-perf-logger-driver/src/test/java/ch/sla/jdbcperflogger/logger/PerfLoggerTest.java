@@ -135,8 +135,8 @@ public class PerfLoggerTest {
     }
     @Test
     public void removeCommentsWithString(){
-        String result ="insert into  /* removed one ? */emp (?,?,'/*test*/')/*ending comment*/";
-        Assert.assertEquals("insert into  emp (?,?,'/*test*/')", PerfLogger.removeComments(result));
+        String result ="insert into /*+ PARALLEL(4) */  /* removed one ? */emp (?,?,'/*test*/')/*ending comment*/";
+        Assert.assertEquals("insert into /*+ PARALLEL(4) */  emp (?,?,'/*test*/')", PerfLogger.removeComments(result));
     }
 
     @Test
@@ -147,6 +147,13 @@ public class PerfLoggerTest {
     @Test
     public void removeCommentsWitDBMSHints(){
         String result ="SELECT /*+ FIRST_ROWS(10) */ * FROM employees;";
-        Assert.assertEquals("SELECT  * FROM employees;", PerfLogger.removeComments(result));
+        Assert.assertEquals("SELECT /*+ FIRST_ROWS(10) */ * FROM employees;", PerfLogger.removeComments(result));
+
+        result ="/*comment*/ SELECT /*+ PARALLEL(4) */ hr_emp.last_name, d.department_name " +
+                "FROM   employees hr_emp, departments d" +
+                "WHERE  hr_emp.department_id=d.department_id;";
+        Assert.assertEquals(" SELECT /*+ PARALLEL(4) */ hr_emp.last_name, d.department_name FROM   employees hr_emp, departments dWHERE  hr_emp.department_id=d.department_id;", PerfLogger.removeComments(result));
+
+
     }
 }

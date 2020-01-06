@@ -312,7 +312,7 @@ public class PerfLogger {
     }
 
     private static boolean isStartingComment(String result, int i) {
-        return result.charAt(i)== '/' &&  result.charAt(i+1)== '*';
+        return result.charAt(i)== '/' &&  result.charAt(i+1)== '*' &&  result.charAt(i+2)!= '+';
     }
     private static boolean isEndComment(String result, int i) {
         return result.charAt(i)== '*' &&  result.charAt(i+1)== '/';
