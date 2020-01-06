@@ -1,8 +1,9 @@
-sudo: false
+dist: xenial
 language: java
 jdk:
-  - oraclejdk8
-  
+  - openjdk8
+script: mvn clean verify
+
 env:
   global:
    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
