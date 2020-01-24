@@ -86,4 +86,69 @@ public class PerfLoggerTest {
         Assert.assertEquals("'java''s cool, it''''s' /*VARCHAR*/", val);
     }
 
+
+    @Test
+    public void replaceParametersWithBlockComments(){
+        final PreparedStatementValuesHolder valHolder = new PreparedStatementValuesHolder();
+        valHolder.put(1, new SqlTypedValue("toto$", Types.VARCHAR));
+        valHolder.put(2, new SqlTypedValue("toto2$", Types.VARCHAR));
+        valHolder.put(3, new SqlTypedValue("dummy", Types.VARCHAR));
+        String sqlStatement ="insert into  /* removed one ? */emp (?,?)/*ending comment ?*/";
+        String filledSql = PerfLogger.fillParameters(sqlStatement, valHolder, DatabaseType.ORACLE);
+        Assert.assertEquals("insert into  /* removed one ? */emp ('toto$' /*VARCHAR*/,'toto2$' /*VARCHAR*/)/*ending comment ?*/", filledSql);
+        Assert.assertFalse(filledSql.contains("dummy"));
+    }
+
+    @Test
+    public void replaceParametersWithEOLComments(){
+        final PreparedStatementValuesHolder valHolder = new PreparedStatementValuesHolder();
+        valHolder.put(1, new SqlTypedValue("toto$", Types.VARCHAR));
+        valHolder.put(2, new SqlTypedValue("toto2$", Types.VARCHAR));
+        valHolder.put(3, new SqlTypedValue("dummy", Types.VARCHAR));
+        String sqlStatement ="/* removed one ? */ insert into  /* removed one ? */emp (?,?)--??ending comment";
+        String filledSql = PerfLogger.fillParameters(sqlStatement, valHolder, DatabaseType.ORACLE);
+        Assert.assertEquals("/* removed one ? */ insert into  /* removed one ? */emp ('toto$' /*VARCHAR*/,'toto2$' /*VARCHAR*/)--??ending comment", filledSql);
+        Assert.assertFalse(filledSql.contains("dummy"));
+    }
+
+    @Test
+    public void replaceParametersWithBlockCommentsAndEscapedQuotes(){
+        final PreparedStatementValuesHolder valHolder = new PreparedStatementValuesHolder();
+        valHolder.put(1, new SqlTypedValue("toto$", Types.VARCHAR));
+        valHolder.put(2, new SqlTypedValue("dummy", Types.VARCHAR));
+        String sqlStatement ="/* removed one ? */ insert into  /* removed one ? */emp ('part1?''part2',?)--??ending comment";
+        String filledSql = PerfLogger.fillParameters(sqlStatement, valHolder, DatabaseType.ORACLE);
+        Assert.assertEquals("/* removed one ? */ insert into  /* removed one ? */emp ('part1?''part2','toto$' /*VARCHAR*/)--??ending comment", filledSql);
+        Assert.assertFalse(filledSql.contains("dummy"));
+    }
+
+
+    @Test
+    public void replaceParametersWithBlockCommentsMultiLine(){
+        final PreparedStatementValuesHolder valHolder = new PreparedStatementValuesHolder();
+        valHolder.put(1, new SqlTypedValue("toto$", Types.VARCHAR));
+        valHolder.put(2, new SqlTypedValue("toto2$", Types.VARCHAR));
+        valHolder.put(3, new SqlTypedValue("dummy", Types.VARCHAR));
+        String sqlStatement ="/*multiline????\\ncomment?*/insert into  /* removed one ? */emp (?,?)--??ending comment";
+        String filledSql = PerfLogger.fillParameters(sqlStatement, valHolder, DatabaseType.ORACLE);
+        Assert.assertEquals("/*multiline????\\ncomment?*/insert into  /* removed one ? */emp ('toto$' /*VARCHAR*/,'toto2$' /*VARCHAR*/)--??ending comment", filledSql);
+        Assert.assertFalse(filledSql.contains("dummy"));
+    }
+
+
+    @Test
+    public void replaceParametersWithEolCmmentsMultiLine(){
+        final PreparedStatementValuesHolder valHolder = new PreparedStatementValuesHolder();
+        valHolder.put(1, new SqlTypedValue("toto$", Types.VARCHAR));
+        valHolder.put(2, new SqlTypedValue("toto2$", Types.VARCHAR));
+        valHolder.put(3, new SqlTypedValue("dummy", Types.VARCHAR));
+        String sqlStatement ="-- eol comment?\n--????\n insert into  /* removed one ? */emp (?,?)--??ending comment";
+        Assert.assertEquals("-- eol comment?\n" +
+                "--????\n" +
+                " insert into  /* removed one ? */emp ('toto$' /*VARCHAR*/,'toto2$' /*VARCHAR*/)--??ending comment", PerfLogger.fillParameters(sqlStatement,valHolder,DatabaseType.ORACLE));
+    }
+
+
+
+
 }

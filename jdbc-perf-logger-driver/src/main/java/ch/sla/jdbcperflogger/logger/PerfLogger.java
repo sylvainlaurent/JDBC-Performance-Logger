@@ -16,6 +16,8 @@
 package ch.sla.jdbcperflogger.logger;
 
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.regex.Pattern.DOTALL;
+import static java.util.regex.Pattern.MULTILINE;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -55,7 +57,7 @@ public class PerfLogger {
     private final static Logger LOGGER_BATCHED_STATEMENTS_DETAIL = Logger
             .getLogger(PerfLogger.class.getName() + ".batchedStatementDetail");
 
-    private final static Pattern PSTMT_PARAMETERS_PATTERN = Pattern.compile("\\?");
+    private final static Pattern PSTMT_PARAMETER_PATTERN = Pattern.compile("(?:'(?:''|[^'])*')|(?:--[^\\r\\n]*$)|(?:\\/\\*(?:[^\\*]|\\*(?!\\/))*\\*\\/)|(\\?)", MULTILINE | DOTALL);
 
     private static Map<Integer, String> typesMap;
 
@@ -182,21 +184,27 @@ public class PerfLogger {
         PerfLoggerRemoting.postLog(log);
     }
 
-    static String fillParameters(final String sql, final PreparedStatementValuesHolder pstmtValues,
-            final DatabaseType databaseType) {
-        Matcher matcher = PSTMT_PARAMETERS_PATTERN.matcher(sql);
+    static String fillParameters(final String preparedStatementSql,
+                                 final PreparedStatementValuesHolder pstmtValues,
+                                 final DatabaseType databaseType) {
+        Matcher matcherOnPstmtParameters = PSTMT_PARAMETER_PATTERN.matcher(preparedStatementSql);
+        StringBuilder newSQLWithValues = new StringBuilder();
+        int lastReplacementIndex = 0;
         int i = 0;
-        final StringBuffer strBuf = new StringBuffer((int) (sql.length() * 1.5));
-        while (matcher.find()) {
-            i++;
-            final SqlTypedValue sqlTypedValue = pstmtValues.get(i);
-            if (sqlTypedValue != null) {
-                final String valueAsString = getValueAsString(sqlTypedValue, databaseType);
-                matcher = matcher.appendReplacement(strBuf, Matcher.quoteReplacement(valueAsString));
+        while (matcherOnPstmtParameters.find()) {
+            if (matcherOnPstmtParameters.group(1) != null) {
+                i++;
+                final SqlTypedValue sqlTypedValue = pstmtValues.get(i);
+                if (sqlTypedValue != null) {
+                    final String valueAsString = getValueAsString(sqlTypedValue, databaseType);
+                    newSQLWithValues.append(preparedStatementSql.substring(lastReplacementIndex, matcherOnPstmtParameters.start(1)));
+                    newSQLWithValues.append(valueAsString);
+                    lastReplacementIndex = matcherOnPstmtParameters.end(1);
+                }
             }
         }
-        matcher.appendTail(strBuf);
-        return strBuf.toString();
+        newSQLWithValues.append(preparedStatementSql.substring(lastReplacementIndex));
+        return newSQLWithValues.toString();
     }
 
     static String getValueAsString(final SqlTypedValue sqlTypedValue, final DatabaseType databaseType) {
