@@ -40,8 +40,6 @@
   </properties>
 
   <modules>
-    <module>jdbc-perf-logger-spring-boot-starter</module>
-    <module>jdbc-perf-logger-spring-boot-starter-test</module>
     <module>jdbc-perf-logger-driver</module>
     <module>jdbc-perf-logger-gui</module>
     <module>jdbc-perf-logger-agent</module>

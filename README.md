@@ -27,7 +27,6 @@ Although other tools already exist around JDBC performance monitoring ([log4jdbc
 - Displays the `queryTimeout` of each statement (no value means 0 or no timeout) (since 0.5.0)
 - Displays the `autoCommit` status of each statement (since 0.6.0)
 - Supports new java 8 methods like `executeLargeUpdate` (since 0.6.2)
-- Auto configuration for [Spring Boot](http://projects.spring.io/spring-boot/) (since 0.7.2)
 - Java agent (since 0.8.0)
 
 ## Requirements
@@ -61,9 +60,6 @@ The driver can be setup in different ways:
 Just launch the JVM with `-javaagent:path/to/jdbc-perf-logger-agent-x.y.z.jar`
 
 The agent jar file is available in the `lib` directory of the zip or tar.gz distribution or as a maven artifact as shown above.
-
-### Using spring-boot
-See [README.md](jdbc-perf-logger-spring-boot-starter/README.md)
 
 ### Manual configuration
 - If using maven, add the `<dependency>` snippet above (replacing the version with the latest one) to your `pom.xml`
