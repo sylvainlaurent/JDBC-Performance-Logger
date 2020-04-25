@@ -2,10 +2,11 @@
 .DS_Store
 .idea
 .project
+*.iml
 *.log
 pom.xml.*
 target
-/.git
+/.java-version
 /logdb
 /release.properties
 /PerfLoggerGuiMain*.launch

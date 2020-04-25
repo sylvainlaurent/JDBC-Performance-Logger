@@ -15,9 +15,18 @@
  */
 package ch.sla.jdbcperflogger.driver;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import ch.sla.jdbcperflogger.StatementType;
+import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting;
+import ch.sla.jdbcperflogger.logger.RecordingLogSender;
+import ch.sla.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
+import ch.sla.jdbcperflogger.model.BatchedPreparedStatementsLog;
+import ch.sla.jdbcperflogger.model.ResultSetLog;
+import ch.sla.jdbcperflogger.model.StatementExecutedLog;
+import ch.sla.jdbcperflogger.model.StatementLog;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -37,19 +46,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import ch.sla.jdbcperflogger.StatementType;
-import ch.sla.jdbcperflogger.logger.PerfLoggerRemoting;
-import ch.sla.jdbcperflogger.logger.RecordingLogSender;
-import ch.sla.jdbcperflogger.model.BatchedNonPreparedStatementsLog;
-import ch.sla.jdbcperflogger.model.BatchedPreparedStatementsLog;
-import ch.sla.jdbcperflogger.model.ResultSetLog;
-import ch.sla.jdbcperflogger.model.StatementExecutedLog;
-import ch.sla.jdbcperflogger.model.StatementLog;
+import static org.junit.Assert.*;
 
 @SuppressWarnings("null")
 public class WrappingDriverTest {
@@ -61,8 +58,18 @@ public class WrappingDriverTest {
 
     @Before
     public void setup() throws Exception {
-        // connection = DriverManager.getConnection("jdbcperflogger:jdbc:h2:mem:", "sa", "");
-        connection = DriverManager.getConnection("jdbcperflogger:jdbc:hsqldb:mem:mydb;shutdown=true", "sa", "");
+        //String rawUrl = "jdbc:oracle:thin:@localhost:1521/CUSTOMSCRIPTS";
+        String rawUrl = "jdbcperflogger:jdbc:hsqldb:mem:mydb;shutdown=true";
+
+        try (Connection rawconnection = DriverManager.getConnection(rawUrl, "test", "test")) {
+            try (final Statement statement = rawconnection.createStatement()) {
+                statement.execute("drop table test");
+            }
+        } catch (SQLException e) {
+            //swallowed
+        }
+
+        connection = DriverManager.getConnection("jdbcperflogger:" + rawUrl, "test", "test");
         logRecorder = new RecordingLogSender();
         PerfLoggerRemoting.addSender(logRecorder);
     }
@@ -74,7 +81,7 @@ public class WrappingDriverTest {
     }
 
     @Test
-    public void testSetupDriver() throws Exception {
+    public void testSetupDriver() {
         Assert.assertNotNull(connection);
     }
 
@@ -86,11 +93,11 @@ public class WrappingDriverTest {
     @Test
     public void testSelectNonPrepared() throws Exception {
         final Statement statement = connection.createStatement();
-        executeStatementAndCheckLogged(statement, "create table test (key_id int);");
+        executeStatementAndCheckLogged(statement, "create table test (key_id integer)");
         // Thread.sleep(5000);
-        executeQueryAndCheckLogged(statement, "select * from test;");
-        executeQueryAndCheckLogged(statement, "select * from test;");
-        executeQueryAndCheckLogged(statement, "select * from test;");
+        executeQueryAndCheckLogged(statement, "select * from test");
+        executeQueryAndCheckLogged(statement, "select * from test");
+        executeQueryAndCheckLogged(statement, "select * from test");
         statement.close();
     }
 
@@ -98,7 +105,7 @@ public class WrappingDriverTest {
     public void testTimeoutSelectNonPrepared() throws Exception {
         final Statement statement = connection.createStatement();
         statement.setQueryTimeout(123);
-        statement.execute("create table test (key_id int);");
+        statement.execute("create table test (key_id int)");
         assertEquals(123, ((StatementLog) logRecorder.lastLogMessage(1)).getTimeout());
         statement.close();
     }
@@ -106,12 +113,12 @@ public class WrappingDriverTest {
     @Test
     public void testAutocommit() throws Exception {
         final Statement statement = connection.createStatement();
-        statement.execute("create table test (key_id int);");
+        statement.execute("create table test (key_id int)");
         StatementLog statementLog = ((StatementLog) logRecorder.lastLogMessage(1));
         assertTrue(statementLog.isAutoCommit());
 
         connection.setAutoCommit(false);
-        statement.execute("create table test2 (key_id int);");
+        statement.execute("create table test2 (key_id int)");
         statementLog = ((StatementLog) logRecorder.lastLogMessage(1));
         assertFalse(statementLog.isAutoCommit());
 
@@ -121,7 +128,7 @@ public class WrappingDriverTest {
     @Test
     public void testExecuteNonPrepared() throws Exception {
         {
-            final String sql = "create table test (key_id int);";
+            final String sql = "create table test (key_id int)";
             final Statement statement = connection.createStatement();
             assertEquals(0, logRecorder.getRecordedLogMessages().length);
             statement.execute(sql);
@@ -156,9 +163,9 @@ public class WrappingDriverTest {
     @Test
     public void testExecutePrepared() throws Exception {
         {
-            final String sql = "create table test (key_id int);";
+            final String sql = "create table test (key_id int)";
             final PreparedStatement statement = connection.prepareStatement(sql);
-            assertEquals(null, logRecorder.lastLogMessage(0));
+            assertNull(logRecorder.lastLogMessage(0));
             statement.execute();
             assertEquals(((StatementExecutedLog) logRecorder.lastLogMessage(0)).getLogId(),
                     ((StatementLog) logRecorder.lastLogMessage(1)).getLogId());
@@ -197,7 +204,7 @@ public class WrappingDriverTest {
         {
             final Statement statement = connection.createStatement();
             statement.execute(
-                    "create table test (key_id int, myDate date, myTimestamp timestamp(0), myTime time, myBoolean boolean, myString varchar(128));");
+                    "create table test (key_id integer, myDate date, myTimestamp timestamp(0), myTime time, myBoolean boolean, myString varchar(128))");
             statement.close();
         }
         {
@@ -339,7 +346,7 @@ public class WrappingDriverTest {
     public void testBatchedNonPrepared() throws Exception {
         {
             final Statement statement = connection.createStatement();
-            statement.execute("create table test (key_id int);");
+            statement.execute("create table test (key_id int)");
             statement.close();
         }
         // TimeUnit.SECONDS.sleep(10);
@@ -387,7 +394,7 @@ public class WrappingDriverTest {
     public void testBatchedPrepared() throws Exception {
         {
             final Statement statement = connection.createStatement();
-            statement.execute("create table test (key_id int);");
+            statement.execute("create table test (key_id int)");
             statement.close();
         }
         // TimeUnit.SECONDS.sleep(10);
@@ -430,23 +437,20 @@ public class WrappingDriverTest {
 
     @Test(expected = SQLException.class)
     public void testException() throws Exception {
-        final Statement statement = connection.createStatement();
-        try {
-            statement.execute("create table test (key_id int);");
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("create table test (key_id int)");
 
-            statement.execute("create table test (key_id int);");
+            statement.execute("create table test (key_id int)");
         } catch (final SQLException exc) {
             final StringWriter stringWriter = new StringWriter(500);
             exc.printStackTrace(new PrintWriter(stringWriter));
 
             assertEquals(stringWriter.toString(),
                     ((StatementExecutedLog) logRecorder.lastLogMessage(0)).getSqlException());
-            assertEquals("create table test (key_id int);", ((StatementLog) logRecorder.lastLogMessage(1)).getRawSql());
-            assertEquals("create table test (key_id int);",
+            assertEquals("create table test (key_id int)", ((StatementLog) logRecorder.lastLogMessage(1)).getRawSql());
+            assertEquals("create table test (key_id int)",
                     ((StatementLog) logRecorder.lastLogMessage(1)).getFilledSql());
             throw exc;
-        } finally {
-            statement.close();
         }
     }
 
@@ -557,11 +561,11 @@ public class WrappingDriverTest {
         return new java.sql.Date(utilDate(dateString).getTime());
     }
 
-    private static java.sql.Timestamp sqlTimestamp(final String tstampString) throws ParseException {
+    private static java.sql.Timestamp sqlTimestamp(final String tstampString) {
         return Timestamp.valueOf(tstampString);
     }
 
-    private static java.sql.Time sqlTime(final String timeString) throws ParseException {
+    private static java.sql.Time sqlTime(final String timeString) {
         return Time.valueOf(timeString);
     }
 
