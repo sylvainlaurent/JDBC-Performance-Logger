@@ -20,3 +20,6 @@ addons:
     build_command_prepend: "mvn clean"
     build_command:   "mvn -DskipTests=true compile"
     branch_pattern: master
+cache:
+  directories:
+  - $HOME/.m2
