@@ -41,7 +41,7 @@
     <dependency>
       <groupId>org.apache.derby</groupId>
       <artifactId>derby</artifactId>
-      <version>10.13.1.1</version>
+      <version>10.14.2.0</version>
       <!-- only used to test with child classloader -->
     </dependency>
   </dependencies>
